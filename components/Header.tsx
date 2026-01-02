@@ -61,7 +61,7 @@ const Header: React.FC = () => {
 						className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-all text-[10px] font-mono uppercase tracking-widest"
 					>
 						<Terminal className="w-3 h-3" />
-						<span className="hidden sm:inline">INIT_COMMS</span>
+						<span className="hidden sm:inline">CONNECT</span>
 					</button>
 				</div>
 			</div>
