@@ -1,151 +1,127 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowUpRight, Activity, Database, Cpu, Star } from 'lucide-react';
-import { Idea } from '../types';
-import { SketchCircle, SketchUnderline } from './SketchElements';
+import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, FileText, Activity } from "lucide-react";
+import { Idea } from "../types";
+import { LabCard, DataReadout, TechBadge } from "./SketchElements";
 
 interface IdeaCardProps {
-  idea: Idea;
-  variant?: 'standard' | 'featured';
+	idea: Idea;
+	variant?: "standard" | "featured";
 }
 
-const IdeaCard: React.FC<IdeaCardProps> = ({ idea, variant = 'standard' }) => {
-  const statusColor = {
-    'CONCEPT': 'text-blue-400',
-    'PROTOTYPE': 'text-amber-400',
-    'ALPHA': 'text-green-400',
-    'ARCHIVED': 'text-zinc-500',
-  }[idea.status];
+const IdeaCard: React.FC<IdeaCardProps> = ({ idea, variant = "standard" }) => {
+	const statusColor = {
+		CONCEPT: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+		PROTOTYPE: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+		ALPHA: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+		ARCHIVED: "text-zinc-500 bg-zinc-500/10 border-zinc-500/20",
+	}[idea.status];
 
-  const statusBorderColor = {
-    'CONCEPT': '#60a5fa',
-    'PROTOTYPE': '#fbbf24',
-    'ALPHA': '#4ade80',
-    'ARCHIVED': '#71717a',
-  }[idea.status];
+	if (variant === "featured") {
+		return (
+			<Link to={`/idea/${idea.id}`} className="group block w-full">
+				<LabCard
+					title={`REF: ${idea.id.toUpperCase()}`}
+					className="border-indigo-500/30 bg-zinc-900/20 hover:border-indigo-500/60"
+				>
+					<div className="flex flex-col md:flex-row gap-8">
+						{/* Visual */}
+						<div className="w-full md:w-5/12 aspect-video md:aspect-auto relative bg-zinc-950 border border-zinc-800 overflow-hidden group-hover:border-indigo-500/30 transition-colors">
+							<img
+								src={idea.coverImage}
+								alt={idea.title}
+								className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 grayscale group-hover:grayscale-0"
+							/>
+							<div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+							<div className="absolute bottom-2 left-2 px-2 py-1 bg-black/80 text-[9px] font-mono text-zinc-400 border border-zinc-800">
+								FIG 1.0 // PREVIEW
+							</div>
+						</div>
 
-  if (variant === 'featured') {
-    return (
-      <Link to={`/idea/${idea.id}`} className="group relative block w-full">
-        {/* Paper texture overlay */}
-        <div className="flex flex-col md:flex-row bg-[#0c0c0e] border border-zinc-800 transition-all duration-500 overflow-hidden min-h-[400px]">
-          
-          {/* Image Section */}
-          <div className="w-full md:w-2/5 relative overflow-hidden border-r border-zinc-800">
-             <div className="absolute inset-0 bg-indigo-900/10 z-10 mix-blend-overlay" />
-             <img 
-              src={idea.coverImage} 
-              alt={idea.title} 
-              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 grayscale group-hover:grayscale-0 opacity-80"
-            />
-             {/* Draft Overlay */}
-             <div className="absolute top-4 left-4 z-20 transform -rotate-6">
-                <SketchCircle color="#ffffff">
-                    <span className="font-sketch text-2xl font-bold text-white px-2">Featured</span>
-                </SketchCircle>
-             </div>
-          </div>
+						{/* Spec Sheet */}
+						<div className="w-full md:w-7/12 flex flex-col justify-center py-2">
+							<div className="flex items-center gap-3 mb-4">
+								<span
+									className={`px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest border ${statusColor}`}
+								>
+									{idea.status}
+								</span>
+								<span className="text-[10px] font-mono text-zinc-500">
+									{idea.date}
+								</span>
+							</div>
 
-          {/* Content Section */}
-          <div className="w-full md:w-3/5 p-6 md:p-12 flex flex-col justify-center relative z-30">
-            <div className="absolute top-6 right-8 opacity-20 transform rotate-12">
-               <span className="font-sketch text-6xl text-white">#01</span>
-            </div>
+							<h3 className="text-3xl font-bold text-white mb-4 font-space tracking-tight group-hover:text-indigo-400 transition-colors">
+								{idea.title}
+							</h3>
 
-            <div className="flex items-center gap-3 mb-6">
-               <span className="font-sketch text-xl text-zinc-500">
-                 Current Status:
-               </span>
-               <span className={`font-sketch text-2xl font-bold ${statusColor} transform -rotate-2`}>
-                 {idea.status}
-               </span>
-            </div>
+							<p className="text-zinc-400 font-light leading-relaxed mb-8 border-l border-zinc-800 pl-4">
+								{idea.subtitle}
+							</p>
 
-            <h3 className="text-3xl md:text-5xl font-bold text-white mb-6 group-hover:text-indigo-400 transition-colors leading-none tracking-tight">
-              {idea.title}
-            </h3>
-            
-            <p className="text-lg text-zinc-400 font-light leading-relaxed mb-8 max-w-xl font-sketch text-2xl">
-              {idea.subtitle}
-            </p>
+							<div className="grid grid-cols-2 gap-6 mb-6 bg-zinc-950/50 p-4 border border-zinc-800/50">
+								<DataReadout label="PROJECTED IMPACT" value={idea.impact} />
+								<DataReadout label="READ TIME" value={idea.readTime} />
+							</div>
 
-            <div className="grid grid-cols-2 gap-8 mb-8">
-               <div>
-                  <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-1">Impact Analysis</div>
-                  <div className="text-white font-mono relative inline-block">
-                    {idea.impact}
-                    <SketchUnderline color="#6366f1" className="opacity-50" />
-                  </div>
-               </div>
-               <div>
-                  <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-1">Read Time</div>
-                  <div className="text-white font-mono">{idea.readTime}</div>
-               </div>
-            </div>
+							<div className="flex items-center gap-2 text-indigo-400 font-mono text-xs font-bold uppercase tracking-widest mt-auto">
+								<span className="group-hover:underline underline-offset-4">
+									Access File
+								</span>
+								<ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+							</div>
+						</div>
+					</div>
+				</LabCard>
+			</Link>
+		);
+	}
 
-            <div className="flex items-center gap-2 mt-auto">
-               <span className="text-xl font-sketch text-indigo-400 group-hover:underline decoration-indigo-500/50 underline-offset-4">
-                 Read full draft
-               </span>
-               <ArrowUpRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </div>
-          </div>
-        </div>
-      </Link>
-    );
-  }
+	// Standard Module
+	return (
+		<Link to={`/idea/${idea.id}`} className="group h-full block">
+			<LabCard className="h-full flex flex-col hover:bg-zinc-900/30 transition-all">
+				<div className="flex justify-between items-start mb-4">
+					<div className="p-1.5 border border-zinc-800 bg-zinc-900 text-zinc-500 group-hover:text-indigo-400 group-hover:border-indigo-500/30 transition-colors">
+						<FileText className="w-4 h-4" />
+					</div>
+					<TechBadge
+						label={idea.status}
+						color={
+							idea.status === "ALPHA" ? "text-emerald-400" : "text-zinc-500"
+						}
+					/>
+				</div>
 
-  // Standard Card
-  return (
-    <Link to={`/idea/${idea.id}`} className="group relative flex flex-col h-full">
-      <div className="flex flex-col h-full bg-[#0c0c0e] border border-zinc-800 hover:border-zinc-500 transition-all duration-300 relative overflow-hidden">
-        
-        {/* Status Header - Sketch Style */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800/50">
-          <div className="transform -rotate-2">
-              <SketchCircle color={statusBorderColor}>
-                <span className={`px-3 py-1 font-sketch text-lg font-bold ${statusColor}`}>
-                    {idea.status}
-                </span>
-              </SketchCircle>
-          </div>
-          <span className="text-[10px] font-mono text-zinc-600 uppercase">
-            ID: {idea.id.substring(0, 8)}
-          </span>
-        </div>
+				<h3 className="text-lg font-bold text-zinc-100 mb-2 font-space leading-tight group-hover:text-indigo-300 transition-colors">
+					{idea.title}
+				</h3>
 
-        {/* Content Body */}
-        <div className="p-6 flex flex-col flex-grow z-10">
-          <h3 className="text-xl font-bold text-zinc-100 mb-3 group-hover:text-indigo-400 transition-colors leading-tight">
-            {idea.title}
-          </h3>
-          
-          <p className="text-zinc-400 text-lg leading-relaxed mb-6 font-sketch line-clamp-3">
-            {idea.subtitle}
-          </p>
+				<p className="text-sm text-zinc-500 leading-relaxed mb-6 font-mono line-clamp-3 flex-grow">
+					{idea.subtitle}
+				</p>
 
-          <div className="mt-auto pt-4 border-t border-dashed border-zinc-800">
-             <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Estimated Impact</span>
-                <span className="text-sm text-zinc-300 font-medium flex items-center gap-2">
-                   {idea.impact}
-                </span>
-             </div>
-          </div>
-        </div>
-
-        {/* Footer/Action */}
-        <div className="p-4 bg-zinc-900/20 flex items-center justify-between group-hover:bg-zinc-900/40 transition-colors">
-          <div className="flex gap-2">
-             {idea.tags.slice(0, 2).map(tag => (
-               <span key={tag} className="text-sm text-zinc-500 font-sketch">#{tag}</span>
-             ))}
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
-        </div>
-      </div>
-    </Link>
-  );
+				<div className="pt-4 border-t border-zinc-800/50 mt-auto">
+					<div className="flex flex-wrap gap-2 mb-4">
+						{idea.tags.slice(0, 3).map((tag) => (
+							<span
+								key={tag}
+								className="text-[9px] text-zinc-600 uppercase font-mono bg-zinc-900 px-1.5 py-0.5 rounded-sm"
+							>
+								{tag}
+							</span>
+						))}
+					</div>
+					<div className="flex items-center justify-between text-zinc-600 group-hover:text-zinc-300 transition-colors">
+						<span className="text-[9px] font-mono uppercase tracking-widest">
+							View Specs
+						</span>
+						<ArrowRight className="w-3 h-3" />
+					</div>
+				</div>
+			</LabCard>
+		</Link>
+	);
 };
 
 export default IdeaCard;

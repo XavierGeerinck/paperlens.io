@@ -1,3 +1,26 @@
+---
+title: BrainMimetic Intelligence
+subtitle: Engineering Test-Time Plasticity with Titans Architecture to enable continuous learning during inference.
+date: 2024-05-21
+status: PROTOTYPE
+category: deep-dive
+impact: Infinite Context
+readTime: 25m
+tags:
+  - AGI
+  - Titans
+  - PyTorch
+  - Neuroscience
+coverImage: https://picsum.photos/seed/titan/800/600?grayscale
+simulation: BrainMimetic
+featured: false
+---
+
+---
+category: deep-dive
+simulation: BrainMimetic
+---
+
 # The BrainMimetic Intelligence Report
 ## Engineering Test-Time Plasticity with Titans Architecture
 
@@ -28,6 +51,25 @@ The BrainMimetic LLM seeks to operationalize this biological mechanism. By defin
 ### 1.3 Test-Time Training (TTT): The New Paradigm
 
 The mechanism enabling this behavior is termed **Test-Time Training (TTT)**. In traditional machine learning, training and inference are distinct phases. In the TTT framework, the distinction blurs. The "hidden state" of the sequence model is no longer a vector of numbers, but the **parameters of a neural network itself**.
+
+```mermaid
+graph TD
+    subgraph Static["Standard Transformer (Read-Only)"]
+        S_In[Input Sequence] -->|Fill Buffer| S_Cache[KV Cache]
+        S_Cache -->|Attention| S_Out[Output]
+        S_Cache -.-x|No Updates| S_Weights[Model Weights]
+        style S_Cache fill:#1e1e2e,stroke:#64748b,stroke-dasharray: 5 5
+    end
+
+    subgraph Plastic["BrainMimetic / Titans (Read-Write)"]
+        P_In[Input Sequence] -->|Forward| P_Mem[Neural Memory]
+        P_Mem -->|Calculated Surprise| P_Grad[Gradient Update]
+        P_Grad -->|Rewire Synapses| P_Mem
+        P_Mem -->|Query| P_Out[Output]
+        style P_Mem fill:#312e81,stroke:#818cf8
+        style P_Grad fill:#064e3b,stroke:#10b981
+    end
+```
 
 Consider a standard RNN update:
 
@@ -74,6 +116,31 @@ If the memory $M$ can already perfectly predict the value $v_t$ from key $k_t$, 
 $$
 Surprise = \nabla Loss(M, x_t)
 $$
+
+### The Synaptic Loop
+
+This diagram illustrates the cycle of prediction, error, and physical rewiring that occurs for every token processed by the Neural Memory.
+
+```mermaid
+sequenceDiagram
+    participant X as Input Token
+    participant M as Neural Memory
+    participant S as Surprise Metric
+    
+    Note over M: State: M(t-1)
+    
+    X->>M: 1. Inference (Predict)
+    M-->>X: Prediction (v_pred)
+    
+    rect rgb(20, 20, 30)
+        Note right of X: Plasticity Phase
+        X->>S: 2. Calculate Error
+        S->>M: 3. Compute Gradient (Surprise)
+        M->>M: 4. Update Weights (M = M - θ∇)
+    end
+    
+    Note over M: New State: M(t)
+```
 
 ### Momentum and Smoothing
 

@@ -1,27 +1,34 @@
 {
-  "name": "moonshot-labs",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "bun --hot index.tsx",
-    "build": "bun run scripts/build.ts",
-    "preview": "bun run scripts/build.ts && npx serve dist"
-  },
-  "dependencies": {
-    "lucide-react": "^0.562.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.11.0",
-    "react-syntax-highlighter": "^16.1.0"
-  },
-  "devDependencies": {
-    "@types/node": "^25.0.3",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@types/react-syntax-highlighter": "^15.5.13",
-    "bun-types": "latest",
-    "typescript": "^5.5.3"
-  }
+	"name": "moonshot-labs",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"generate": "bun run scripts/generate-ideas.ts",
+		"dev": "bun run generate && vite",
+		"build": "bun run generate && bun run scripts/build.ts",
+		"preview": "bun run build && npx serve dist"
+	},
+	"dependencies": {
+		"lucide-react": "^0.562.0",
+		"mermaid": "^11.12.2",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"react-helmet-async": "^2.0.5",
+		"react-markdown": "^10.1.0",
+		"react-router-dom": "^7.11.0",
+		"react-syntax-highlighter": "^16.1.0",
+		"rehype-katex": "^7.0.1",
+		"remark-math": "^6.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.3",
+		"@types/react": "^19.2.7",
+		"@types/react-dom": "^19.2.3",
+		"@types/react-syntax-highlighter": "^15.5.13",
+		"@vitejs/plugin-react": "^5.1.2",
+		"bun-types": "latest",
+		"typescript": "^5.5.3",
+		"vite": "^7.3.0"
+	}
 }

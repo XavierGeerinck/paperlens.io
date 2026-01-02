@@ -1,149 +1,216 @@
-import React from 'react';
-import { MOONSHOT_IDEAS } from '../constants';
-import IdeaCard from '../components/IdeaCard';
-import { Sparkles, Activity, Cpu, Fingerprint, BrainCircuit, Lightbulb, ExternalLink } from 'lucide-react';
-import { useUI } from '../context/UIContext';
-import GameOfLife from '../components/GameOfLife';
-import ScrambleText from '../components/ScrambleText';
-import { SketchArrowRight, SketchCircle } from '../components/SketchElements';
+import React from "react";
+import { USER_CONFIG } from "../config";
+import IdeaCard from "../components/IdeaCard";
+import {
+	FlaskConical,
+	Microscope,
+	GitBranch,
+	ArrowDownRight,
+	Database,
+	Terminal,
+	Loader2,
+} from "lucide-react";
+import { useUI } from "../context/UIContext";
+import GameOfLife from "../components/GameOfLife";
+import ScrambleText from "../components/ScrambleText";
+import { TechBadge } from "../components/SketchElements";
+import { useIdeas } from "../hooks/useIdeas";
+import SEO from "../components/SEO";
 
 const Home: React.FC = () => {
-  const featuredIdea = MOONSHOT_IDEAS.find(i => i.featured);
-  const otherIdeas = MOONSHOT_IDEAS.filter(i => !i.featured);
-  const { openContact } = useUI();
+	const { ideas, loading, error } = useIdeas();
+	const { openContact } = useUI();
 
-  return (
-    <div className="space-y-20 relative">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 z-[-1]">
-        <GameOfLife />
-      </div>
+	const featuredIdea = ideas.find((i) => i.featured);
+	const otherIdeas = ideas.filter((i) => !i.featured);
 
-      {/* Identity Manifesto */}
-      <section className="relative py-12 sm:py-24 border-b border-zinc-800/50 backdrop-blur-[2px]">
-        <div className="flex flex-col lg:flex-row gap-12 items-start justify-between">
-          <div className="max-w-3xl relative">
-             <div className="flex items-center gap-3 mb-8">
-                <span className="w-2 h-2 bg-white rounded-full" />
-                <h2 className="text-sm font-mono text-zinc-400 uppercase tracking-widest">Personal Research Log</h2>
-             </div>
-             
-             <h1 className="text-5xl sm:text-7xl font-bold tracking-tighter text-white mb-24 leading-[0.9]">
-                THIS IS MY <br />
-                <span className="text-indigo-500 relative inline-block group">
-                  <ScrambleText text="DIGITAL CORTEX." />
-                  <div className="absolute top-full right-0 mt-4 rotate-[-4deg] hidden sm:block pointer-events-none whitespace-nowrap z-10">
-                     <span className="font-sketch text-zinc-500 text-3xl opacity-80 group-hover:opacity-100 transition-opacity">*(messy & raw)</span>
-                  </div>
-                </span>
-             </h1>
-             
-             <div className="relative">
-                <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl font-light leading-relaxed mb-8">
-                    I don't just write code; I simulate futures. This is where I document my attempts to break the status quo, one moonshot at a time.
-                </p>
-                {/* Handwriting Note */}
-                <div className="hidden lg:block absolute right-0 top-0 transform translate-x-full rotate-12 w-48">
-                    <SketchArrowRight color="#71717a" className="w-12 h-12 transform rotate-90 -ml-4" />
-                    <p className="font-sketch text-xl text-zinc-500 leading-tight mt-2">
-                        These are mostly drafts. Don't judge the code quality yet!
-                    </p>
-                </div>
-             </div>
+	// Helper to render bio with bold name
+	const renderBio = () => {
+		const parts = USER_CONFIG.bio.split("%NAME%");
+		return (
+			<p className="text-lg text-zinc-400 font-light leading-relaxed max-w-2xl">
+				{parts[0]}
+				<strong>{USER_CONFIG.name}</strong>
+				{parts[1]}
+			</p>
+		);
+	};
 
-             <div className="flex flex-wrap gap-4">
-                <div className="px-4 py-2 border border-zinc-700 bg-zinc-950/50 backdrop-blur-md rounded-full flex items-center gap-2 text-zinc-300 font-mono text-xs uppercase tracking-wider hover:border-indigo-500 transition-colors cursor-default group">
-                  <BrainCircuit className="w-4 h-4 text-indigo-400 group-hover:animate-pulse" />
-                  Neural Arch
-                </div>
-                <div className="px-4 py-2 border border-zinc-700 bg-zinc-950/50 backdrop-blur-md rounded-full flex items-center gap-2 text-zinc-300 font-mono text-xs uppercase tracking-wider hover:border-indigo-500 transition-colors cursor-default group">
-                  <Fingerprint className="w-4 h-4 text-indigo-400 group-hover:animate-pulse" />
-                  Identity
-                </div>
-                <div className="px-4 py-2 border border-zinc-700 bg-zinc-950/50 backdrop-blur-md rounded-full flex items-center gap-2 text-zinc-300 font-mono text-xs uppercase tracking-wider hover:border-indigo-500 transition-colors cursor-default group">
-                  <Lightbulb className="w-4 h-4 text-indigo-400 group-hover:animate-pulse" />
-                  Moonshots
-                </div>
-             </div>
-          </div>
+	return (
+		<div className="space-y-16 relative">
+			<SEO />
+			{/* Simulation Layer */}
+			<div className="fixed inset-0 z-[-1]">
+				<GameOfLife />
+				<div className="absolute inset-0 bg-zinc-950/80 bg-[radial-gradient(circle_at_center,transparent_0%,#09090b_100%)] pointer-events-none" />
+			</div>
 
-          {/* Quick Bio Card - Sketchified */}
-          <div className="w-full lg:w-80 shrink-0 bg-[#0c0c0e] border-2 border-zinc-800 p-6 rotate-1 hover:rotate-0 transition-transform duration-300 shadow-[8px_8px_0px_0px_rgba(24,24,27,0.5)]">
-             <div className="w-20 h-20 bg-indigo-500 rounded-full mb-4 flex items-center justify-center text-3xl font-bold text-white border-4 border-zinc-950 overflow-hidden shadow-inner relative group">
-               <span className="relative z-10 font-sketch text-4xl">XG</span>
-               <div className="absolute inset-0 bg-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity animate-pulse z-0" />
-             </div>
-             <h3 className="text-white font-bold text-lg mb-1 font-space">Xavier Geerinck</h3>
-             <div className="text-xl font-sketch text-indigo-400 mb-4 transform -rotate-2">Innovation & Cloud Architect</div>
-             <p className="text-zinc-400 text-sm leading-relaxed mb-6 font-mono">
-               Passionate about solving complex problems. Writing about Code, Cloud, and the Future at xaviergeerinck.com.
-             </p>
-             <div className="space-y-2">
-               <button 
-                 onClick={openContact}
-                 className="w-full py-2 bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors border border-transparent"
-               >
-                 Connect
-               </button>
-               <a 
-                 href="https://xaviergeerinck.com" 
-                 target="_blank" 
-                 rel="noreferrer"
-                 className="w-full py-2 flex items-center justify-center gap-2 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-widest hover:bg-zinc-800 transition-colors"
-               >
-                 Visit Blog <ExternalLink className="w-3 h-3" />
-               </a>
-             </div>
-          </div>
-        </div>
-      </section>
+			{/* Hero / Mission Log */}
+			<section className="relative pt-8 pb-8 border-b border-zinc-800">
+				{/* Personnel Header */}
+				<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-zinc-800/50 pb-8 mb-8">
+					<div className="flex items-center gap-4">
+						<div className="relative group">
+							<div className="w-14 h-14 bg-zinc-900 border border-zinc-700 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500">
+								<img
+									src={USER_CONFIG.avatar}
+									onError={(e) => {
+										e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(USER_CONFIG.name)}&background=18181b&color=71717a`;
+									}}
+									alt={USER_CONFIG.name}
+									className="w-full h-full object-cover opacity-80 group-hover:opacity-100"
+								/>
+							</div>
+							{/* Online Indicator */}
+							<div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-zinc-950" />
+						</div>
+						<div>
+							<h2 className="text-base font-bold text-white font-mono tracking-wider uppercase">
+								{USER_CONFIG.name}
+							</h2>
+							<div className="text-[10px] text-indigo-400 font-mono uppercase tracking-widest flex items-center gap-2 mt-1">
+								<Terminal className="w-3 h-3" />
+								<span>{USER_CONFIG.role}</span>
+								<span className="text-zinc-700">|</span>
+								<span>{USER_CONFIG.lab}</span>
+							</div>
+						</div>
+					</div>
 
-      {/* Featured Section */}
-      {featuredIdea && (
-        <section className="relative z-10">
-          <div className="flex items-center gap-4 mb-6">
-             <div className="h-px bg-indigo-500 w-12" />
-             <h3 className="text-indigo-400 font-mono text-sm uppercase tracking-widest font-bold">Current Obsession</h3>
-          </div>
-          <IdeaCard idea={featuredIdea} variant="featured" />
-        </section>
-      )}
+					<div className="flex gap-4">
+						<div className="px-4 py-2 bg-zinc-900/50 border border-zinc-800">
+							<div className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest mb-1">
+								Clearance
+							</div>
+							<div className="text-xs text-zinc-300 font-mono font-bold">
+								{USER_CONFIG.clearance}
+							</div>
+						</div>
+						<div className="px-4 py-2 bg-zinc-900/50 border border-zinc-800 hidden sm:block">
+							<div className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest mb-1">
+								Location
+							</div>
+							<div className="text-xs text-zinc-300 font-mono font-bold">
+								{USER_CONFIG.location}
+							</div>
+						</div>
+					</div>
+				</div>
 
-      {/* The Archive */}
-      <section className="relative z-10">
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
-           <h3 className="text-3xl font-bold text-white flex items-center gap-3 font-sketch">
-             <div className="transform rotate-12 text-zinc-600">
-                <Cpu className="w-8 h-8" />
-             </div>
-             The Idea Archive
-           </h3>
-           <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest border border-zinc-800 px-2 py-1 rounded">
-             Total Entries: {MOONSHOT_IDEAS.length}
-           </span>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {otherIdeas.map((idea) => (
-            <IdeaCard key={idea.id} idea={idea} />
-          ))}
-        </div>
-      </section>
+				<div className="flex flex-col gap-6">
+					<div className="inline-flex items-center gap-2 px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 w-fit">
+						<FlaskConical className="w-3 h-3 text-indigo-400" />
+						<span className="text-[10px] font-mono text-indigo-300 uppercase tracking-widest">
+							Research Directive 2025
+						</span>
+					</div>
 
-      {/* Personal CTA */}
-      <section className="py-24 text-center border-t border-zinc-800 border-dashed mt-12 relative z-10 bg-zinc-950/50 backdrop-blur-sm">
-        <h2 className="text-4xl font-bold text-white mb-6 font-sketch transform -rotate-1">Think my ideas are crazy?</h2>
-        <p className="text-zinc-500 mb-8 max-w-lg mx-auto text-lg">Good. That means I'm on the right track. Let's debate them.</p>
-        <button 
-          onClick={openContact}
-          className="inline-flex items-center gap-3 bg-indigo-600 text-white px-8 py-4 font-bold tracking-tight hover:bg-indigo-500 transition-colors rounded-sm shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] group hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
-        >
-           <Fingerprint className="w-5 h-5 group-hover:scale-110 transition-transform" />
-           SEND ENCRYPTED MESSAGE
-        </button>
-      </section>
-    </div>
-  );
+					<h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight font-space max-w-4xl leading-none">
+						BUILDING THE <br />
+						<span className="text-indigo-500">
+							<ScrambleText text="IMPOSSIBLE" />
+						</span>
+					</h1>
+
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-4">
+						<div className="md:col-span-2">
+							{/* Dynamically rendered bio to keep the structure intact but name configurable */}
+							{renderBio()}
+						</div>
+						<div className="border-l border-zinc-800 pl-6 flex flex-col justify-center space-y-2">
+							<div className="flex justify-between text-xs font-mono text-zinc-500">
+								<span>EXPERIMENTS</span>
+								<span className="text-zinc-200">{ideas.length}</span>
+							</div>
+							<div className="flex justify-between text-xs font-mono text-zinc-500">
+								<span>SUCCESS RATE</span>
+								<span className="text-zinc-200">12.4%</span>
+							</div>
+							<div className="w-full h-1 bg-zinc-900 mt-2">
+								<div className="h-full bg-indigo-500 w-[12.4%]" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			{/* Loading State */}
+			{loading && (
+				<div className="flex items-center justify-center py-20">
+					<Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+				</div>
+			)}
+
+			{/* Error State */}
+			{error && (
+				<div className="p-4 border border-red-500/50 bg-red-900/20 text-red-200 font-mono text-sm text-center">
+					{error}
+				</div>
+			)}
+
+			{!loading && !error && (
+				<>
+					{/* Featured Experiment */}
+					{featuredIdea && (
+						<section className="relative z-10">
+							<div className="flex items-center gap-2 mb-6">
+								<Microscope className="w-4 h-4 text-indigo-400" />
+								<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+									Priority Focus
+								</h3>
+								<div className="h-px bg-zinc-800 flex-grow ml-4" />
+							</div>
+							<IdeaCard idea={featuredIdea} variant="featured" />
+						</section>
+					)}
+
+					{/* Experiment Log */}
+					<section className="relative z-10 pb-24">
+						<div className="flex items-center justify-between mb-8">
+							<div className="flex items-center gap-2">
+								<Database className="w-4 h-4 text-zinc-600" />
+								<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+									Project Archive
+								</h3>
+							</div>
+
+							<div className="flex gap-2">
+								<TechBadge label="Sort: Date" color="text-zinc-500" />
+								<TechBadge label="Filter: All" color="text-zinc-500" />
+							</div>
+						</div>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+							{otherIdeas.map((idea) => (
+								<IdeaCard key={idea.id} idea={idea} />
+							))}
+						</div>
+					</section>
+				</>
+			)}
+
+			{/* Collaboration Protocol */}
+			<section className="py-16 border-t border-zinc-800 bg-zinc-900/20">
+				<div className="max-w-2xl mx-auto text-center">
+					<GitBranch className="w-8 h-8 text-zinc-500 mx-auto mb-6" />
+					<h2 className="text-2xl font-bold text-white mb-4 font-space">
+						Initiate Collaboration Protocol
+					</h2>
+					<p className="text-zinc-500 mb-8 font-mono text-sm">
+						Have a hypothesis? Found a bug in my logic?
+						<br />
+						The lab is open for peer review.
+					</p>
+					<button
+						onClick={openContact}
+						className="inline-flex items-center gap-2 bg-zinc-100 text-zinc-900 px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors"
+					>
+						Open Frequency <ArrowDownRight className="w-4 h-4" />
+					</button>
+				</div>
+			</section>
+		</div>
+	);
 };
 
 export default Home;
