@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { UIProvider } from "./context/UIContext";
 import ContactModal from "./components/ContactModal";
+import GameOfLife from "./components/GameOfLife";
 import { USER_CONFIG } from "./config";
 
 const ScrollToTop = () => {
@@ -17,6 +18,20 @@ const ScrollToTop = () => {
 	}, [pathname]);
 
 	return null;
+};
+
+const BackgroundLayer = () => {
+	const location = useLocation();
+	const isHome = location.pathname === "/";
+
+	if (!isHome) return null;
+
+	return (
+		<div className="fixed inset-0 z-[-1] pointer-events-none">
+			<GameOfLife />
+			<div className="absolute inset-0 bg-zinc-950/60 bg-[radial-gradient(circle_at_center,transparent_0%,#09090b_100%)]" />
+		</div>
+	);
 };
 
 const App: React.FC = () => {
@@ -40,6 +55,7 @@ const App: React.FC = () => {
 			<UIProvider>
 				<HashRouter>
 					<ScrollToTop />
+					<BackgroundLayer />
 					{/* Removed bg-zinc-950 to allow background components to show through */}
 					<div className="flex flex-col min-h-screen text-zinc-100 selection:bg-indigo-500/30 relative">
 						<Header />

@@ -190,7 +190,7 @@ const GameOfLife: React.FC = () => {
 					// Overclocked: Matrix Green (#22c55e)
 					const colorString = isOverclocked
 						? `rgba(34, 197, 94, ${trail[i] * 0.8})` // Very bright when overclocked
-						: `rgba(99, 102, 241, ${trail[i] * 0.15})`;
+						: `rgba(99, 102, 241, ${trail[i] * 0.25})`;
 
 					ctx.fillStyle = colorString;
 
