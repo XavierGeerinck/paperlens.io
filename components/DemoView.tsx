@@ -2,6 +2,7 @@ import React from "react";
 import { Activity } from "lucide-react";
 import BrainMimeticSimulation from "./simulations/BrainMimeticSimulation";
 import DeepSeekMHCSimulation from "./simulations/DeepSeekMHCSimulation";
+import AsahiM1n1Simulation from "./simulations/AsahiM1n1Simulation";
 
 interface DemoViewProps {
 	simulationName?: string;
@@ -10,6 +11,7 @@ interface DemoViewProps {
 const REGISTRY: Record<string, React.FC> = {
 	BrainMimetic: BrainMimeticSimulation,
 	DeepSeekMHC: DeepSeekMHCSimulation,
+	AsahiM1n1: AsahiM1n1Simulation,
 };
 
 const DemoView: React.FC<DemoViewProps> = ({ simulationName }) => {

@@ -22,7 +22,7 @@ const Home: React.FC = () => {
 	const { openContact } = useUI();
 
 	const featuredIdea = ideas.find((i) => i.featured);
-	const otherIdeas = ideas.filter((i) => !i.featured);
+	const otherIdeas = ideas.filter((i) => i.id !== featuredIdea?.id);
 
 	// Helper to render bio with bold name
 	const renderBio = () => {
@@ -37,7 +37,7 @@ const Home: React.FC = () => {
 	};
 
 	return (
-		<div className="space-y-16 relative">
+		<div className="relative">
 			<SEO />
 			{/* Simulation Layer */}
 			<div className="fixed inset-0 z-[-1]">
@@ -46,7 +46,7 @@ const Home: React.FC = () => {
 			</div>
 
 			{/* Hero / Mission Log */}
-			<section className="relative pt-8 pb-8 border-b border-zinc-800">
+			<section className="relative border-b border-zinc-800">
 				{/* Personnel Header */}
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-zinc-800/50 pb-8 mb-8">
 					<div className="flex items-center gap-4">
@@ -134,60 +134,62 @@ const Home: React.FC = () => {
 				</div>
 			</section>
 
-			{/* Loading State */}
-			{loading && (
-				<div className="flex items-center justify-center py-20">
-					<Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-				</div>
-			)}
+			<section className="mt-16 space-y-16 flex flex-col">
+				{/* Loading State */}
+				{loading && (
+					<div className="flex items-center justify-center py-20">
+						<Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+					</div>
+				)}
 
-			{/* Error State */}
-			{error && (
-				<div className="p-4 border border-red-500/50 bg-red-900/20 text-red-200 font-mono text-sm text-center">
-					{error}
-				</div>
-			)}
+				{/* Error State */}
+				{error && (
+					<div className="p-4 border border-red-500/50 bg-red-900/20 text-red-200 font-mono text-sm text-center">
+						{error}
+					</div>
+				)}
 
-			{!loading && !error && (
-				<>
-					{/* Featured Experiment */}
-					{featuredIdea && (
-						<section className="relative z-10">
-							<div className="flex items-center gap-2 mb-6">
-								<Microscope className="w-4 h-4 text-indigo-400" />
-								<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-									Priority Focus
-								</h3>
-								<div className="h-px bg-zinc-800 flex-grow ml-4" />
+				{!loading && !error && (
+					<>
+						{/* Featured Experiment */}
+						{featuredIdea && (
+							<section className="relative z-10">
+								<div className="flex items-center gap-2 mb-6">
+									<Microscope className="w-4 h-4 text-indigo-400" />
+									<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+										Priority Focus
+									</h3>
+									<div className="h-px bg-zinc-800 flex-grow ml-4" />
+								</div>
+								<IdeaCard idea={featuredIdea} variant="featured" />
+							</section>
+						)}
+
+						{/* Experiment Log */}
+						<section className="relative z-10 pb-24">
+							<div className="flex items-center justify-between mb-8">
+								<div className="flex items-center gap-2">
+									<Database className="w-4 h-4 text-zinc-600" />
+									<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+										Project Archive
+									</h3>
+								</div>
+
+								<div className="flex gap-2">
+									<TechBadge label="Sort: Date" color="text-zinc-500" />
+									<TechBadge label="Filter: All" color="text-zinc-500" />
+								</div>
 							</div>
-							<IdeaCard idea={featuredIdea} variant="featured" />
+
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+								{otherIdeas.map((idea) => (
+									<IdeaCard key={idea.id} idea={idea} />
+								))}
+							</div>
 						</section>
-					)}
-
-					{/* Experiment Log */}
-					<section className="relative z-10 pb-24">
-						<div className="flex items-center justify-between mb-8">
-							<div className="flex items-center gap-2">
-								<Database className="w-4 h-4 text-zinc-600" />
-								<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-									Project Archive
-								</h3>
-							</div>
-
-							<div className="flex gap-2">
-								<TechBadge label="Sort: Date" color="text-zinc-500" />
-								<TechBadge label="Filter: All" color="text-zinc-500" />
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-							{otherIdeas.map((idea) => (
-								<IdeaCard key={idea.id} idea={idea} />
-							))}
-						</div>
-					</section>
-				</>
-			)}
+					</>
+				)}
+			</section>
 
 			{/* Collaboration Protocol */}
 			<section className="py-16 border-t border-zinc-800 bg-zinc-900/20">

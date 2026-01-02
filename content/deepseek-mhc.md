@@ -13,6 +13,7 @@ tags:
 coverImage: https://picsum.photos/seed/deepseek/800/600?grayscale
 simulation: DeepSeekMHC
 featured: true
+pdfUrl: https://arxiv.org/pdf/2512.24880
 ---
 
 # DeepSeek mHC: The Signal Survival Protocol

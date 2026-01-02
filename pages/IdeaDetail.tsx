@@ -197,6 +197,15 @@ const IdeaDetail: React.FC = () => {
 								Source PDF
 							</button>
 						)}
+						{idea.githubUrl && (
+							<a href={idea.githubUrl} target="_blank" rel="noreferrer">
+								<button className="pb-3 text-xs font-mono uppercase tracking-widest text-zinc-500 hover:text-zinc-300 flex items-center gap-2">
+									<Github className="w-4 h-4" />
+									GitHub Repo
+									<ExternalLink className="w-3 h-3 opacity-50" />
+								</button>
+							</a>
+						)}
 					</div>
 
 					<div className="min-h-[500px]">
