@@ -69,7 +69,7 @@ const IdeaDetail: React.FC = () => {
 
 	const statusColor = idea.status === "CONCEPT" ? "#3b82f6" : "#22c55e";
 	const ctaText =
-		idea.category === "deep-dive" ? "Discuss Deep Dive" : "Discuss Idea";
+		idea.category === "deep-dive" ? "Questions or Remarks?" : "Discuss Idea";
 
 	return (
 		<div className="animate-in fade-in duration-500 min-h-screen">

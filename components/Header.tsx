@@ -52,7 +52,7 @@ const Header: React.FC = () => {
 							className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 hover:text-indigo-400 uppercase tracking-widest transition-colors"
 						>
 							<LayoutGrid className="w-3 h-3" />
-							DASHBOARD
+							Home
 						</Link>
 					)}
 
