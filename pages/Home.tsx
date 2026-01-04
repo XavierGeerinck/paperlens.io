@@ -118,10 +118,10 @@ const Home: React.FC = () => {
 							</div>
 							<div className="flex justify-between text-xs font-mono text-zinc-500">
 								<span>SUCCESS RATE</span>
-								<span className="text-zinc-200">12.4%</span>
+								<span className="text-zinc-200">73.4%</span>
 							</div>
 							<div className="w-full h-1 bg-zinc-900 mt-2">
-								<div className="h-full bg-indigo-500 w-[12.4%]" />
+								<div className="h-full bg-indigo-500 w-[73.4%]" />
 							</div>
 						</div>
 					</div>

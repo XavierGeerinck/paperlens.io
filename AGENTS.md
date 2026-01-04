@@ -38,7 +38,7 @@ tags:
   - Tag2
 coverImage: https://picsum.photos/seed/<slug>/800/600?grayscale
 simulation: IdeaName
-pdfUrl: "https://arxiv.org/pdf/xxxx.xxxxx" # Optional: Link to the research paper
+pdfUrl: https://arxiv.org/pdf/xxxx.xxxxx # Optional: Link to the research paper
 featured: false
 ---
 ```
@@ -59,6 +59,8 @@ Simulations are interactive React components that demonstrate the core concept.
 - **Hooks**: Use the custom `useSimulation` hook for state management and logging.
 - **UI Components**: Use `SchematicCard` and `SchematicButton` from [components/SketchElements.tsx](components/SketchElements.tsx).
 - **Icons**: Use `lucide-react`.
+- **Side-by-Side Comparisons**: If the concept improves upon an existing architecture (e.g., MLA vs MHA), visualize both side-by-side to highlight the difference in efficiency or performance.
+- **Explanation Notes**: Always include small explanation notes or "What to watch for" callouts within the simulation to guide the user through the technical changes being demonstrated.
 
 ### Simulation Template
 ```tsx
