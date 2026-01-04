@@ -1,242 +1,147 @@
-import React, { useRef, useEffect } from "react";
-import { Play, RotateCcw, Database, BrainCircuit, Pause } from "lucide-react";
+import React from "react";
+import {
+	BrainCircuit,
+	Database,
+} from "lucide-react";
 import { useSimulation } from "../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 
-// --- Brain Mimetic Logic ---
-interface BrainMimeticState {
-	loss: number;
+interface BrainState {
+	token: number;
+	staticMemory: string[];
+	plasticMemory: string[];
 	surprise: number;
-	memory: number;
-	alpha: number;
-	eta: number;
-	theta: number;
+	loss: number;
 }
 
-const BRAIN_MIMETIC_INIT: BrainMimeticState = {
-	loss: 2.5,
-	surprise: 0.8,
-	memory: 0,
-	alpha: 0.1,
-	eta: 0.9,
-	theta: 0.01,
-};
-
-const brainMimeticTick = (
-	prev: BrainMimeticState,
-	tick: number,
-): Partial<BrainMimeticState> => {
-	const newLoss = Math.max(
-		0.1,
-		prev.loss * 0.95 + (Math.random() * 0.1 - 0.05),
-	);
-	const newSurprise = Math.max(0, prev.surprise * 0.9 + Math.random() * 0.2);
-	return {
-		loss: newLoss,
-		surprise: newSurprise,
-		memory: Math.min(100, prev.memory + 0.8),
-		alpha: 0.1 + Math.sin(tick / 10) * 0.05,
-		eta: 0.9 - newSurprise * 0.1,
-		theta: 0.01 + newSurprise * 0.05,
-	};
-};
-
-const brainMimeticLog = (state: BrainMimeticState) => {
-	if (Math.random() > 0.6)
-		return `[TITANS] Surprise: ${state.surprise.toFixed(4)} | Loss: ${state.loss.toFixed(4)}`;
-	return null;
-};
-
-const renderGraphLine = (
-	data: number[] | undefined,
-	max: number,
-	color: string,
-) => {
-	if (!data || data.length < 2) return null;
-	const width = 100;
-	const height = 40;
-	const step = width / (Math.max(data.length, 50) - 1);
-
-	const points = data
-		.map((val, i) => {
-			const x = i * step;
-			const normalizedY = Math.min(val, max) / max;
-			const y = height - normalizedY * height;
-			return `${x},${y}`;
-		})
-		.join(" ");
-
-	return (
-		<polyline
-			points={points}
-			fill="none"
-			stroke={color}
-			strokeWidth="1.5"
-			vectorEffect="non-scaling-stroke"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-		/>
-	);
-};
-
 const BrainMimeticSimulation: React.FC = () => {
-	const logsContainerRef = useRef<HTMLDivElement>(null);
-	const { isRunning, state, logs, history, epoch, start, stop, reset } =
-		useSimulation<BrainMimeticState>({
-			initialState: BRAIN_MIMETIC_INIT,
-			onTick: brainMimeticTick,
-			onLog: brainMimeticLog,
-			tickRate: 200,
-		});
+	const { isRunning, state, start, stop, reset } = useSimulation({
+		initialState: {
+			token: 0,
+			staticMemory: [] as string[],
+			plasticMemory: [] as string[],
+			surprise: 0,
+			loss: 2.5,
+		},
+		onTick: (prev) => {
+			const tokens = [
+				"The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog",
+				"Wait", "the", "dog", "is", "actually", "a", "robot", "!!!"
+			];
 
-	useEffect(() => {
-		if (logsContainerRef.current) {
-			logsContainerRef.current.scrollTop =
-				logsContainerRef.current.scrollHeight;
-		}
-	}, [logs]);
+			if (prev.token >= tokens.length) {
+				stop();
+				return prev;
+			}
+
+			const currentToken = tokens[prev.token];
+			const isSurprising = ["robot", "!!!"].includes(currentToken);
+			const surpriseVal = isSurprising ? 0.9 : 0.1 + Math.random() * 0.1;
+
+			return {
+				...prev,
+				token: prev.token + 1,
+				staticMemory: [...prev.staticMemory, currentToken].slice(-5),
+				plasticMemory: isSurprising 
+					? [...prev.plasticMemory, currentToken].slice(-5)
+					: prev.plasticMemory,
+				surprise: surpriseVal,
+				loss: Math.max(0.1, prev.loss * 0.9 - (isSurprising ? 0.5 : 0)),
+			};
+		},
+		tickRate: 800,
+	});
 
 	return (
-		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
-			<div className="lg:col-span-2 space-y-6">
-				<SchematicCard title="TRAINING_ENVIRONMENT">
-					<div className="flex items-center justify-between mb-8">
-						<div className="flex items-center gap-2 text-sky-400 font-mono text-sm">
-							<BrainCircuit className="w-4 h-4" />
-							<span>BRAIN_MIMETIC_MODEL_V1</span>
+		<div className="flex flex-col gap-4 p-4 bg-slate-900 text-slate-100 rounded-xl">
+			<SchematicCard title="TEST_TIME_PLASTICITY_COMPARISON">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+					{/* LEFT: STATIC (TRANSFORMER) */}
+					<div className="flex flex-col gap-4 border-r border-slate-800 pr-6 opacity-80">
+						<div className="flex items-center gap-2 text-slate-400 font-mono text-sm uppercase border-b border-slate-800 pb-2">
+							<Database size={16} /> Static (Transformer)
 						</div>
-						<div className="flex gap-2">
-							{!isRunning ? (
-								<SchematicButton onClick={start}>
-									<Play className="w-3 h-3 inline mr-2" /> INITIATE
-								</SchematicButton>
-							) : (
-								<SchematicButton onClick={stop}>
-									<Pause className="w-3 h-3 inline mr-2" /> HALT
-								</SchematicButton>
+
+						<div className="p-4 bg-slate-950 rounded border border-slate-800 min-h-[120px]">
+							<div className="text-[10px] text-slate-500 uppercase mb-2">KV Cache (Fixed Window)</div>
+							<div className="flex flex-wrap gap-2">
+								{state.staticMemory.map((t, i) => (
+									<span key={i} className="px-2 py-1 bg-slate-800 rounded text-xs font-mono text-slate-400">
+										{t}
+									</span>
+								))}
+								{state.staticMemory.length === 0 && <span className="text-slate-700 italic text-xs">Empty...</span>}
+							</div>
+						</div>
+
+						<div className="p-3 bg-slate-800/30 rounded border border-slate-700 text-[11px] text-slate-400 leading-relaxed">
+							Standard Transformers use a <span className="text-slate-300 font-bold">Read-Only</span> KV cache. They can only "see" what fits in the window and cannot learn new patterns during inference.
+						</div>
+					</div>
+
+					{/* RIGHT: PLASTIC (TITANS) */}
+					<div className="flex flex-col gap-4 pl-2">
+						<div className="flex items-center gap-2 text-purple-400 font-mono text-sm uppercase border-b border-slate-800 pb-2">
+							<BrainCircuit size={16} /> Plastic (Titans)
+						</div>
+
+						<div className="p-4 bg-slate-950 rounded border border-purple-500/30 min-h-[120px] relative overflow-hidden">
+							<div className="text-[10px] text-purple-400 uppercase mb-2">Neural Memory (Weights)</div>
+							<div className="flex flex-wrap gap-2">
+								{state.plasticMemory.map((t, i) => (
+									<span key={i} className="px-2 py-1 bg-purple-900/30 border border-purple-500/50 rounded text-xs font-mono text-purple-200 animate-pulse">
+										{t}
+									</span>
+								))}
+								{state.plasticMemory.length === 0 && <span className="text-slate-700 italic text-xs">Awaiting Surprise...</span>}
+							</div>
+							{state.surprise > 0.5 && (
+								<div className="absolute inset-0 bg-purple-500/5 animate-pulse pointer-events-none" />
 							)}
-							<button
-								onClick={reset}
-								className="p-3 border border-slate-700 text-slate-400 hover:text-white transition-colors"
-							>
-								<RotateCcw className="w-4 h-4" />
-							</button>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-2 gap-4">
-						{/* Graph 1: Loss */}
-						<div className="bg-slate-950 border border-slate-800 p-4 relative">
-							<div className="text-[10px] font-mono text-slate-500 uppercase mb-2 flex justify-between">
-								<span>Loss (MSE)</span>
-								<span className="text-slate-200">{state.loss.toFixed(4)}</span>
-							</div>
-							<div className="h-24 w-full">
-								<svg
-									viewBox="0 0 100 40"
-									preserveAspectRatio="none"
-									className="w-full h-full overflow-visible"
-								>
-									{renderGraphLine(history["loss"], 3, "#f43f5e")}
-								</svg>
-							</div>
 						</div>
 
-						{/* Graph 2: Surprise */}
-						<div className="bg-slate-950 border border-slate-800 p-4 relative">
-							<div className="text-[10px] font-mono text-slate-500 uppercase mb-2 flex justify-between">
-								<span>Surprise (∇L)</span>
-								<span className="text-slate-200">
-									{state.surprise.toFixed(4)}
-								</span>
+						<div className="grid grid-cols-2 gap-4">
+							<div className="p-2 bg-slate-950 rounded border border-slate-800">
+								<div className="text-[9px] text-slate-500 uppercase">Surprise</div>
+								<div className={`text-lg font-mono font-bold ${state.surprise > 0.5 ? "text-amber-400" : "text-slate-400"}`}>
+									{(state.surprise * 100).toFixed(1)}%
+								</div>
 							</div>
-							<div className="h-24 w-full">
-								<svg
-									viewBox="0 0 100 40"
-									preserveAspectRatio="none"
-									className="w-full h-full overflow-visible"
-								>
-									{renderGraphLine(history["surprise"], 1.5, "#22d3ee")}
-								</svg>
+							<div className="p-2 bg-slate-950 rounded border border-slate-800">
+								<div className="text-[9px] text-slate-500 uppercase">Loss</div>
+								<div className="text-lg font-mono font-bold text-emerald-400">
+									{state.loss.toFixed(3)}
+								</div>
 							</div>
 						</div>
 					</div>
-
-					<div className="mt-6 flex items-center gap-4 text-xs font-mono text-slate-500 border-t border-slate-800 pt-4">
-						<div className="flex items-center gap-2 min-w-[140px]">
-							<Database className="w-3 h-3 text-sky-500" />
-							MEM_LOAD: {state.memory.toFixed(1)}%
-						</div>
-						<div className="flex-grow h-1 bg-slate-800">
-							<div
-								className="h-full bg-sky-500 transition-all duration-200"
-								style={{ width: `${state.memory}%` }}
-							/>
-						</div>
-						<div>EPOCH {epoch.toString().padStart(4, "0")}</div>
-					</div>
-				</SchematicCard>
-
-				{/* Code & Vars */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<SchematicCard title="KERNEL_LOGIC" className="font-mono text-[10px]">
-						<div className="text-slate-600 mb-2">
-							def forward(self, x, state):
-						</div>
-						<div className="text-emerald-500 pl-2">M, S = state</div>
-						<div className="text-slate-400 pl-2">surprise = grad(loss, M)</div>
-						<div className="text-sky-400 pl-2 mt-1"># Plasticity Update</div>
-						<div className="text-slate-300 pl-2">
-							M = (1 - {state.alpha.toFixed(2)}) * M
-						</div>
-						<div className="text-slate-300 pl-6">
-							+ {state.eta.toFixed(2)} * S
-						</div>
-						<div className="text-slate-300 pl-6">
-							- {state.theta.toFixed(3)} * surprise
-						</div>
-					</SchematicCard>
-
-					<SchematicCard title="PARAMETERS">
-						<div className="space-y-1">
-							<div className="flex justify-between text-xs font-mono border-b border-slate-800 pb-1">
-								<span className="text-blue-400">ALPHA (Forget)</span>
-								<span className="text-slate-300">{state.alpha.toFixed(4)}</span>
-							</div>
-							<div className="flex justify-between text-xs font-mono border-b border-slate-800 pb-1">
-								<span className="text-yellow-400">ETA (Momentum)</span>
-								<span className="text-slate-300">{state.eta.toFixed(4)}</span>
-							</div>
-							<div className="flex justify-between text-xs font-mono border-b border-slate-800 pb-1">
-								<span className="text-red-400">THETA (Learn)</span>
-								<span className="text-slate-300">{state.theta.toFixed(4)}</span>
-							</div>
-						</div>
-					</SchematicCard>
 				</div>
-			</div>
 
-			{/* Logs */}
-			<div className="lg:col-span-1">
-				<SchematicCard title="SYS_LOGS" className="h-[600px] flex flex-col">
-					<div
-						ref={logsContainerRef}
-						className="flex-grow overflow-y-auto space-y-1 text-slate-500 font-mono text-[10px] scrollbar-hide"
-					>
-						{logs.map((log, i) => (
-							<div
-								key={i}
-								className="break-all border-l-2 border-slate-800 pl-2"
-							>
-								<span className="text-slate-700 mr-2">
-									{new Date().toLocaleTimeString().split(" ")[0]}
-								</span>
-								{log}
-							</div>
-						))}
+				{/* Explanation Notes */}
+				<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-6">
+					<div className="p-3 bg-purple-900/10 border border-purple-500/20 rounded-lg">
+						<h4 className="text-[10px] font-bold text-purple-400 uppercase mb-1">What to watch for: Neural Memory</h4>
+						<p className="text-[11px] text-slate-400 leading-relaxed">
+							Unlike the static cache, the <span className="text-purple-400 font-bold">Neural Memory</span> updates its internal weights during inference. It "learns" the robot dog fact physically, allowing for infinite context recall.
+						</p>
 					</div>
-				</SchematicCard>
-			</div>
+					<div className="p-3 bg-amber-900/10 border border-amber-500/20 rounded-lg">
+						<h4 className="text-[10px] font-bold text-amber-400 uppercase mb-1">What to watch for: Surprise Gating</h4>
+						<p className="text-[11px] text-slate-400 leading-relaxed">
+							Updates only happen when <span className="text-amber-400 font-bold">Surprise</span> is high. This mimics biological plasticity, where the brain only rewires itself when encountering novel or contradictory information.
+						</p>
+					</div>
+				</div>
+
+				<div className="flex gap-4 mt-6 border-t border-slate-800 pt-4">
+					<SchematicButton onClick={isRunning ? stop : start}>
+						{isRunning ? "HALT_INFERENCE" : "START_INFERENCE"}
+					</SchematicButton>
+					<SchematicButton onClick={reset} variant="secondary">
+						RESET
+					</SchematicButton>
+				</div>
+			</SchematicCard>
 		</div>
 	);
 };
