@@ -23,31 +23,46 @@ featured: true
 With the transition from Blackwell to the **Rubin Architecture**, NVIDIA is moving beyond the "GPU-first" mindset into a holistic "Data Center-as-a-Chip" philosophy. Rubin isn't just a spec bump; it is a fundamental reconfiguration of compute density and memory bandwidth designed specifically for agentic AI and million-token reasoning.
 
 ## 1. Executive Summary
-The Rubin platform (expected 2H 2026) centers on the **Vera Rubin Superchip**, combining the custom **Vera CPU** (Arm-based) with the **Rubin GPU**. Key breakthroughs include the adoption of **HBM4** (delivering 13 TB/s bandwidth), the **NVLink 6** interconnect (3.6 TB/s per GPU), and a new specialized class of silicon called **Rubin CPX** for massive-context processing.
+The Rubin platform (Production 2H 2026) is not just a GPU; it is a unified AI supercomputer built on **six key chips** designed for extreme co-design. Centered on the **Vera Rubin Superchip**, it combines the custom **Vera CPU** (Arm-based "Olympus" cores) with the **Rubin GPU**. Key breakthroughs include the adoption of **HBM4** (delivering 22 TB/s bandwidth), the **NVLink 6** interconnect (3.6 TB/s per GPU), and a specialized **Rubin CPX** accelerator for massive-context inference.
 
 ## 2. The Problem: The "Memory Wall" and Attention Bottlenecks
 Current architectures (Hopper/Blackwell) struggle with two primary constraints:
 1. **Memory Bandwidth:** LLMs are often IO-bound. Even HBM3e cannot feed the sheer FLOPs available in modern SMs (Streaming Multiprocessors).
 2. **Context Fragmentation:** Processing million-token contexts requires massive KV-cache storage, often forcing disaggregated inference which introduces latency.
 
-## 3. The Solution: The Vera-Rubin Stack
+## 3. The Solution: The "Six Key Chips" Architecture
 
-### Vera CPU: The "Olympus" Cores
-Moving away from off-the-shelf Neoverse designs, the Vera CPU features **88 custom Arm cores** (internally dubbed "Olympus"). 
-- **Throughput:** Supports SMT (Simultaneous Multithreading) for 176 logical threads.
-- **Performance:** Delivers 2x the performance of the Grace CPU.
-- **Interconnect:** Uses NVLink-C2C to provide 900 GB/s of bidirectional bandwidth to the GPUs.
+NVIDIA's strict co-design philosophy unites six specialized components into a single logical entity:
 
-> **Note:** It is crucial to distinguish between **Vera** (the CPU) and **Rubin** (the GPU). They are packaged together on the same board (the "Superchip") but serve different roles. Vera handles the OS, data preprocessing, and agentic logic, while Rubin handles the massive matrix multiplications required for inference.
+### 1. Vera CPU: The "Olympus" Cores
+The **Vera CPU** features **88 custom Arm cores** (codenamed "Olympus"), fully compatible with Armv9.2.
+- **Role**: OS management, agentic logic, and data preprocessing.
+- **Throughput**: Optimized for AI factories with high power efficiency.
+- **Interconnect**: NVLink-C2C provides cohesive CPU-GPU memory addressing.
 
-### Rubin GPU & HBM4
-The Rubin GPU utilizes a **dual-reticle die** design manufactured on TSMC’s **3nm (N3P)** process.
-- **Memory:** 8 stacks of **HBM4** providing **288GB** of VRAM per package.
-- **Bandwidth:** Hits **13 TB/s**, a 60% increase over Blackwell Ultra.
-- **Precision:** Native support for **NVFP4**, allowing for 50 PFLOPS of inference performance per GPU.
+### 2. Rubin GPU: The Engine
+The **Rubin GPU** is the heavy lifter for training and generation.
+- **Specs**: ~336 billion transistors on TSMC 3nm.
+- **Memory**: **288GB HBM4** delivering a staggering **22 TB/s** bandwidth.
+- **Compute**: **50 PFLOPS** of NVFP4 tensor performance.
+- **Features**: 3rd Gen Transformer Engine with adaptive hardware compression.
 
-### Rubin CPX: The Context Processing Extension
-A revolutionary addition is the **Rubin CPX GPU**. Unlike standard GPUs, CPX is a monolithic die optimized for the **Attention Phase** of inference. It features 128GB of GDDR7 and provides **3x faster attention** mechanisms, allowing models to reason across millions of tokens without linear latency scaling.
+### 3. NVLink 6 Switch
+The backbone of the rack, enabling 3.6 TB/s of bidirectional bandwidth per GPU. It allows 72 GPUs to function as a single 20.7TB HBM4 memory domain.
+
+### 4. ConnectX-9 SuperNIC
+Provides ultra-high throughput network endpoints for scale-out, critical for multi-rack training runs.
+
+### 5. BlueField-4 DPU
+A dual-die package (combining a Grace CPU core) that handles security offload and powers the **Inference Context Memory Storage** platform, enabling efficient KV-cache reuse.
+
+### 6. Spectrum-6 Ethernet Switch
+The first switch to integrate **Co-Packaged Optics (CPO)**, significantly reducing power and latency for east-west cluster traffic.
+
+### Rubin CPX: The Specialized Accelerator
+Distinct from the main Rubin GPU, the **Rubin CPX** is a cost-optimized, monolithic die featuring **128GB of GDDR7**.
+- **Purpose**: "Prefill" / Context Phase. GDDR7 offers massive capacity at lower cost/bandwidth than HBM4, perfect for storing million-token contexts before the compute-heavy decode phase.
+- **Performance**: 30 PFLOPS (NVFP4) and 3x faster attention mechanisms than prior generations.
 
 ## 4. Visual Architecture
 The following diagram illustrates the Vera Rubin NVL144 node topology:

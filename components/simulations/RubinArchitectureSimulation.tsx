@@ -11,12 +11,12 @@ const RubinArchitectureSimulation: React.FC = () => {
 		},
 		onTick: (prev) => {
 			const targetBlackwell = 8.0; // TB/s
-			const targetRubin = 13.0; // TB/s (Estimated)
+			const targetRubin = 22.0; // TB/s (HBM4)
 
 			return {
 				...prev,
 				bwBlackwell: Math.min(prev.bwBlackwell + 0.4, targetBlackwell),
-				bwRubin: Math.min(prev.bwRubin + 0.65, targetRubin),
+				bwRubin: Math.min(prev.bwRubin + 1.1, targetRubin), // Faster ramp to show higher ceiling
 			};
 		},
 		tickRate: 100,
@@ -124,7 +124,7 @@ const RubinArchitectureSimulation: React.FC = () => {
 								<span className="text-sm text-slate-500">TB/s</span>
 							</div>
 							<div className="text-[10px] text-emerald-500 mt-1 font-bold">
-								+60% Throughput
+								+175% Throughput
 							</div>
 						</div>
 					</div>
@@ -172,8 +172,8 @@ const RubinArchitectureSimulation: React.FC = () => {
 						<p className="text-[11px] text-slate-400 leading-relaxed">
 							Notice the HBM4 stacks on the Rubin chip. By moving to HBM4,
 							NVIDIA achieves a{" "}
-							<span className="text-emerald-400 font-bold">60% increase</span>{" "}
-							in memory bandwidth (13 TB/s vs 8 TB/s), which is critical for
+							<span className="text-emerald-400 font-bold">2.8x increase</span>{" "}
+							in memory bandwidth (22 TB/s vs 8 TB/s), which is critical for
 							feeding the massive FLOPs required for trillion-parameter models.
 						</p>
 					</div>
@@ -189,6 +189,19 @@ const RubinArchitectureSimulation: React.FC = () => {
 							Superchip footprint compared to Blackwell.
 						</p>
 					</div>
+				</div>
+
+				<div className="mt-4 p-3 bg-purple-900/10 border border-purple-500/20 rounded-lg">
+					<h4 className="text-[10px] font-bold text-purple-400 uppercase mb-1">
+						New Component: Rubin CPX
+					</h4>
+					<p className="text-[11px] text-slate-400 leading-relaxed">
+						Not shown in this single-chip view is the new{" "}
+						<span className="text-purple-400 font-bold">Rubin CPX</span>, a
+						specialized accelerator with 128GB GDDR7 dedicated to the "prefill"
+						phase of inference, decoupling context processing from token
+						generation.
+					</p>
 				</div>
 
 				<div className="flex gap-4 mt-6">
