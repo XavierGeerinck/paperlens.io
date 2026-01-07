@@ -82,7 +82,7 @@ Subject to dynamics $x_{k+i+1|k} = f(x_{k+i|k}, u_{k+i|k})$ and constraints. Thi
 
 | Feature | Reinforcement Learning (Model-Free) | Large Language Models (Autoregressive) | Model Predictive Control (Hybrid/AGI) |
 | :--- | :--- | :--- | :--- |
-| **Core Mechanism** | Amortized Policy $\pi(s)$ | Next-Token Prediction $P(x_{t+1}|x_t)$ | Online Optimization $\min \sum Cost$ |
+| **Core Mechanism** | Amortized Policy $\pi(s)$ | Next-Token Prediction $P(x_{t+1} \mid x_t)$ | Online Optimization $\min \sum Cost$ |
 | **Inference Type** | $O(1)$ Forward Pass (Reflexive) | $O(N)$ Sequential Gen (Reflexive) | Iterative Search/Optimization (Deliberative) |
 | **OOD Robustness** | Low (Fails if $s \notin \mathcal{D}_{train}$) | Low (Hallucinates) | High (Re-optimizes for new $s$) |
 | **Sample Efficiency** | Very Low (Billions of steps) | Medium (Trillions of tokens) | High (World Model learns from observation) |

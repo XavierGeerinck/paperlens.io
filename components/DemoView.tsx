@@ -11,6 +11,7 @@ import ObjectiveVerifierSimulation from "./simulations/ObjectiveVerifierSimulati
 import AsahiM1n1Simulation from "./simulations/AsahiM1n1Simulation";
 import MLASimulation from "./simulations/MLASimulation";
 import ControlTheoreticSimulation from "./simulations/ControlTheoreticSimulation";
+import JEPASimulation from "./simulations/JEPASimulation";
 
 interface DemoViewProps {
 	simulationName?: string;
@@ -28,6 +29,7 @@ const REGISTRY: Record<string, React.FC> = {
 	AsahiM1n1: AsahiM1n1Simulation,
 	MLASimulation: MLASimulation,
 	ControlTheoretic: ControlTheoreticSimulation,
+	JEPASimulation: JEPASimulation,
 };
 
 const DemoView: React.FC<DemoViewProps> = ({ simulationName }) => {

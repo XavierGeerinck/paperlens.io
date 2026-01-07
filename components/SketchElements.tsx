@@ -76,14 +76,33 @@ export const SketchCircle: React.FC<{
 
 export const SketchBox = LabCard; // Map to new style
 export const SchematicCard = LabCard; // Map to new style
-export const SchematicButton = ({ onClick, children }: any) => (
-	<button
-		onClick={onClick}
-		className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-zinc-300 font-mono text-xs uppercase hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2"
-	>
-		{children}
-	</button>
-);
+export const SchematicButton = ({
+	onClick,
+	children,
+	icon: Icon,
+	label,
+	active,
+}: any) => {
+	const iconElement = React.isValidElement(Icon) ? (
+		Icon
+	) : Icon ? (
+		<Icon size={14} />
+	) : null;
+
+	return (
+		<button
+			onClick={onClick}
+			className={`px-4 py-2 border font-mono text-xs uppercase transition-colors flex items-center gap-2 ${
+				active
+					? "bg-zinc-800 border-zinc-500 text-white"
+					: "bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+			}`}
+		>
+			{iconElement}
+			{children || label}
+		</button>
+	);
+};
 export const DataLabel = DataReadout;
 
 // --- SVGs ---

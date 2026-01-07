@@ -5,6 +5,7 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Terminal, Copy, Check } from "lucide-react";
 import mermaid from "mermaid";
 import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 
 interface MarkdownRendererProps {
@@ -69,9 +70,38 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
 	return (
 		<div className="w-full">
 			<ReactMarkdown
-				remarkPlugins={[remarkMath]}
+				remarkPlugins={[remarkMath, remarkGfm]}
 				rehypePlugins={[rehypeKatex]}
 				components={{
+					table: ({ node, ...props }) => (
+						<div className="overflow-x-auto my-10 rounded-xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-sm">
+							<table className="w-full text-left border-collapse" {...props} />
+						</div>
+					),
+					thead: ({ node, ...props }) => (
+						<thead
+							className="bg-zinc-900/80 border-b border-zinc-700"
+							{...props}
+						/>
+					),
+					tr: ({ node, ...props }) => (
+						<tr
+							className="border-b border-zinc-800/50 last:border-0 hover:bg-white/5 transition-colors"
+							{...props}
+						/>
+					),
+					th: ({ node, ...props }) => (
+						<th
+							className="px-6 py-4 font-bold text-white text-sm uppercase tracking-wider font-space"
+							{...props}
+						/>
+					),
+					td: ({ node, ...props }) => (
+						<td
+							className="px-6 py-4 text-zinc-300 text-sm leading-relaxed"
+							{...props}
+						/>
+					),
 					h1: ({ node, ...props }) => (
 						<h1
 							className="text-4xl md:text-5xl font-bold text-white mb-8 mt-4 font-space tracking-tight leading-tight"
