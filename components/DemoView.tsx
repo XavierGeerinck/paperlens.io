@@ -1,4 +1,4 @@
-import React from "react";
+import type { FC } from "react";
 import { Activity } from "lucide-react";
 import BrainMimeticSimulation from "./simulations/BrainMimeticSimulation";
 import DeepSeekMHCSimulation from "./simulations/DeepSeekMHCSimulation";
@@ -13,15 +13,17 @@ import MLASimulation from "./simulations/MLASimulation";
 import ControlTheoreticSimulation from "./simulations/ControlTheoreticSimulation";
 import JEPASimulation from "./simulations/JEPASimulation";
 import DigitalRedQueenSimulation from "./simulations/DigitalRedQueenSimulation";
+import DeepSeekEngramSimulation from "./simulations/DeepSeekEngramSimulation";
 
 interface DemoViewProps {
 	simulationName?: string;
 }
 
-const REGISTRY: Record<string, React.FC> = {
+const REGISTRY: Record<string, FC> = {
 	BrainMimetic: BrainMimeticSimulation,
 	DeepSeekMHC: DeepSeekMHCSimulation,
 	DeepSeekMoE: DeepSeekMoESimulation,
+	DeepSeekEngram: DeepSeekEngramSimulation,
 	RLVR: RLVRSimulation,
 	RubinArchitecture: RubinArchitectureSimulation,
 	SubQuadratic: SubQuadraticSimulation,
@@ -34,7 +36,7 @@ const REGISTRY: Record<string, React.FC> = {
 	DigitalRedQueen: DigitalRedQueenSimulation,
 };
 
-const DemoView: React.FC<DemoViewProps> = ({ simulationName }) => {
+const DemoView: FC<DemoViewProps> = ({ simulationName }) => {
 	const Component = simulationName ? REGISTRY[simulationName] : null;
 
 	if (!Component) {

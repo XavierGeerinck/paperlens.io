@@ -7,7 +7,7 @@ export interface SimulationConfig<T> {
 	onLog?: (state: T, tick: number) => string | null;
 }
 
-export function useSimulation<T extends Record<string, any>>({
+export function useSimulation<T extends Record<string, unknown>>({
 	initialState,
 	tickRate = 200,
 	onTick,
@@ -36,10 +36,11 @@ export function useSimulation<T extends Record<string, any>>({
 						setHistory((prevHist) => {
 							const newHist = { ...prevHist };
 							Object.keys(newState).forEach((key) => {
-								if (typeof newState[key] === "number") {
+								const value = newState[key];
+								if (typeof value === "number") {
 									if (!newHist[key]) newHist[key] = [];
 									const h = newHist[key];
-									h.push(newState[key]);
+									h.push(value);
 									if (h.length > 50) h.shift();
 								}
 							});
@@ -66,6 +67,15 @@ export function useSimulation<T extends Record<string, any>>({
 
 	const start = useCallback(() => setIsRunning(true), []);
 	const stop = useCallback(() => setIsRunning(false), []);
+	const update = useCallback(
+		(patch: Partial<T> | ((prevState: T) => Partial<T>)) => {
+			setState((prev) => {
+				const updates = typeof patch === "function" ? patch(prev) : patch;
+				return { ...prev, ...updates };
+			});
+		},
+		[],
+	);
 	const reset = useCallback(() => {
 		setIsRunning(false);
 		setState(initialState);
@@ -74,5 +84,5 @@ export function useSimulation<T extends Record<string, any>>({
 		setHistory({});
 	}, [initialState]);
 
-	return { isRunning, state, logs, history, epoch, start, stop, reset };
+	return { isRunning, state, logs, history, epoch, start, stop, reset, update };
 }
