@@ -27,36 +27,54 @@ const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
     <!-- Hero Section -->
     <section class="max-w-7xl mx-auto px-4 py-16">
       <div class="flex flex-col md:flex-row items-center gap-12">
-        <div class="flex-1">
-          <div class="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">
-            Research Directive 2026
+        <div class="flex-1 space-y-8">
+          <!-- Main Heading -->
+          <div>
+            <h1 class="text-5xl md:text-6xl font-heading font-bold text-zinc-100 mb-3">
+              Xavier Geerinck
+            </h1>
+            <p class="text-xl md:text-2xl text-indigo-400 font-heading mb-4">
+              CTO & AI Systems Architect
+            </p>
+            <p class="text-lg text-zinc-400 max-w-2xl leading-relaxed">
+              Building the future of intelligent systems at the intersection of AI, distributed computing, and emerging technologies. Sharing research, ideas, and technical deep-dives on <span class="text-indigo-400 font-semibold">PaperLens</span>.
+            </p>
           </div>
-          <h1 class="text-4xl md:text-5xl font-heading font-bold text-zinc-100 mb-4">
-            Make the <span class="text-indigo-400">impossible</span> inevitable
-          </h1>
-          <p class="text-lg text-zinc-400 max-w-xl mb-8">
-            Exploring the frontiers of AI, systems architecture, and emerging technologies.
-          </p>
 
-          <!-- Identity Card -->
-          <div class="inline-block bg-zinc-900/50 border border-zinc-800 rounded-lg p-6 max-w-sm">
-            <div class="space-y-3">
-              <div>
-                <div class="text-2xl font-heading font-bold text-zinc-100 mb-1">Xavier Geerinck</div>
-                <div class="text-sm text-zinc-500 font-mono">CTO | PaperLens</div>
-              </div>
-              <div class="h-px bg-zinc-800"></div>
-              <div class="grid grid-cols-2 gap-4 text-xs font-mono">
-                <div>
-                  <div class="text-zinc-600 uppercase mb-1">Clearance</div>
-                  <div class="text-indigo-400">Sovereign</div>
-                </div>
-                <div>
-                  <div class="text-zinc-600 uppercase mb-1">Location</div>
-                  <div class="text-zinc-300">Scrydon</div>
-                </div>
-              </div>
+          <!-- Quick Stats / Highlights -->
+          <div class="flex flex-wrap gap-4 text-sm font-mono">
+            <div class="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded">
+              <span class="text-zinc-500">Focus:</span>
+              <span class="text-zinc-300 ml-2">AI Architecture</span>
             </div>
+            <div class="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded">
+              <span class="text-zinc-500">Expertise:</span>
+              <span class="text-zinc-300 ml-2">Systems & ML</span>
+            </div>
+            <div class="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded">
+              <span class="text-zinc-500">Location:</span>
+              <span class="text-zinc-300 ml-2">Belgium</span>
+            </div>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-wrap gap-4">
+            <a
+              href="https://linkedin.com/in/xaviergeerinck"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-mono text-sm uppercase tracking-wider rounded transition-colors"
+            >
+              Connect on LinkedIn
+            </a>
+            <a
+              href="https://github.com/xaviergeerinck"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-6 py-3 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 font-mono text-sm uppercase tracking-wider rounded transition-colors"
+            >
+              View GitHub
+            </a>
           </div>
         </div>
 
