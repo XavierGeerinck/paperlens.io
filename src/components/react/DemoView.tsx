@@ -1,40 +1,33 @@
 import type { FC } from "react";
 import { Activity } from "lucide-react";
-import BrainMimeticSimulation from "./simulations/BrainMimeticSimulation";
-import DeepSeekMHCSimulation from "./simulations/DeepSeekMHCSimulation";
-import DeepSeekMoESimulation from "./simulations/DeepSeekMoESimulation";
-import RLVRSimulation from "./simulations/RLVRSimulation";
-import RubinArchitectureSimulation from "./simulations/RubinArchitectureSimulation";
-import SubQuadraticSimulation from "./simulations/SubQuadraticSimulation";
-import MappingTheMindSimulation from "./simulations/MappingTheMindSimulation";
-import ObjectiveVerifierSimulation from "./simulations/ObjectiveVerifierSimulation";
-import AsahiM1n1Simulation from "./simulations/AsahiM1n1Simulation";
-import MLASimulation from "./simulations/MLASimulation";
-import ControlTheoreticSimulation from "./simulations/ControlTheoreticSimulation";
-import JEPASimulation from "./simulations/JEPASimulation";
-import DigitalRedQueenSimulation from "./simulations/DigitalRedQueenSimulation";
-import DeepSeekEngramSimulation from "./simulations/DeepSeekEngramSimulation";
 
 interface DemoViewProps {
 	simulationName?: string;
 }
 
-const REGISTRY: Record<string, FC> = {
-	BrainMimetic: BrainMimeticSimulation,
-	DeepSeekMHC: DeepSeekMHCSimulation,
-	DeepSeekMoE: DeepSeekMoESimulation,
-	DeepSeekEngram: DeepSeekEngramSimulation,
-	RLVR: RLVRSimulation,
-	RubinArchitecture: RubinArchitectureSimulation,
-	SubQuadratic: SubQuadraticSimulation,
-	MappingTheMind: MappingTheMindSimulation,
-	ObjectiveVerifier: ObjectiveVerifierSimulation,
-	AsahiM1n1: AsahiM1n1Simulation,
-	MLASimulation: MLASimulation,
-	ControlTheoretic: ControlTheoreticSimulation,
-	JEPASimulation: JEPASimulation,
-	DigitalRedQueen: DigitalRedQueenSimulation,
-};
+// Dynamically import all simulations
+const modules = import.meta.glob<React.ComponentType>('./simulations/*.tsx', { eager: true, import: 'default' });
+
+const REGISTRY: Record<string, FC> = {};
+
+// Build registry from dynamic imports
+Object.entries(modules).forEach(([path, component]) => {
+	// Extract filename: ./simulations/MySim.tsx -> MySim
+	const name = path.split('/').pop()?.replace(/\.tsx$/, '');
+	
+	if (name) {
+		REGISTRY[name] = component as FC;
+		
+		// Optional: Support "ShortName" if filename ends with "Simulation" 
+		// (e.g. BrainMimeticSimulation -> BrainMimetic) to match legacy usage
+		if (name.endsWith('Simulation')) {
+			const shortName = name.replace(/Simulation$/, '');
+			if (shortName && !REGISTRY[shortName]) {
+				REGISTRY[shortName] = component as FC;
+			}
+		}
+	}
+});
 
 const DemoView: FC<DemoViewProps> = ({ simulationName }) => {
 	const Component = simulationName ? REGISTRY[simulationName] : null;

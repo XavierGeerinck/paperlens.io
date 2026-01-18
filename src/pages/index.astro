@@ -6,7 +6,7 @@ import Footer from '../components/Footer.astro';
 import IdeaCard from '../components/IdeaCard.astro';
 import GlobeAnimation from '../components/react/GlobeAnimation';
 import ScrambleText from '../components/react/ScrambleText';
-import { Lightbulb, FileText, Terminal, FlaskConical, Network, Database } from 'lucide-react';
+import { Lightbulb, FileText, Terminal, FlaskConical, Network, Database, BookOpen } from 'lucide-react';
 
 const allIdeas = await getCollection('ideas');
 const sortedIdeas = allIdeas.sort(
@@ -14,6 +14,7 @@ const sortedIdeas = allIdeas.sort(
 );
 
 const featured = sortedIdeas.find((idea) => idea.data.featured);
+const deepDives = sortedIdeas.filter((i) => i.data.category === 'deep-dive');
 const papers = sortedIdeas.filter((i) => i.data.category === 'paper');
 const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
 ---
@@ -179,6 +180,21 @@ const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ideas.filter((i) => i.slug !== featured?.slug).map((idea) => (
+            <IdeaCard idea={idea} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Deep Dive -->
+    {deepDives.length > 0 && (
+      <section class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex items-center gap-2 mb-6 text-xs font-mono text-zinc-500 uppercase">
+          <BookOpen className="w-4 h-4" />
+          Deep Dive
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {deepDives.filter((i) => i.slug !== featured?.slug).map((idea) => (
             <IdeaCard idea={idea} />
           ))}
         </div>

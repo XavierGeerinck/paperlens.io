@@ -19,12 +19,16 @@
     "@astrojs/rss": "^4.0.15",
     "@astrojs/sitemap": "^3.7.0",
     "@astrojs/tailwind": "^6.0.2",
+    "@types/d3": "^7.4.3",
     "astro": "^5.16.11",
+    "d3": "^7.9.0",
     "lucide-react": "^0.562.0",
+    "mermaid": "^11.12.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "unist-util-visit": "^5.0.0"
   }
 }

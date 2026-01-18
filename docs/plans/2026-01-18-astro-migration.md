@@ -942,6 +942,34 @@ const formattedDate = date.toLocaleDateString('en-US', {
           </a>
         </section>
       )}
+
+      <!-- Web Link -->
+      {webUrl && (
+        <section class="mt-8 pt-8 border-t border-zinc-800">
+          <a
+            href={webUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
+          >
+            View Original Paper (Web)
+          </a>
+        </section>
+      )}
+
+      <!-- GitHub Link -->
+      {githubUrl && (
+        <section class="mt-8 pt-8 border-t border-zinc-800">
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
+          >
+            View GitHub Repository
+          </a>
+        </section>
+      )}
     </article>
   </div>
 

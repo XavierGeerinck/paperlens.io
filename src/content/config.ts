@@ -7,7 +7,7 @@ const ideasCollection = defineCollection({
     subtitle: z.string(),
     date: z.coerce.date(),
     status: z.enum(['RESEARCH', 'CONCEPT', 'PROTOTYPE', 'ALPHA', 'ARCHIVED']),
-    category: z.enum(['idea', 'paper']).default('idea'),
+    category: z.enum(['idea', 'paper', 'deep-dive', 'tutorial', 'concept']).default('idea'),
     impact: z.string(),
     readTime: z.string(),
     tags: z.array(z.string()),
@@ -15,6 +15,7 @@ const ideasCollection = defineCollection({
     simulation: z.string().optional(),
     pdfUrl: z.string().optional(),
     githubUrl: z.string().optional(),
+    webUrl: z.string().optional(),
     featured: z.boolean().default(false),
   }),
 });

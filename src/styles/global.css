@@ -26,3 +26,13 @@
   background-image: radial-gradient(circle, #27272a 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/* Mermaid diagrams */
+.mermaid-diagram {
+  @apply my-6 p-4 bg-zinc-900 rounded-lg overflow-x-auto;
+}
+
+.mermaid-diagram svg {
+  @apply max-w-full h-auto mx-auto;
+}
+

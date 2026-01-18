@@ -46,5 +46,10 @@ const { title, description, image, type, date } = Astro.props;
     <main transition:animate="fade" class="relative z-10">
       <slot />
     </main>
+
+    <!-- Mermaid initialization -->
+    <script>
+      import '../lib/mermaid-init.ts';
+    </script>
   </body>
 </html>
