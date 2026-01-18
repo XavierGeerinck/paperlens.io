@@ -289,3 +289,5 @@ export const GlobeAnimation: React.FC = () => {
 		</div>
 	);
 };
+
+export default GlobeAnimation;
