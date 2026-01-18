@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, Copy, Send, Linkedin, Globe, Github, Terminal } from 'lucide-react';
 
 export default function ConnectModal() {
@@ -23,9 +24,9 @@ export default function ConnectModal() {
       </button>
 
       {/* Modal Backdrop */}
-      {isOpen && (
+      {isOpen && createPortal(
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
           onClick={() => setIsOpen(false)}
         >
           {/* Modal Content */}
@@ -146,7 +147,8 @@ export default function ConnectModal() {
             {/* Bottom Gradient Bar */}
             <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-zinc-800" />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
