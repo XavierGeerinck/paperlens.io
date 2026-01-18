@@ -1,5 +1,5 @@
 ---
-title: Asahi Linux m1n1: The Hardware Puppeteer
+title: "Asahi Linux m1n1: The Hardware Puppeteer"
 subtitle: Reverse engineering Apple Silicon through real-time MMIO tracing and Python-based hypervisors.
 date: 2026-01-02
 status: RESEARCH
