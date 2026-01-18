@@ -117,6 +117,7 @@ export default <IdeaName>Simulation;
 - **Graphs**: Use SVG polylines (or D3) within the simulation to show real-time metrics (Loss, Accuracy, etc.).
 - **Math**: Use KaTeX for mathematical formulas ($E = mc^2$).
 - **AlgorithmBlock**: Use the `AlgorithmBlock` component for step-by-step algorithm visualization (see section below).
+- **ExpandableMath**: Use the `ExpandableMath` component for complex equations that need explanation (see section below).
 
 ## 6.1. AlgorithmBlock Component
 The `AlgorithmBlock` component ([components/react/AlgorithmBlock.tsx](components/react/AlgorithmBlock.tsx)) creates interactive, executable algorithm visualizations with:
@@ -219,6 +220,55 @@ executors['my-new-algorithm'] = async function* (initialState) {
   - `description` (optional string): Explanation of what this step does
 - Values in `state` are automatically formatted (matrices, vectors, numbers)
 - Users can play/pause or step through manually
+
+## 6.2. ExpandableMath Component
+The `ExpandableMath` component ([components/react/ExpandableMath.tsx](components/react/ExpandableMath.tsx)) makes complex mathematical equations accessible with layered explanations:
+- 📐 KaTeX-rendered equation (always visible)
+- 📖 Plain English explanation (expandable)
+- 🔢 Worked numerical example (expandable)
+- 📑 Term-by-term breakdown (expandable)
+
+### When to Use ExpandableMath
+Use `ExpandableMath` when:
+- Introducing a core mathematical formula that readers may not know (gradient descent, loss functions)
+- The equation has multiple variables that need explanation
+- A concrete numerical example would help understanding
+
+**DO NOT use** for:
+- Simple, well-known equations (E = mc²)
+- Inline math in flowing prose (use regular KaTeX)
+- Step-by-step algorithm execution (use AlgorithmBlock instead)
+
+### ExpandableMath Usage
+
+```mdx
+import ExpandableMath from '../../components/react/ExpandableMath';
+
+<ExpandableMath
+  client:only="react"
+  equation="W_t = W_{t-1} - \eta \nabla_W \mathcal{L}"
+  explanation="The new weights equal the old weights minus a small step in the direction that reduces error."
+  example={{
+    description: "Update weights after observing prediction error:",
+    values: { "W_{t-1}": "1.5", "\\eta": "0.1", "\\nabla_W \\mathcal{L}": "2.0" },
+    result: "W_t = 1.5 - 0.1 \\times 2.0 = 1.3"
+  }}
+  terms={[
+    { symbol: "W_t", name: "Updated Weights", meaning: "Model parameters after update" },
+    { symbol: "\\eta", name: "Learning Rate", meaning: "Step size for updates" },
+    { symbol: "\\nabla_W \\mathcal{L}", name: "Gradient", meaning: "Direction of steepest loss increase" }
+  ]}
+/>
+```
+
+### ExpandableMath Props
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `equation` | string | ✅ | LaTeX equation |
+| `explanation` | string | ✅ | Plain English explanation |
+| `displayMode` | boolean | ❌ | Block (true) vs inline display |
+| `example` | object | ❌ | Worked example with values and result |
+| `terms` | array | ❌ | Array of {symbol, name, meaning} objects |
 
 ## 7. Research & Enrichment
 To ensure the highest quality content:

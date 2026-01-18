@@ -51,9 +51,28 @@ For language models, training *is* compression. Next-token prediction compresses
 
 1.  **Inner Loop (Test Time)**: As the model reads context $x_1, \dots, x_t$, it performs gradient descent steps on the weights $W$ to minimize the prediction error on this context.
 
-$$
-W_t = W_{t-1} - \eta \nabla_W \mathcal{L}(x_t; W_{t-1})
-$$
+import ExpandableMath from '../../components/react/ExpandableMath';
+
+<ExpandableMath
+  client:only="react"
+  equation="W_t = W_{t-1} - \eta \nabla_W \mathcal{L}(x_t; W_{t-1})"
+  explanation="The new weights equal the old weights minus a small step in the direction that reduces the error. Think of it like adjusting a dial: if the error is high, we turn the dial in the direction that lowers it."
+  example={{
+    description: "Given initial weights and a learning rate, update after observing token error:",
+    values: {
+      "W_{t-1}": "1.5",
+      "\\eta": "0.1",
+      "\\nabla_W \\mathcal{L}": "2.0"
+    },
+    result: "W_t = 1.5 - 0.1 \\times 2.0 = 1.3"
+  }}
+  terms={[
+    { symbol: "W_t", name: "Updated Weights", meaning: "The model parameters after this update step" },
+    { symbol: "W_{t-1}", name: "Previous Weights", meaning: "The model parameters before this update" },
+    { symbol: "\\eta", name: "Learning Rate", meaning: "How big of a step to take (smaller = more cautious updates)" },
+    { symbol: "\\nabla_W \\mathcal{L}", name: "Gradient", meaning: "Direction of steepest increase in loss — we go opposite to reduce error" }
+  ]}
+/>
 
 2.  **Outer Loop (Training Time)**: We don't just use standard pre-trained weights. We use **meta-learning** to find the optimal initialization $W_0$ and learning rate $\eta$ such that *after* the inner loop updates, final performance is maximized.
 
