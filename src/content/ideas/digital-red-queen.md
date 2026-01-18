@@ -14,7 +14,7 @@ tags:
   - Cybersecurity
 coverImage: https://picsum.photos/seed/redqueen/800/600?grayscale
 simulation: DigitalRedQueen
-pdfUrl: https://arxiv.org/abs/2601.03335
+pdfUrl: https://arxiv.org/pdf/2601.03335
 featured: true
 ---
 

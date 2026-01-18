@@ -19,8 +19,14 @@ interface Props {
 }
 
 const { idea } = Astro.props;
-const { title, subtitle, status, date, tags, simulation, pdfUrl, coverImage } = idea.data;
+const { title, subtitle, status, date, tags, simulation, coverImage } = idea.data;
+let { pdfUrl } = idea.data;
 const { Content } = await idea.render();
+
+// Convert arXiv abstract URLs to PDF URLs for iframe embedding
+if (pdfUrl && pdfUrl.includes('arxiv.org/abs/')) {
+  pdfUrl = pdfUrl.replace('/abs/', '/pdf/');
+}
 
 const statusColors: Record<string, string> = {
   RESEARCH: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
