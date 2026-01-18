@@ -1,0 +1,88 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  idea: CollectionEntry<'ideas'>;
+  variant?: 'standard' | 'featured';
+}
+
+const { idea, variant = 'standard' } = Astro.props;
+const { title, subtitle, status, coverImage, tags, impact, readTime } = idea.data;
+
+const statusColors: Record<string, string> = {
+  RESEARCH: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  CONCEPT: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  PROTOTYPE: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  ALPHA: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  ARCHIVED: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+};
+---
+
+{variant === 'featured' ? (
+  <a
+    href={`/idea/${idea.slug}/`}
+    class="group block bg-zinc-900/50 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-all"
+  >
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="aspect-video overflow-hidden">
+        <img
+          src={coverImage}
+          alt={title}
+          class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+        />
+      </div>
+      <div class="p-6 flex flex-col justify-center">
+        <div class="flex items-center gap-2 mb-3">
+          <span class={`px-2 py-0.5 text-[10px] font-mono uppercase border rounded ${statusColors[status]}`}>
+            {status}
+          </span>
+        </div>
+        <h3 class="text-xl font-heading font-bold text-zinc-100 mb-2 group-hover:text-indigo-400 transition-colors">
+          {title}
+        </h3>
+        <p class="text-sm text-zinc-400 mb-4">{subtitle}</p>
+        <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+          <div class="bg-black/30 p-2 rounded border border-zinc-800">
+            <div class="text-zinc-500 uppercase mb-1">Impact</div>
+            <div class="text-zinc-300">{impact}</div>
+          </div>
+          <div class="bg-black/30 p-2 rounded border border-zinc-800">
+            <div class="text-zinc-500 uppercase mb-1">Read Time</div>
+            <div class="text-zinc-300">{readTime}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a>
+) : (
+  <a
+    href={`/idea/${idea.slug}/`}
+    class="group block bg-zinc-900/50 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-all"
+  >
+    <div class="aspect-video overflow-hidden">
+      <img
+        src={coverImage}
+        alt={title}
+        class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+      />
+    </div>
+    <div class="p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class={`px-2 py-0.5 text-[10px] font-mono uppercase border rounded ${statusColors[status]}`}>
+          {status}
+        </span>
+      </div>
+      <h3 class="text-lg font-heading font-bold text-zinc-100 mb-1 group-hover:text-indigo-400 transition-colors line-clamp-2">
+        {title}
+      </h3>
+      <p class="text-sm text-zinc-400 line-clamp-2">{subtitle}</p>
+      <div class="flex flex-wrap gap-1 mt-3">
+        {tags.slice(0, 3).map((tag) => (
+          <span class="px-2 py-0.5 text-[10px] font-mono text-zinc-500 bg-zinc-800/50 rounded">
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  </a>
+)}
