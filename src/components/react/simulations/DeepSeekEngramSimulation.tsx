@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { FC } from "react";
 import { Database, Hash, ShieldCheck, SlidersHorizontal } from "lucide-react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 
 type EngramSimState = {

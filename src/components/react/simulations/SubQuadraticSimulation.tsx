@@ -1,6 +1,6 @@
 import React from "react";
 import { Activity, Layers, Database, Zap } from "lucide-react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 
 const SubQuadraticSimulation: React.FC = () => {

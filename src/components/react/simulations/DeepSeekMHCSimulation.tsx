@@ -8,7 +8,7 @@ import {
 	Zap,
 	ShieldCheck,
 } from "lucide-react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 
 interface MHCState {

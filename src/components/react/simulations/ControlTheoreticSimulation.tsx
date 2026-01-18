@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard } from "../SketchElements";
 import {
 	Play,

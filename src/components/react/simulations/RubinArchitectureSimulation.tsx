@@ -1,6 +1,6 @@
 import React from "react";
 import { Cpu, Database, Layers, Server } from "lucide-react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 
 const RubinArchitectureSimulation: React.FC = () => {

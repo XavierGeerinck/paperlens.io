@@ -1,5 +1,5 @@
 import React from "react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 import {
 	CheckCircle,
@@ -15,7 +15,7 @@ interface ThoughtStep {
 	type: "thought" | "error" | "correction" | "verified";
 }
 
-const ObjectiveVerifierSimulation: React.FC = () => {
+const RLVRSimulation: React.FC = () => {
 	const { isRunning, state, start, stop, reset } = useSimulation({
 		initialState: {
 			steps: [] as ThoughtStep[],
@@ -240,4 +240,4 @@ const ObjectiveVerifierSimulation: React.FC = () => {
 	);
 };
 
-export default ObjectiveVerifierSimulation;
+export default RLVRSimulation;

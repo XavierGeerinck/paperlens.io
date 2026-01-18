@@ -11,7 +11,7 @@ import {
 	Play,
 	RotateCcw,
 } from "lucide-react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 
 // Hardware blocks to discover

@@ -1,5 +1,5 @@
 import React from "react";
-import { useSimulation } from "../../hooks/useSimulation";
+import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
 import { Brain } from "lucide-react";
 
