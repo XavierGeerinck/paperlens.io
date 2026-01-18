@@ -3,6 +3,7 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import TabsController from '../../components/react/TabsController';
 import DemoView from '../../components/react/DemoView';
 
 export async function getStaticPaths() {
@@ -34,6 +35,19 @@ const formattedDate = date.toLocaleDateString('en-US', {
   month: 'long',
   day: 'numeric',
 });
+
+// Build tab metadata
+const tabs = [
+  { id: 'paper', label: 'Documentation' },
+];
+
+if (simulation) {
+  tabs.push({ id: 'simulation', label: 'Simulation' });
+}
+
+if (pdfUrl) {
+  tabs.push({ id: 'pdf', label: 'PDF' });
+}
 ---
 
 <BaseLayout
@@ -84,34 +98,41 @@ const formattedDate = date.toLocaleDateString('en-US', {
         />
       </div>
 
-      <!-- Content -->
-      <div class="prose prose-invert prose-zinc max-w-none prose-headings:font-heading prose-code:font-mono prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
-        <Content />
+      <!-- Tabbed Content -->
+      <div class="w-full">
+        <TabsController client:load tabs={tabs} />
+
+        <!-- Documentation Tab -->
+        <div id="tab-panel-paper" class="mt-6">
+          <div class="prose prose-invert prose-zinc max-w-none prose-headings:font-heading prose-code:font-mono prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
+            <Content />
+          </div>
+        </div>
+
+        <!-- Simulation Tab -->
+        {simulation && (
+          <div id="tab-panel-simulation" class="mt-6" style="display: none;">
+            <DemoView client:visible simulationName={simulation} />
+          </div>
+        )}
+
+        <!-- PDF Tab -->
+        {pdfUrl && (
+          <div id="tab-panel-pdf" class="mt-6" style="display: none;">
+            <div class="flex flex-col items-start gap-4">
+              <p class="text-zinc-400">View the original research paper in PDF format.</p>
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
+              >
+                Open PDF
+              </a>
+            </div>
+          </div>
+        )}
       </div>
-
-      <!-- Simulation -->
-      {simulation && (
-        <section class="mt-12 pt-8 border-t border-zinc-800">
-          <h2 class="text-xl font-heading font-bold text-zinc-100 mb-6">
-            Interactive Simulation
-          </h2>
-          <DemoView client:visible simulation={simulation} />
-        </section>
-      )}
-
-      <!-- PDF Link -->
-      {pdfUrl && (
-        <section class="mt-8 pt-8 border-t border-zinc-800">
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
-          >
-            View Original Paper (PDF)
-          </a>
-        </section>
-      )}
     </article>
   </div>
 
