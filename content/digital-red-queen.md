@@ -3,7 +3,7 @@ title: "Digital Red Queen"
 subtitle: "Adversarial Evolution and Weaponized LLMs in Core War"
 date: 2026-01-08
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "Automated Malware Evolution"
 readTime: "12m"
 tags:

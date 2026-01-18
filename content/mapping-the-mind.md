@@ -3,7 +3,7 @@ title: "Mapping the Mind: Decoding LLMs with Sparse Autoencoders"
 subtitle: "Using smaller helper models to translate millions of cryptic neurons into human-understandable concepts."
 date: 2024-06-15
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "Mechanistic Interpretability & AI Safety"
 readTime: "18m"
 tags:

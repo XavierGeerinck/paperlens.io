@@ -3,7 +3,7 @@ title: DeepSeek mHC Protocol
 subtitle: Solving the Signal Survival problem in deep networks using Manifold Constrained Hyper-Connections.
 date: 2024-02-14
 status: ALPHA
-category: deep-dive
+category: paper
 impact: Infinite Depth
 readTime: 18m
 tags:

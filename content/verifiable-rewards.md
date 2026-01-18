@@ -3,7 +3,7 @@ title: "Beyond the Vibes: Why Verifiable Rewards (RLVR) is the New Scaling Law"
 subtitle: "Moving from subjective human 'vibes' to objective ground-truth verification in the quest for AGI reasoning."
 date: 2025-01-24
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "Reliable Machine Reasoning"
 readTime: "12m"
 tags:

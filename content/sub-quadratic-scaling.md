@@ -3,7 +3,7 @@ title: "Breaking the Quadratic Wall: The Rise of Sub-Quadratic Scaling"
 subtitle: "Moving beyond Transformers with Mamba, Jamba, and the shift toward linear-time sequence modeling."
 date: 2026-01-04
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: Linear Scaling & Constant Memory Inference
 readTime: "18m"
 tags:

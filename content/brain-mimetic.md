@@ -3,7 +3,7 @@ title: BrainMimetic Intelligence
 subtitle: Engineering Test-Time Plasticity with Titans Architecture to enable continuous learning during inference.
 date: 2024-05-21
 status: PROTOTYPE
-category: deep-dive
+category: idea
 impact: Infinite Context
 readTime: 25m
 tags:
@@ -14,11 +14,6 @@ tags:
 coverImage: https://picsum.photos/seed/titan/800/600?grayscale
 simulation: BrainMimetic
 featured: false
----
-
----
-category: deep-dive
-simulation: BrainMimetic
 ---
 
 # The BrainMimetic Intelligence Report

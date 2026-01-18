@@ -3,7 +3,7 @@ title: "The Control-Theoretic Imperative"
 subtitle: "Why Model Predictive Control, Not Autoregression, Is the Architecture of General Intelligence"
 date: 2026-01-07
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "AGI Architecture"
 readTime: "20m"
 tags:

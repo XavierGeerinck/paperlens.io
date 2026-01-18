@@ -3,7 +3,7 @@ title: "Gigascale Intelligence: Deciphering the NVIDIA Rubin Architecture"
 subtitle: "Beyond Blackwell: Engineering Million-Token Contexts with HBM4, Vera CPUs, and CPX Accelerators."
 date: 2026-01-04
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: Million-Token Context & 600kW Rack Density
 readTime: "22m"
 tags:

@@ -11,7 +11,7 @@ export const USER_CONFIG = {
 		github: "https://github.com/xaviergeerinck",
 		twitter: "https://twitter.com/XavierGeerinck",
 		linkedin: "https://www.linkedin.com/in/xaviergeerinck",
-		website: "https://xaviergeerinck.com",
+		website: "https://paperlens.io",
 	},
 	system: {
 		status: "NORMAL",

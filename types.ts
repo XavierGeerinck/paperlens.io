@@ -1,5 +1,5 @@
 export type ProjectStatus = "CONCEPT" | "PROTOTYPE" | "ALPHA" | "ARCHIVED";
-export type ProjectCategory = "idea" | "deep-dive";
+export type ProjectCategory = "idea" | "paper";
 
 export interface Idea {
 	id: string;

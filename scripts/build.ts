@@ -78,7 +78,7 @@ if (await cssFile.exists()) {
 // 5. Generate Static Routes for SEO (SSG)
 console.log("Generating static routes for SEO...");
 
-function injectMeta(html: string, { title, description, image, url }: any) {
+function injectMeta(html: string, { title, description, image, url, noindex = false }: { title: string; description: string; image: string; url: string; noindex?: boolean }) {
 	let newHtml = html;
 	// Replace title
 	newHtml = newHtml.replace(/<title>.*<\/title>/, `<title>${title}</title>`);
@@ -103,6 +103,14 @@ function injectMeta(html: string, { title, description, image, url }: any) {
 		}
 	};
 
+	// Add canonical link
+	const canonicalLink = `<link rel="canonical" href="${url}" />`;
+	newHtml = newHtml.replace("</head>", `    ${canonicalLink}\n  </head>`);
+
+	// Add robots meta tag
+	const robotsContent = noindex ? "noindex, nofollow" : "index, follow";
+	replaceMeta("name", "robots", robotsContent);
+
 	replaceMeta("name", "description", description);
 	replaceMeta("property", "og:title", title);
 	replaceMeta("property", "og:description", description);
@@ -126,16 +134,30 @@ for (const idea of IDEAS) {
 		title: `${idea.title} | ${USER_CONFIG.lab}`,
 		description: idea.subtitle,
 		image: idea.coverImage,
-		url: `${BASE_URL}/idea/${idea.id}`,
+		url: `${BASE_URL}/idea/${idea.id}/`,
 	});
 
 	await Bun.write(join(ideaDir, "index.html"), ideaHtml);
 }
 
-// Create 404.html for GitHub Pages SPA fallback
-await Bun.write(join(OUT_DIR, "404.html"), updatedHtml);
+// Create 404.html for GitHub Pages SPA fallback (with noindex to prevent duplicate content)
+const notFoundHtml = injectMeta(updatedHtml, {
+	title: `Page Not Found | ${USER_CONFIG.lab}`,
+	description: "The page you're looking for doesn't exist.",
+	image: USER_CONFIG.avatar,
+	url: BASE_URL,
+	noindex: true,
+});
+await Bun.write(join(OUT_DIR, "404.html"), notFoundHtml);
 
-await Bun.write(join(OUT_DIR, "index.html"), updatedHtml);
+// Create index.html with proper homepage SEO
+const indexHtmlWithMeta = injectMeta(updatedHtml, {
+	title: `${USER_CONFIG.name} | ${USER_CONFIG.lab}`,
+	description: USER_CONFIG.bio.replace("%NAME%", USER_CONFIG.name),
+	image: USER_CONFIG.avatar,
+	url: `${BASE_URL}/`,
+});
+await Bun.write(join(OUT_DIR, "index.html"), indexHtmlWithMeta);
 
 // 6. Generate Sitemap & Robots.txt
 console.log("Generating sitemap.xml and robots.txt...");
@@ -149,7 +171,7 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
   </url>
 ${IDEAS.map(
 	(idea) => `  <url>
-    <loc>${BASE_URL}/idea/${idea.id}</loc>
+    <loc>${BASE_URL}/idea/${idea.id}/</loc>
     <lastmod>${idea.date}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -182,8 +204,8 @@ const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 		(idea) => `
   <item>
     <title><![CDATA[${idea.title}]]></title>
-    <link>${BASE_URL}/idea/${idea.id}</link>
-    <guid>${BASE_URL}/idea/${idea.id}</guid>
+    <link>${BASE_URL}/idea/${idea.id}/</link>
+    <guid>${BASE_URL}/idea/${idea.id}/</guid>
     <pubDate>${new Date(idea.date).toUTCString()}</pubDate>
     <description><![CDATA[${idea.subtitle}]]></description>
   </item>`,

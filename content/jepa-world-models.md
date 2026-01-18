@@ -3,7 +3,7 @@ title: "JEPA: The Architecture of Reasoning"
 subtitle: "Why AGI requires predicting representations, not pixels."
 date: 2024-05-24
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "World Models & Planning"
 readTime: "18m"
 tags:

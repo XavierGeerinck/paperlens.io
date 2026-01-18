@@ -69,6 +69,12 @@ const SEO: React.FC<SEOProps> = ({
 			<meta name="description" content={metaDescription} />
 			<meta name="image" content={metaImage} />
 
+			{/* Canonical URL - critical for SEO */}
+			<link rel="canonical" href={currentUrl} />
+
+			{/* Robots */}
+			<meta name="robots" content="index, follow" />
+
 			{/* Open Graph */}
 			<meta property="og:site_name" content={USER_CONFIG.lab} />
 			<meta property="og:title" content={pageTitle} />

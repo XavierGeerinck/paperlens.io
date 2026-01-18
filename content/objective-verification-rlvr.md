@@ -3,7 +3,7 @@ title: "The Shift to Objective Verification"
 subtitle: "Moving from human 'vibes' to ground-truth feedback loops with RLVR and Synthetic Textbooks."
 date: 2025-01-04
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: Reliable Reasoning
 readTime: "15m"
 tags:

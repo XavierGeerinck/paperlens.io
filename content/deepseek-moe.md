@@ -3,7 +3,7 @@ title: "Advanced Mixture of Experts: The DeepSeek-V3 Architecture"
 subtitle: "Mastering efficiency through Shared Experts and Bias-Driven Load Balancing."
 date: 2024-12-28
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "Efficient Scaling (671B parameters / 37B active)"
 readTime: "15m"
 tags:

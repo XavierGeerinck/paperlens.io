@@ -3,7 +3,7 @@ title: DeepSeek Engram (Conditional Memory)
 subtitle: Adding an $O(1)$ knowledge lookup primitive that complements MoE conditional compute.
 date: 2026-01-15
 status: PROTOTYPE
-category: deep-dive
+category: paper
 impact: Infinite Memory
 readTime: 22m
 tags:

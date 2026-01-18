@@ -6,9 +6,10 @@ import {
 	Microscope,
 	GitBranch,
 	ArrowDownRight,
-	Database,
 	Terminal,
 	Loader2,
+	Lightbulb,
+	FileText,
 } from "lucide-react";
 import { useUI } from "../context/UIContext";
 import ScrambleText from "../components/ScrambleText";
@@ -22,7 +23,8 @@ const Home: React.FC = () => {
 	const { openContact } = useUI();
 
 	const featuredIdea = ideas.find((i) => i.featured);
-	const otherIdeas = ideas.filter((i) => i.id !== featuredIdea?.id);
+	const myThoughts = ideas.filter((i) => i.category === "idea" && i.id !== featuredIdea?.id);
+	const papers = ideas.filter((i) => i.category === "paper" && i.id !== featuredIdea?.id);
 
 	// Helper to render bio with bold name
 	const renderBio = () => {
@@ -154,28 +156,53 @@ const Home: React.FC = () => {
 							</section>
 						)}
 
-						{/* Experiment Log */}
-						<section className="relative z-10 pb-24">
-							<div className="flex items-center justify-between mb-8">
-								<div className="flex items-center gap-2">
-									<Database className="w-4 h-4 text-zinc-600" />
-									<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-										Project Archive
-									</h3>
+						{/* My Thoughts and Ideas */}
+						{myThoughts.length > 0 && (
+							<section className="relative z-10">
+								<div className="flex items-center justify-between mb-8">
+									<div className="flex items-center gap-2">
+										<Lightbulb className="w-4 h-4 text-amber-500" />
+										<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+											My Thoughts & Ideas
+										</h3>
+									</div>
+
+									<div className="flex gap-2">
+										<TechBadge label="Sort: Date" color="text-zinc-500" />
+									</div>
 								</div>
 
-								<div className="flex gap-2">
-									<TechBadge label="Sort: Date" color="text-zinc-500" />
-									<TechBadge label="Filter: All" color="text-zinc-500" />
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+									{myThoughts.map((idea) => (
+										<IdeaCard key={idea.id} idea={idea} />
+									))}
 								</div>
-							</div>
+							</section>
+						)}
 
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-								{otherIdeas.map((idea) => (
-									<IdeaCard key={idea.id} idea={idea} />
-								))}
-							</div>
-						</section>
+						{/* Papers */}
+						{papers.length > 0 && (
+							<section className="relative z-10 pb-24">
+								<div className="flex items-center justify-between mb-8">
+									<div className="flex items-center gap-2">
+										<FileText className="w-4 h-4 text-zinc-600" />
+										<h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+											Papers
+										</h3>
+									</div>
+
+									<div className="flex gap-2">
+										<TechBadge label="Sort: Date" color="text-zinc-500" />
+									</div>
+								</div>
+
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+									{papers.map((idea) => (
+										<IdeaCard key={idea.id} idea={idea} />
+									))}
+								</div>
+							</section>
+						)}
 					</>
 				)}
 			</section>

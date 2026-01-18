@@ -3,7 +3,7 @@ title: "Multi-Head Latent Attention: The Memory-Efficient Future of LLMs"
 subtitle: "How DeepSeek-V3 compresses KV caches by 93% using low-rank latent projections and weight absorption."
 date: 2026-01-04
 status: RESEARCH
-category: deep-dive
+category: paper
 impact: "Massive KV-Cache Reduction"
 readTime: "15m"
 tags:
