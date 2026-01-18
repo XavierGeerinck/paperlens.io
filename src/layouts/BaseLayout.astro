@@ -1,6 +1,7 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
 import SEO from '../components/SEO.astro';
+import GameOfLife from '../components/react/GameOfLife';
 import '../styles/global.css';
 
 interface Props {
@@ -37,8 +38,11 @@ const { title, description, image, type, date } = Astro.props;
       href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
     />
   </head>
-  <body class="bg-zinc-950 text-zinc-200 min-h-screen antialiased">
-    <main transition:animate="fade">
+  <body class="bg-zinc-950 text-zinc-200 min-h-screen antialiased relative">
+    <!-- Background Game of Life -->
+    <GameOfLife client:load />
+
+    <main transition:animate="fade" class="relative z-10">
       <slot />
     </main>
   </body>
