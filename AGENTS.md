@@ -46,10 +46,21 @@ tags:
   - Tag2
 coverImage: https://picsum.photos/seed/<slug>/800/600?grayscale
 simulation: IdeaName
-pdfUrl: https://arxiv.org/pdf/xxxx.xxxxx # Optional: Link to the research paper
+pdfUrl: https://arxiv.org/pdf/xxxx.xxxxx # Optional: Research paper PDF
+webUrl: https://example.com/project       # Optional: Official project website
+githubUrl: https://github.com/org/repo    # Optional: Source code repository
 featured: false
 ---
 ```
+
+### URL Field Guidelines
+| Field | Use When | Tab Label |
+|-------|----------|-----------|
+| `pdfUrl` | Linking to a research paper (arXiv, PDF) | PDF |
+| `webUrl` | Linking to official project website or demo | Website |
+| `githubUrl` | Linking to source code repository | GitHub |
+
+**Note**: ArXiv abstract URLs (`arxiv.org/abs/...`) are automatically converted to PDF URLs for embedding.
 
 ### Content Sections
 1. **Executive Summary**: High-level overview.
