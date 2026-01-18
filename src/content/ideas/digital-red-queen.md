@@ -41,8 +41,7 @@ The most striking finding is that **nature found the Nash equilibrium twice**.
 
 With zero prior knowledge of Core War strategies, DRQ independently re-discovered the "Rock-Paper-Scissors" meta that human experts took decades to map out: **Imps** (fast replicators), **Dwarves** (heavy bombers), and **Scanners** (complex hunters).
 
-![Warrior Behavior Space showing convergent evolution](image_0.png)
-*Visualizing Convergence: The graphic above depicts the "Warrior Behavior Space." Independent evolutionary runs, starting from diverse random points (the outer edges), all converge towards the same central "Generally Robust" peak. This visually proves that distinct AI populations independently discovered the same optimal survival strategies.*
+*Visualizing Convergence: Independent evolutionary runs, starting from diverse random points, all converge towards the same central "Generally Robust" peak in the behavior space. This proves that distinct AI populations independently discovered the same optimal survival strategies.*
 
 After **1000 generations**, the AI-bred warriors achieved an **85% win rate** against the Grand Champions of the 1988 International Core War Society tournament. They evolved complex behaviors like "Imp-spirals"—warriors that rapidly replicate while simultaneously carpet-bombing memory blocks behind them.
 

@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import IdeaCard from '../components/IdeaCard.astro';
+import { Lightbulb, FileText } from 'lucide-react';
+
+const allIdeas = await getCollection('ideas');
+const sortedIdeas = allIdeas.sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const featured = sortedIdeas.find((idea) => idea.data.featured);
+const papers = sortedIdeas.filter((i) => i.data.category === 'paper');
+const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
+---
+
+<BaseLayout
+  title="Research Lab"
+  description="Xavier Geerinck's research lab exploring AI, systems, and beyond."
+>
+  <Header />
+
+  <div class="pt-20 min-h-screen">
+    <!-- Hero Section -->
+    <section class="max-w-7xl mx-auto px-4 py-16">
+      <div class="flex flex-col md:flex-row items-center gap-8">
+        <div class="flex-1">
+          <div class="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">
+            Research Directive 2026
+          </div>
+          <h1 class="text-4xl md:text-5xl font-heading font-bold text-zinc-100 mb-4">
+            Make the <span class="text-indigo-400">impossible</span> inevitable
+          </h1>
+          <p class="text-lg text-zinc-400 max-w-xl">
+            Exploring the frontiers of AI, systems architecture, and emerging technologies.
+          </p>
+        </div>
+        <div class="w-48 h-48 rounded-full overflow-hidden border-2 border-zinc-800">
+          <img
+            src="https://media.licdn.com/dms/image/v2/D4E03AQFaL40i2fJ6Jw/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1700217102565?e=1740614400&v=beta&t=MxXaVr_eA_ZhxYuFpRHPv-HNd3XSMgXE8M8cCuLXhqQ"
+            alt="Xavier Geerinck"
+            class="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured -->
+    {featured && (
+      <section class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex items-center gap-2 mb-6 text-xs font-mono text-zinc-500 uppercase">
+          <span class="w-2 h-2 rounded-full bg-indigo-500" />
+          Featured Research
+        </div>
+        <IdeaCard idea={featured} variant="featured" />
+      </section>
+    )}
+
+    <!-- My Thoughts -->
+    {ideas.length > 0 && (
+      <section class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex items-center gap-2 mb-6 text-xs font-mono text-zinc-500 uppercase">
+          <Lightbulb className="w-4 h-4" />
+          My Thoughts
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ideas.filter((i) => i.slug !== featured?.slug).map((idea) => (
+            <IdeaCard idea={idea} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Papers -->
+    {papers.length > 0 && (
+      <section class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex items-center gap-2 mb-6 text-xs font-mono text-zinc-500 uppercase">
+          <FileText className="w-4 h-4" />
+          Papers
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {papers.filter((i) => i.slug !== featured?.slug).map((idea) => (
+            <IdeaCard idea={idea} />
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+
+  <Footer />
+</BaseLayout>
