@@ -1,0 +1,33 @@
+---
+const isHome = Astro.url.pathname === '/';
+---
+
+<header
+  class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-sm border-b border-zinc-800"
+>
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a
+      href="/"
+      class="font-heading text-lg font-bold text-zinc-100 hover:text-indigo-400 transition-colors"
+    >
+      PAPERLENS
+    </a>
+
+    {isHome && (
+      <div class="hidden md:flex items-center gap-4 text-xs font-mono">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span class="text-zinc-500">SYSTEM STATUS:</span>
+          <span class="text-emerald-400">NORMAL</span>
+        </div>
+      </div>
+    )}
+
+    <a
+      href="mailto:geerinck.xavier@gmail.com"
+      class="px-4 py-1.5 border border-zinc-700 text-xs font-mono uppercase tracking-wider text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
+    >
+      Connect
+    </a>
+  </div>
+</header>
