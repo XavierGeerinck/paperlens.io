@@ -119,16 +119,12 @@ if (pdfUrl) {
         <!-- PDF Tab -->
         {pdfUrl && (
           <div id="tab-panel-pdf" class="mt-6" style="display: none;">
-            <div class="flex flex-col items-start gap-4">
-              <p class="text-zinc-400">View the original research paper in PDF format.</p>
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
-              >
-                Open PDF
-              </a>
+            <div class="w-full">
+              <iframe
+                src={pdfUrl}
+                class="w-full h-[800px] border border-zinc-800 rounded-lg"
+                title={`${title} - PDF`}
+              />
             </div>
           </div>
         )}
