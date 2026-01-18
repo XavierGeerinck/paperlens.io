@@ -125,12 +125,30 @@ if (pdfUrl) {
         <!-- PDF Tab -->
         {pdfUrl && (
           <div id="tab-panel-pdf" class="mt-6" style="display: none;">
-            <div class="w-full">
-              <iframe
-                src={pdfUrl}
-                class="w-full h-[800px] border border-zinc-800 rounded-lg"
-                title={`${title} - PDF`}
-              />
+            <div class="w-full min-h-[600px] flex flex-col items-center justify-center gap-6 bg-zinc-900/30 border border-zinc-800 rounded-lg p-12">
+              <div class="text-center max-w-md">
+                <h3 class="text-xl font-heading font-bold text-zinc-100 mb-3">
+                  View Research Paper
+                </h3>
+                <p class="text-sm text-zinc-400 mb-6">
+                  Due to security restrictions, this PDF cannot be embedded directly.
+                  Click below to open it in a new tab.
+                </p>
+                <a
+                  href={pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-mono text-sm uppercase tracking-wider rounded transition-colors"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Open PDF in New Tab
+                </a>
+                <p class="text-xs text-zinc-600 mt-4 font-mono">
+                  {pdfUrl}
+                </p>
+              </div>
             </div>
           </div>
         )}
