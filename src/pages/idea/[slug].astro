@@ -89,14 +89,20 @@ if (pdfUrl) {
         </div>
       </header>
 
-      <!-- Cover Image -->
-      <div class="aspect-video overflow-hidden rounded-lg border border-zinc-800 mb-8">
-        <img
-          src={coverImage}
-          alt={title}
-          class="w-full h-full object-cover"
-        />
-      </div>
+      <!-- Cover Image or Simulation -->
+      {simulation ? (
+        <div class="mb-8">
+          <DemoView client:visible simulationName={simulation} />
+        </div>
+      ) : (
+        <div class="aspect-video overflow-hidden rounded-lg border border-zinc-800 mb-8">
+          <img
+            src={coverImage}
+            alt={title}
+            class="w-full h-full object-cover"
+          />
+        </div>
+      )}
 
       <!-- Tabbed Content -->
       <div class="w-full">
