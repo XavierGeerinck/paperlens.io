@@ -26,7 +26,7 @@ const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
   <div class="pt-20 min-h-screen">
     <!-- Hero Section -->
     <section class="max-w-7xl mx-auto px-4 py-16">
-      <div class="flex flex-col md:flex-row items-center gap-8">
+      <div class="flex flex-col md:flex-row items-center gap-12">
         <div class="flex-1">
           <div class="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">
             Research Directive 2026
@@ -34,11 +34,33 @@ const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
           <h1 class="text-4xl md:text-5xl font-heading font-bold text-zinc-100 mb-4">
             Make the <span class="text-indigo-400">impossible</span> inevitable
           </h1>
-          <p class="text-lg text-zinc-400 max-w-xl">
+          <p class="text-lg text-zinc-400 max-w-xl mb-8">
             Exploring the frontiers of AI, systems architecture, and emerging technologies.
           </p>
+
+          <!-- Identity Card -->
+          <div class="inline-block bg-zinc-900/50 border border-zinc-800 rounded-lg p-6 max-w-sm">
+            <div class="space-y-3">
+              <div>
+                <div class="text-2xl font-heading font-bold text-zinc-100 mb-1">Xavier Geerinck</div>
+                <div class="text-sm text-zinc-500 font-mono">CTO | PaperLens</div>
+              </div>
+              <div class="h-px bg-zinc-800"></div>
+              <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+                <div>
+                  <div class="text-zinc-600 uppercase mb-1">Clearance</div>
+                  <div class="text-indigo-400">Sovereign</div>
+                </div>
+                <div>
+                  <div class="text-zinc-600 uppercase mb-1">Location</div>
+                  <div class="text-zinc-300">Scrydon</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="w-64 h-64">
+
+        <div class="w-96 h-96 flex-shrink-0">
           <GlobeAnimation client:load />
         </div>
       </div>
