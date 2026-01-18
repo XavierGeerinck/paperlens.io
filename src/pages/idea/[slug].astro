@@ -127,21 +127,10 @@ if (pdfUrl) {
           <div id="tab-panel-pdf" class="mt-6" style="display: none;">
             <div class="w-full">
               <iframe
-                src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
-                class="w-full h-[800px] border border-zinc-800 rounded-lg bg-white"
+                src={pdfUrl}
+                class="w-full h-[800px] border border-zinc-800 rounded-lg"
                 title={`${title} - PDF`}
-                frameborder="0"
               />
-              <div class="mt-2 text-center">
-                <a
-                  href={pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-xs text-zinc-500 hover:text-zinc-300 font-mono"
-                >
-                  Open PDF directly →
-                </a>
-              </div>
             </div>
           </div>
         )}
