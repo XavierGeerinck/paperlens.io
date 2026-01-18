@@ -4,6 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import IdeaCard from '../components/IdeaCard.astro';
+import GlobeAnimation from '../components/react/GlobeAnimation';
 import { Lightbulb, FileText } from 'lucide-react';
 
 const allIdeas = await getCollection('ideas');
@@ -37,12 +38,8 @@ const ideas = sortedIdeas.filter((i) => i.data.category === 'idea');
             Exploring the frontiers of AI, systems architecture, and emerging technologies.
           </p>
         </div>
-        <div class="w-48 h-48 rounded-full overflow-hidden border-2 border-zinc-800">
-          <img
-            src="https://media.licdn.com/dms/image/v2/D4E03AQFaL40i2fJ6Jw/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1700217102565?e=1740614400&v=beta&t=MxXaVr_eA_ZhxYuFpRHPv-HNd3XSMgXE8M8cCuLXhqQ"
-            alt="Xavier Geerinck"
-            class="w-full h-full object-cover"
-          />
+        <div class="w-64 h-64">
+          <GlobeAnimation client:load />
         </div>
       </div>
     </section>
