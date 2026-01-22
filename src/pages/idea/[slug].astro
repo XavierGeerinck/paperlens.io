@@ -23,9 +23,13 @@ const { title, subtitle, status, date, tags, simulation, coverImage, webUrl, git
 let { pdfUrl } = idea.data;
 const { Content } = await idea.render();
 
-// Convert arXiv abstract URLs to PDF URLs for iframe embedding
-if (pdfUrl && pdfUrl.includes('arxiv.org/abs/')) {
-  pdfUrl = pdfUrl.replace('/abs/', '/pdf/');
+// Parse comma-delimited PDF URLs and convert arXiv abstract URLs to PDF URLs
+let pdfUrls: string[] = [];
+if (pdfUrl) {
+  pdfUrls = pdfUrl.split(',').map(url => {
+    const trimmed = url.trim();
+    return trimmed.includes('arxiv.org/abs/') ? trimmed.replace('/abs/', '/pdf/') : trimmed;
+  });
 }
 
 const statusColors: Record<string, string> = {
@@ -51,8 +55,14 @@ if (simulation) {
   tabs.push({ id: 'simulation', label: 'Simulation' });
 }
 
-if (pdfUrl) {
-  tabs.push({ id: 'pdf', label: 'PDF' });
+if (pdfUrls.length > 0) {
+  if (pdfUrls.length === 1) {
+    tabs.push({ id: 'pdf', label: 'PDF' });
+  } else {
+    pdfUrls.forEach((_, idx) => {
+      tabs.push({ id: `pdf-${idx}`, label: `PDF ${idx + 1}` });
+    });
+  }
 }
 
 if (webUrl) {
@@ -136,18 +146,29 @@ if (githubUrl) {
           </div>
         )}
 
-        <!-- PDF Tab -->
-        {pdfUrl && (
+        <!-- PDF Tabs -->
+        {pdfUrls.length === 1 && (
           <div id="tab-panel-pdf" class="mt-6" style="display: none;">
             <div class="w-full">
               <iframe
-                src={pdfUrl}
+                src={pdfUrls[0]}
                 class="w-full h-[800px] border border-zinc-800 rounded-lg"
                 title={`${title} - PDF`}
               />
             </div>
           </div>
         )}
+        {pdfUrls.length > 1 && pdfUrls.map((url, idx) => (
+          <div id={`tab-panel-pdf-${idx}`} class="mt-6" style="display: none;">
+            <div class="w-full">
+              <iframe
+                src={url}
+                class="w-full h-[800px] border border-zinc-800 rounded-lg"
+                title={`${title} - PDF ${idx + 1}`}
+              />
+            </div>
+          </div>
+        ))}
 
         <!-- Website Tab -->
         {webUrl && (

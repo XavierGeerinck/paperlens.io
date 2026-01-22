@@ -1,0 +1,112 @@
+---
+title: "Kona 1: Energy-Based Reasoning"
+subtitle: "Logical Intelligence recruits Yann LeCun to productize 'Implicit Chain-of-Thought' reasoning."
+date: 2026-01-22
+status: RESEARCH
+category: deep-dive
+impact: "Provable Correctness"
+readTime: "15m"
+tags:
+  - Architecture
+  - EBM
+  - Logical Intelligence
+  - Implicit CoT
+coverImage: https://picsum.photos/seed/kona1/800/600?grayscale
+simulation: Kona1
+pdfUrl: https://arxiv.org/pdf/2511.07124,https://arxiv.org/abs/2510.20607
+webUrl: https://logicalintelligence.com/kona-ebms-energy-based-models
+featured: true
+---
+
+import AlgorithmBlock from '../../components/react/AlgorithmBlock';
+import ExpandableMath from '../../components/react/ExpandableMath';
+
+# The End of "Probable"
+
+The era of "guessing" is over. Yesterday, **Logical Intelligence** released **Kona 1.0**, the first commercial Energy-Based Model (EBM) for reasoning, alongside a stunning leadership shakeup: Turing Award winner **Yann LeCun** has joined as Founding Chair of the Technical Research Board, and former Binance executive **Patrick Hillmann** has been appointed Chief Strategy Officer.
+
+While GPT-5 and DeepSeek V3 continue to push the boundaries of *explicit* text generation, Kona aims for something different: **implicit, provable correctness**.
+
+## The Core Thesis: Implicit Chain-of-Thought
+
+Kona 1 is the first commercial implementation of the framework proposed in *"Think Consistently, Reason Efficiently: Energy-Based Calibration for Implicit Chain-of-Thought"* (Chen et al., Nov 2025).
+
+Traditional LLMs "think out loud"—generating tokens step-by-step ($x_1, x_2, ...$). If they make a mistake at step 3, the error propagates. Kona, by contrast, thinks in the **continuous latent space** before generating a single word.
+
+- **Explicit CoT**: Discrete, brittle, prone to error cascading.
+- **Implicit EBM-CoT**: Continuous, fluid, self-correcting via energy minimization.
+
+## Architecture: The Latent Manifold
+
+Kona separates **Intelligence** (Optimization) from **Language** (Generation).
+
+1.  **Thinking Stage**: The problem is encoded into a continuous "Soft Thought" tensor.
+2.  **Reasoning Stage (Langevin Dynamics)**: The system applies an **Energy Function** $E(z)$ that measures logical consistency. It uses gradient descent to "slide" the thought tensor toward a low-energy state (valid solution).
+3.  **Generation Stage**: Only when the energy is minimized is the thought "collapsed" (decoded) into text or actions.
+
+<div className="my-8 p-6 bg-zinc-900 rounded-xl border border-zinc-800 shadow-lg">
+  <h3 className="text-lg font-bold mb-4 text-white">EBM-CoT Architecture</h3>
+  ```mermaid
+    flowchart LR
+        Input[Prompt] --> Encode[Encoder]
+        Encode --> Latent((Soft Thought z_0))
+        
+        subgraph LANGEVIN [Energy-Based Calibration]
+            Latent -- "Gradient ∇E(z)" --> Refine[Update State]
+            Refine -- "z_t" --> Latent
+        end
+        
+        Latent -- "Converged (Low Energy)" --> Decode[Decoder]
+        Decode --> Output[Verified Solution]
+        
+        style LANGEVIN fill:#e8f5e9,stroke:#2e7d32
+  ```
+</div>
+
+## Algorithm: Langevin Calibration
+
+The breakthrough in Kona 1 is **Langevin Calibration**. Instead of sampling the next token, we sample the *meaning* of the solution and refine it against hard logical constraints.
+
+<AlgorithmBlock 
+  client:only="react"
+  title="Langevin Calibration Step"
+  inputs={["Latent Thought $z_t$", "Energy Function $E(z)$", "Step size $\\lambda$", "Noise $\\eta$"]}
+  outputs={["Calibrated Thought $z_{t+1}$"]}
+  steps={[
+    "Calculate Consistency Energy: $E = \\text{LogicConstraints}(z_t)$",
+    "Compute Gradient: $\\nabla_z E(z_t)$ (Direction of Truth)",
+    "Update: $z_{t+1} \\leftarrow z_t - \\frac{\\lambda}{2} \\nabla_z E(z_t) + \\sqrt{\\lambda} \\eta$"
+  ]}
+  executor="langevin-calibration"
+  initialState={{
+    z: [0.1, 0.8, -0.4],
+    E: 2.5,
+    lambda: 0.1
+  }}
+/>
+
+### Why This Solves the "Sudoku Problem"
+In discrete solvers (like standard code), you are either "Right" or "Wrong". In Kona's continuous space, a cell can be "80% a 3, 20% a 4". This fluidity allows the gradients to push the system out of local minima that trap discrete solvers.
+
+## The Math of Certainty
+
+The probability of a thought $z$ being correct is given by the Gibbs-Boltzmann distribution:
+
+<ExpandableMath
+  client:only="react"
+  equation="P(z|x) = \frac{e^{-E(z, x)/T}}{Z(x)}"
+  explanation="We define the probability of a solution not by how likely a human is to write it, but by how well it satisfies the Energy Function E."
+  example={{
+    description: "If a solution violates a logic constraint:",
+    values: { "E(z, x)": "High (Conflict)", "P(z|x)": "Approaches 0" },
+    result: "The model physically cannot output the hallucination."
+  }}
+  terms={[
+    { symbol: "E(z, x)", name: "Energy", meaning: "Logic violation score" },
+    { symbol: "T", name: "Temperature", meaning: "Controls reasoning diversity" }
+  ]}
+/>
+
+## Performance
+
+In the demos released on `logicalintelligence.com`, Kona solves "Evil" grade Sudoku puzzles in **14ms** on a single H100 GPU. This is achieved not by being smarter, but by being **differentiable**. It doesn't "search" the tree of possibilities; it "flows" to the answer.

@@ -23,6 +23,48 @@ type ExecutorFn = (
 ) => AsyncGenerator<ExecutionStep, void, unknown>;
 const executors: Record<string, ExecutorFn> = {};
 
+const randn = () => {
+	let u = 0;
+	let v = 0;
+	while (u === 0) u = Math.random();
+	while (v === 0) v = Math.random();
+	return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+};
+
+executors["langevin-calibration"] = async function* (initialState) {
+	let { z, E, lambda } = initialState;
+
+	// Dummy target for the latent thought: [0.0, 1.0, 0.0]
+	const target = [0.0, 1.0, 0.0];
+
+	for (let step = 1; step <= 5; step++) {
+		// 1. Compute Gradients
+		const grad = z.map((val: number, i: number) => val - target[i]);
+
+		// 2. Langevin Update
+		const noise = z.map(() => (Math.random() - 0.5) * 0.2);
+		const z_new = z.map(
+			(val: number, i: number) => val - lambda * grad[i] + noise[i],
+		);
+
+		// 3. New Energy
+		E = E * 0.8; // Pretend energy goes down
+
+		yield {
+			step,
+			state: {
+				z_t: `[${z.map((n: number) => n.toFixed(2)).join(", ")}]`,
+				E: E.toFixed(2),
+				"\\nabla E": `[${grad.map((n: number) => n.toFixed(1)).join(", ")}]`,
+			},
+			description:
+				"Gradient descent pushes z toward the valid region, noise explores local structure.",
+		};
+
+		z = z_new;
+	}
+};
+
 // TTT-E2E Executor
 executors["ttt-e2e"] = async function* (initialState) {
 	const { W, x_t, eta } = initialState;
@@ -117,6 +159,43 @@ executors["vvpa-mechanism"] = async function* (initialState) {
 		step: 4,
 		state: { v_pos, cache_status: "SAVED", index: m },
 		description: "Store position-aware value in KV cache",
+	};
+};
+
+// Langevin Dynamics Executor
+executors["langevin-dynamics"] = async function* (initialState) {
+	const { z, lambda, temperature, noise } = initialState;
+
+	// Step 1: Evaluate Energy (quadratic proxy)
+	const energy = z.reduce((sum: number, v: number) => sum + v * v, 0);
+	const E = 0.5 * energy;
+
+	yield {
+		step: 1,
+		state: { z, E },
+		description: "Compute energy E(z) = 1/2 ||z||^2 as a proxy landscape",
+	};
+
+	// Step 2: Compute Gradient
+	const grad = z.map((v: number) => v);
+
+	yield {
+		step: 2,
+		state: { z, grad },
+		description: "Gradient of E is ∇E(z) = z for the quadratic proxy",
+	};
+
+	// Step 3: Langevin Update
+	const scale = Math.sqrt(2 * lambda * temperature);
+	const eps = z.map(() => randn() * noise);
+	const z_next = z.map(
+		(v: number, i: number) => v - lambda * grad[i] + scale * eps[i],
+	);
+
+	yield {
+		step: 3,
+		state: { z, grad, epsilon: eps, z_next, lambda, temperature },
+		description: "Update with noise: z_{t+1} = z_t - λ∇E(z_t) + √(2λT) ε",
 	};
 };
 
