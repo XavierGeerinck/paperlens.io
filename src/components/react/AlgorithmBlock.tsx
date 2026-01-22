@@ -1,307 +1,383 @@
-import React, { useState, useEffect, useRef } from 'react';
-import katex from 'katex';
-import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import katex from "katex";
+import { Play, Pause, RotateCcw, SkipForward } from "lucide-react";
 
 interface AlgorithmBlockProps {
-  title: string;
-  inputs?: string[];
-  outputs?: string[];
-  steps: string[];
-  executor?: string; // Name of the executor to use
-  initialState?: any;
+	title: string;
+	inputs?: string[];
+	outputs?: string[];
+	steps: string[];
+	executor?: string; // Name of the executor to use
+	initialState?: any;
 }
 
 interface ExecutionStep {
-  step: number;
-  state: Record<string, any>;
-  description?: string;
+	step: number;
+	state: Record<string, any>;
+	description?: string;
 }
 
 // Registry of named executors
-type ExecutorFn = (initialState: any) => AsyncGenerator<ExecutionStep, void, unknown>;
+type ExecutorFn = (
+	initialState: any,
+) => AsyncGenerator<ExecutionStep, void, unknown>;
 const executors: Record<string, ExecutorFn> = {};
 
 // TTT-E2E Executor
-executors['ttt-e2e'] = async function* (initialState) {
-  const { W, x_t, eta } = initialState;
-  
-  // Step 1: Predict x_{t+1} using W
-  const prediction = W.map((row: number[]) => 
-    row.reduce((sum: number, w: number, j: number) => sum + w * x_t[j], 0)
-  );
-  
-  yield {
-    step: 1,
-    state: { W, x_t, prediction },
-    description: "Forward pass: multiply weight matrix W with input x_t to get prediction"
-  };
-  
-  // Step 2: Observe true x_{t+1}
-  const x_next = [0.8, 0.6];
-  const loss = prediction.reduce((sum: number, pred: number, i: number) => 
-    sum + Math.pow(pred - x_next[i], 2), 0
-  );
-  
-  yield {
-    step: 2,
-    state: { W, x_t, prediction, x_next, loss },
-    description: "Observe ground truth x_{t+1} and compute loss"
-  };
-  
-  // Step 3: Update W using SGD
-  const gradient = W.map((row: number[], i: number) => 
-    row.map((_: number, j: number) => 2 * (prediction[i] - x_next[i]) * x_t[j])
-  );
-  
-  const W_new = W.map((row: number[], i: number) => 
-    row.map((w: number, j: number) => w - eta * gradient[i][j])
-  );
-  
-  yield {
-    step: 3,
-    state: { W_old: W, gradient, W_new, eta, x_next },
-    description: "Apply gradient descent: W ← W - η∇L"
-  };
+executors["ttt-e2e"] = async function* (initialState) {
+	const { W, x_t, eta } = initialState;
+
+	// Step 1: Predict x_{t+1} using W
+	const prediction = W.map((row: number[]) =>
+		row.reduce((sum: number, w: number, j: number) => sum + w * x_t[j], 0),
+	);
+
+	yield {
+		step: 1,
+		state: { W, x_t, prediction },
+		description:
+			"Forward pass: multiply weight matrix W with input x_t to get prediction",
+	};
+
+	// Step 2: Observe true x_{t+1}
+	const x_next = [0.8, 0.6];
+	const loss = prediction.reduce(
+		(sum: number, pred: number, i: number) =>
+			sum + Math.pow(pred - x_next[i], 2),
+		0,
+	);
+
+	yield {
+		step: 2,
+		state: { W, x_t, prediction, x_next, loss },
+		description: "Observe ground truth x_{t+1} and compute loss",
+	};
+
+	// Step 3: Update W using SGD
+	const gradient = W.map((row: number[], i: number) =>
+		row.map((_: number, j: number) => 2 * (prediction[i] - x_next[i]) * x_t[j]),
+	);
+
+	const W_new = W.map((row: number[], i: number) =>
+		row.map((w: number, j: number) => w - eta * gradient[i][j]),
+	);
+
+	yield {
+		step: 3,
+		state: { W_old: W, gradient, W_new, eta, x_next },
+		description: "Apply gradient descent: W ← W - η∇L",
+	};
+};
+
+// VVPA Mechanism Executor
+executors["vvpa-mechanism"] = async function* (initialState) {
+	const { xt, m, theta } = initialState;
+
+	// Step 1: Generate standard Value
+	const W_V = [
+		[0.1, 0.2, 0.3, 0.4],
+		[0.5, 0.6, 0.7, 0.8],
+		[0.9, 1.0, 1.1, 1.2],
+		[1.3, 1.4, 1.5, 1.6],
+	];
+	const v_t = W_V.map((row) => row.reduce((sum, w, j) => sum + w * xt[j], 0));
+
+	yield {
+		step: 1,
+		state: { xt, W_V, v_t },
+		description: "Generate semantic value vector v_t = W_V * x_t",
+	};
+
+	// Step 2: Compute Positional Rotation
+	const angle = m / Math.pow(theta, 0); // Simplified for visualization
+	const R_m = [
+		Math.cos(angle),
+		Math.sin(angle),
+		Math.cos(angle),
+		Math.sin(angle),
+	];
+
+	yield {
+		step: 2,
+		state: { m, theta, R_m },
+		description: "Compute RoPE-like rotational vector R_m for position m",
+	};
+
+	// Step 3: Inject Position
+	const v_pos = v_t.map((v, i) => v * R_m[i]);
+
+	yield {
+		step: 3,
+		state: { v_t, R_m, v_pos },
+		description: "Modulate value vector with position: v_pos = v_t ⊙ R_m",
+	};
+
+	// Step 4: Cache
+	yield {
+		step: 4,
+		state: { v_pos, cache_status: "SAVED", index: m },
+		description: "Store position-aware value in KV cache",
+	};
 };
 
 // Helper function to render LaTeX inline math
 function renderMath(text: string): string {
-  return text.replace(/\$([^$]+)\$/g, (_, math) => {
-    try {
-      return katex.renderToString(math, {
-        throwOnError: false,
-        displayMode: false,
-      });
-    } catch (e) {
-      return `$${math}$`;
-    }
-  });
+	return text.replace(/\$([^$]+)\$/g, (_, math) => {
+		try {
+			return katex.renderToString(math, {
+				throwOnError: false,
+				displayMode: false,
+			});
+		} catch (e) {
+			return `$${math}$`;
+		}
+	});
 }
 
 // Helper to format values for display
 function formatValue(value: any): string {
-  if (Array.isArray(value)) {
-    if (value.length > 0 && Array.isArray(value[0])) {
-      return `[${value.map(row => `[${row.map((v: number) => v.toFixed(4)).join(', ')}]`).join(', ')}]`;
-    }
-    return `[${value.map((v: number) => typeof v === 'number' ? v.toFixed(4) : v).join(', ')}]`;
-  }
-  if (typeof value === 'number') {
-    return value.toFixed(4);
-  }
-  return String(value);
+	if (Array.isArray(value)) {
+		if (value.length > 0 && Array.isArray(value[0])) {
+			return `[${value.map((row) => `[${row.map((v: number) => v.toFixed(4)).join(", ")}]`).join(", ")}]`;
+		}
+		return `[${value.map((v: number) => (typeof v === "number" ? v.toFixed(4) : v)).join(", ")}]`;
+	}
+	if (typeof value === "number") {
+		return value.toFixed(4);
+	}
+	return String(value);
 }
 
-export default function AlgorithmBlock({ 
-  title, 
-  inputs, 
-  outputs,
-  steps,
-  executor,
-  initialState 
+export default function AlgorithmBlock({
+	title,
+	inputs,
+	outputs,
+	steps,
+	executor,
+	initialState,
 }: AlgorithmBlockProps) {
-  // Look up the executor function from the registry
-  const execute = executor ? executors[executor] : undefined;
-  
-  console.log('[AlgorithmBlock] Props received:', { title, executor, hasExecute: !!execute, initialState });
-  
-  const [currentStep, setCurrentStep] = useState(0);
-  const [executionHistory, setExecutionHistory] = useState<ExecutionStep[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const generatorRef = useRef<AsyncGenerator<ExecutionStep, void, unknown> | null>(null);
-  const playIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+	// Look up the executor function from the registry
+	const execute = executor ? executors[executor] : undefined;
 
-  const totalSteps = steps.length;
+	console.log("[AlgorithmBlock] Props received:", {
+		title,
+		executor,
+		hasExecute: !!execute,
+		initialState,
+	});
 
-  const resetExecution = () => {
-    setCurrentStep(0);
-    setExecutionHistory([]);
-    setIsPlaying(false);
-    setIsComplete(false);
-    generatorRef.current = null;
-    if (playIntervalRef.current) {
-      clearInterval(playIntervalRef.current);
-      playIntervalRef.current = null;
-    }
-  };
+	const [currentStep, setCurrentStep] = useState(0);
+	const [executionHistory, setExecutionHistory] = useState<ExecutionStep[]>([]);
+	const [isPlaying, setIsPlaying] = useState(false);
+	const [isComplete, setIsComplete] = useState(false);
+	const generatorRef = useRef<AsyncGenerator<
+		ExecutionStep,
+		void,
+		unknown
+	> | null>(null);
+	const playIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const stepForward = async () => {
-    if (!execute || !initialState || isComplete) return;
+	const totalSteps = steps.length;
 
-    if (!generatorRef.current) {
-      generatorRef.current = execute(initialState);
-    }
+	const resetExecution = () => {
+		setCurrentStep(0);
+		setExecutionHistory([]);
+		setIsPlaying(false);
+		setIsComplete(false);
+		generatorRef.current = null;
+		if (playIntervalRef.current) {
+			clearInterval(playIntervalRef.current);
+			playIntervalRef.current = null;
+		}
+	};
 
-    const result = await generatorRef.current!.next();
-    
-    if (result.done) {
-      setIsPlaying(false);
-      setIsComplete(true);
-      if (playIntervalRef.current) {
-        clearInterval(playIntervalRef.current);
-        playIntervalRef.current = null;
-      }
-      return;
-    }
+	const stepForward = async () => {
+		if (!execute || !initialState || isComplete) return;
 
-    const step = result.value;
-    setExecutionHistory(prev => [...prev, step]);
-    setCurrentStep(step.step);
-  };
+		if (!generatorRef.current) {
+			generatorRef.current = execute(initialState);
+		}
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+		const result = await generatorRef.current!.next();
 
-  // Handle play loop
-  useEffect(() => {
-    if (isPlaying && !playIntervalRef.current) {
-      stepForward();
-      playIntervalRef.current = setInterval(() => {
-        stepForward();
-      }, 1000);
-    } else if (!isPlaying && playIntervalRef.current) {
-      clearInterval(playIntervalRef.current);
-      playIntervalRef.current = null;
-    }
-    
-    return () => {
-      if (playIntervalRef.current) {
-        clearInterval(playIntervalRef.current);
-        playIntervalRef.current = null;
-      }
-    };
-  }, [isPlaying]);
+		if (result.done) {
+			setIsPlaying(false);
+			setIsComplete(true);
+			if (playIntervalRef.current) {
+				clearInterval(playIntervalRef.current);
+				playIntervalRef.current = null;
+			}
+			return;
+		}
 
-  const currentState = executionHistory[executionHistory.length - 1];
+		const step = result.value;
+		setExecutionHistory((prev) => [...prev, step]);
+		setCurrentStep(step.step);
+	};
 
-  return (
-    <div className="my-8 rounded-none border border-zinc-800 bg-zinc-900/50 shadow-sm">
-      {/* Header */}
-      <div className="border-b border-zinc-800 bg-zinc-950/50 p-6">
-        <h3 className="text-sm font-mono font-bold uppercase tracking-widest text-white">{title}</h3>
-        
-        {inputs && (
-          <div className="mt-3 font-mono text-sm text-zinc-400">
-            <span className="font-bold text-zinc-200">Input:</span>{' '}
-            {inputs.map((input, idx) => (
-              <span key={idx}>
-                <span dangerouslySetInnerHTML={{ __html: renderMath(input) }} />
-                {idx < inputs.length - 1 && ', '}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+	const togglePlay = () => {
+		setIsPlaying(!isPlaying);
+	};
 
-      {/* Algorithm Steps */}
-      <div className="p-6">
-        <ol className="space-y-2 font-mono text-sm leading-relaxed text-zinc-300 list-decimal list-inside mb-6">
-          {steps.map((step, idx) => {
-            const stepNumber = idx + 1;
-            const isActive = currentStep === stepNumber;
-            const isPast = currentStep > stepNumber;
-            
-            return (
-              <li
-                key={idx}
-                className={`transition-all duration-300 ${
-                  isActive 
-                    ? 'text-white font-bold bg-indigo-500/10 -mx-2 px-2 py-1 border-l-2 border-indigo-500' 
-                    : isPast 
-                    ? 'text-zinc-500' 
-                    : 'text-zinc-300'
-                }`}
-                dangerouslySetInnerHTML={{ __html: renderMath(step) }}
-              />
-            );
-          })}
-        </ol>
+	// Handle play loop
+	useEffect(() => {
+		if (isPlaying && !playIntervalRef.current) {
+			stepForward();
+			playIntervalRef.current = setInterval(() => {
+				stepForward();
+			}, 1000);
+		} else if (!isPlaying && playIntervalRef.current) {
+			clearInterval(playIntervalRef.current);
+			playIntervalRef.current = null;
+		}
 
-        {/* Execution Controls */}
-        {execute && initialState && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 border-t border-zinc-800 pt-4">
-              <button
-                onClick={togglePlay}
-                disabled={isComplete}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="w-4 h-4" />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    Play
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={stepForward}
-                disabled={isPlaying || isComplete}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-300 font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                <SkipForward className="w-4 h-4" />
-                Step
-              </button>
+		return () => {
+			if (playIntervalRef.current) {
+				clearInterval(playIntervalRef.current);
+				playIntervalRef.current = null;
+			}
+		};
+	}, [isPlaying]);
 
-              <button
-                onClick={resetExecution}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Reset
-              </button>
+	const currentState = executionHistory[executionHistory.length - 1];
 
-              <div className="ml-auto font-mono text-xs text-zinc-500">
-                Step {currentStep} / {totalSteps}
-              </div>
-            </div>
+	return (
+		<div className="my-8 rounded-none border border-zinc-800 bg-zinc-900/50 shadow-sm">
+			{/* Header */}
+			<div className="border-b border-zinc-800 bg-zinc-950/50 p-6">
+				<h3 className="text-sm font-mono font-bold uppercase tracking-widest text-white">
+					{title}
+				</h3>
 
-            {/* State Visualization */}
-            {currentState && (
-              <div className="border border-zinc-800 bg-zinc-950/50 p-4">
-                <div className="mb-3 text-xs font-mono font-bold uppercase tracking-widest text-zinc-400">
-                  Current State
-                </div>
-                <div className="space-y-2">
-                  {Object.entries(currentState.state).map(([key, value]) => (
-                    <div key={key} className="flex items-start gap-3 font-mono text-sm">
-                      <span className="text-indigo-400 min-w-[80px]">{key}:</span>
-                      <span className="text-zinc-200 font-medium break-all">{formatValue(value)}</span>
-                    </div>
-                  ))}
-                </div>
-                {currentState.description && (
-                  <div className="mt-3 pt-3 border-t border-zinc-800 text-sm text-zinc-400 italic">
-                    {currentState.description}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+				{inputs && (
+					<div className="mt-3 font-mono text-sm text-zinc-400">
+						<span className="font-bold text-zinc-200">Input:</span>{" "}
+						{inputs.map((input, idx) => (
+							<span key={idx}>
+								<span dangerouslySetInnerHTML={{ __html: renderMath(input) }} />
+								{idx < inputs.length - 1 && ", "}
+							</span>
+						))}
+					</div>
+				)}
+			</div>
 
-      {/* Outputs */}
-      {outputs && (
-        <div className="border-t border-zinc-800 bg-zinc-950/50 p-6">
-          <div className="font-mono text-sm text-zinc-400">
-            <span className="font-bold text-zinc-200">Output:</span>{' '}
-            {outputs.map((output, idx) => (
-              <span key={idx}>
-                <span dangerouslySetInnerHTML={{ __html: renderMath(output) }} />
-                {idx < outputs.length - 1 && ', '}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+			{/* Algorithm Steps */}
+			<div className="p-6">
+				<ol className="space-y-2 font-mono text-sm leading-relaxed text-zinc-300 list-decimal list-inside mb-6">
+					{steps.map((step, idx) => {
+						const stepNumber = idx + 1;
+						const isActive = currentStep === stepNumber;
+						const isPast = currentStep > stepNumber;
+
+						return (
+							<li
+								key={idx}
+								className={`transition-all duration-300 ${
+									isActive
+										? "text-white font-bold bg-indigo-500/10 -mx-2 px-2 py-1 border-l-2 border-indigo-500"
+										: isPast
+											? "text-zinc-500"
+											: "text-zinc-300"
+								}`}
+								dangerouslySetInnerHTML={{ __html: renderMath(step) }}
+							/>
+						);
+					})}
+				</ol>
+
+				{/* Execution Controls */}
+				{execute && initialState && (
+					<div className="space-y-4">
+						<div className="flex items-center gap-2 border-t border-zinc-800 pt-4">
+							<button
+								onClick={togglePlay}
+								disabled={isComplete}
+								className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
+							>
+								{isPlaying ? (
+									<>
+										<Pause className="w-4 h-4" />
+										Pause
+									</>
+								) : (
+									<>
+										<Play className="w-4 h-4" />
+										Play
+									</>
+								)}
+							</button>
+
+							<button
+								onClick={stepForward}
+								disabled={isPlaying || isComplete}
+								className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-300 font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
+							>
+								<SkipForward className="w-4 h-4" />
+								Step
+							</button>
+
+							<button
+								onClick={resetExecution}
+								className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
+							>
+								<RotateCcw className="w-4 h-4" />
+								Reset
+							</button>
+
+							<div className="ml-auto font-mono text-xs text-zinc-500">
+								Step {currentStep} / {totalSteps}
+							</div>
+						</div>
+
+						{/* State Visualization */}
+						{currentState && (
+							<div className="border border-zinc-800 bg-zinc-950/50 p-4">
+								<div className="mb-3 text-xs font-mono font-bold uppercase tracking-widest text-zinc-400">
+									Current State
+								</div>
+								<div className="space-y-2">
+									{Object.entries(currentState.state).map(([key, value]) => (
+										<div
+											key={key}
+											className="flex items-start gap-3 font-mono text-sm"
+										>
+											<span className="text-indigo-400 min-w-[80px]">
+												{key}:
+											</span>
+											<span className="text-zinc-200 font-medium break-all">
+												{formatValue(value)}
+											</span>
+										</div>
+									))}
+								</div>
+								{currentState.description && (
+									<div className="mt-3 pt-3 border-t border-zinc-800 text-sm text-zinc-400 italic">
+										{currentState.description}
+									</div>
+								)}
+							</div>
+						)}
+					</div>
+				)}
+			</div>
+
+			{/* Outputs */}
+			{outputs && (
+				<div className="border-t border-zinc-800 bg-zinc-950/50 p-6">
+					<div className="font-mono text-sm text-zinc-400">
+						<span className="font-bold text-zinc-200">Output:</span>{" "}
+						{outputs.map((output, idx) => (
+							<span key={idx}>
+								<span
+									dangerouslySetInnerHTML={{ __html: renderMath(output) }}
+								/>
+								{idx < outputs.length - 1 && ", "}
+							</span>
+						))}
+					</div>
+				</div>
+			)}
+		</div>
+	);
 }

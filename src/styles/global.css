@@ -29,7 +29,7 @@
 
 /* Mermaid diagrams */
 .mermaid-diagram {
-  @apply my-6 p-4 bg-zinc-900 rounded-lg overflow-x-auto;
+  @apply p-4 bg-zinc-900 rounded-lg overflow-x-auto;
 }
 
 .mermaid-diagram svg {
