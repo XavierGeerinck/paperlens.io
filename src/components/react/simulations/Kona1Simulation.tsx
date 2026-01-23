@@ -2,7 +2,14 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { useSimulation } from "../../../hooks/useSimulation";
 import { SchematicCard, SchematicButton } from "../SketchElements";
-import { Play, RotateCcw, Flame, Activity, BrainCircuit, ShieldCheck } from "lucide-react";
+import {
+	Play,
+	RotateCcw,
+	Flame,
+	Activity,
+	BrainCircuit,
+	ShieldCheck,
+} from "lucide-react";
 
 // 9x9 Full Sudoku
 const BOARD_SIZE = 9;
@@ -10,15 +17,10 @@ const SQ_SIZE = 3;
 
 // Problem: 0 = Unknown (Classic "Evil" Sudoku)
 const PROBLEM = [
-	0, 0, 0, 0, 0, 0, 0, 1, 2,
-	0, 0, 0, 0, 3, 5, 0, 0, 0,
-	0, 0, 0, 6, 0, 0, 0, 7, 0,
-	7, 0, 0, 0, 0, 0, 3, 0, 0,
-	0, 0, 0, 4, 0, 0, 8, 0, 0,
-	1, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 1, 2, 0, 0, 0, 0,
-	0, 8, 0, 0, 0, 0, 0, 4, 0,
-	0, 5, 0, 0, 0, 0, 6, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 3, 5, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 7,
+	0, 7, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 4, 0, 0, 8, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 4, 0, 0, 5, 0, 0, 0, 0,
+	6, 0, 0,
 ];
 
 const CELL_IDS = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, (_, i) => {
@@ -165,7 +167,10 @@ const Kona1Simulation: FC = () => {
 		for (const group of groups) {
 			for (let k = 0; k < BOARD_SIZE; k++) {
 				// Sum probability of number k+1 in this group
-				const sumProb = group.reduce((sum, cellIdx) => sum + probs[cellIdx][k], 0);
+				const sumProb = group.reduce(
+					(sum, cellIdx) => sum + probs[cellIdx][k],
+					0,
+				);
 				const deviation = sumProb - 1.0; // Should be exactly 1.0
 				energy += deviation * deviation * 8.0; // Quadratic penalty
 
@@ -176,7 +181,11 @@ const Kona1Simulation: FC = () => {
 						if (m === k) {
 							addGrad(cellIdx, m, 2 * 8.0 * deviation * p_k * (1 - p_k));
 						} else {
-							addGrad(cellIdx, m, -2 * 8.0 * deviation * p_k * probs[cellIdx][m]);
+							addGrad(
+								cellIdx,
+								m,
+								-2 * 8.0 * deviation * p_k * probs[cellIdx][m],
+							);
 						}
 					}
 				}
@@ -296,12 +305,12 @@ const Kona1Simulation: FC = () => {
 								const row = Math.floor(i / BOARD_SIZE);
 								const isBlockRight = col === 2 || col === 5;
 								const isBlockBottom = row === 2 || row === 5;
-								
+
 								// Confidence calculation for visual effects
 								const probs = softmax(latent[i]);
 								const maxP = Math.max(...probs);
 								const isGiven = PROBLEM[i] !== 0;
-								
+
 								return (
 									<div
 										key={CELL_IDS[i]}
@@ -314,7 +323,7 @@ const Kona1Simulation: FC = () => {
 										`}
 									>
 										{/* Cell Value */}
-										<span 
+										<span
 											className={`
 												z-10 text-lg leading-none
 												${isGiven ? "font-black text-white" : "font-semibold"}
@@ -324,7 +333,7 @@ const Kona1Simulation: FC = () => {
 												${!isGiven && maxP >= 0.95 ? "text-emerald-400 font-bold" : ""}
 											`}
 											style={{
-												opacity: isGiven ? 1 : Math.max(0.5, maxP)
+												opacity: isGiven ? 1 : Math.max(0.5, maxP),
 											}}
 										>
 											{val}
@@ -344,12 +353,12 @@ const Kona1Simulation: FC = () => {
 												))}
 											</div>
 										)}
-										
+
 										{/* Active "Thinking" Glow */}
 										{!isGiven && maxP < 0.95 && (
-											<div 
+											<div
 												className="absolute inset-0 bg-indigo-500/5 pointer-events-none rounded"
-												style={{ opacity: (1 - maxP) * 0.5 }} 
+												style={{ opacity: (1 - maxP) * 0.5 }}
 											/>
 										)}
 									</div>
@@ -394,83 +403,125 @@ const Kona1Simulation: FC = () => {
 					</div>
 
 					<div className="flex-grow bg-zinc-900 rounded border border-zinc-800 relative overflow-hidden p-2 h-32">
-					<svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-						<title>Energy minimization trace over time</title>
-						{/* Y-axis grid lines */}
-						<line x1="0" y1="25" x2="100" y2="25" stroke="currentColor" strokeWidth="0.2" opacity="0.2" vectorEffect="non-scaling-stroke" />
-						<line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" strokeWidth="0.2" opacity="0.2" vectorEffect="non-scaling-stroke" />
-						<line x1="0" y1="75" x2="100" y2="75" stroke="currentColor" strokeWidth="0.2" opacity="0.2" vectorEffect="non-scaling-stroke" />
-						
-						{gradientTrace.length > 1 && (() => {
-							// Dynamic scaling based on actual energy range
-							const energies = gradientTrace.map(p => p.value);
-							const maxE = Math.max(...energies);
-							const minE = Math.min(...energies);
-							const range = maxE - minE;
-							const padding = range * 0.1 || 1; // Add 10% padding, minimum 1
-							
-							const scaleY = (val: number) => {
-								if (range < 0.01) return 50; // Flat line in middle if no variation
-								return 95 - ((val - minE + padding) / (range + 2 * padding)) * 90;
-							};
-							
-							const points = gradientTrace
-								.map((p, i) => {
-									const x = (i / Math.max(gradientTrace.length - 1, 1)) * 100;
-									const y = scaleY(p.value);
-									return `${x},${y}`;
-								})
-								.join(" ");
-							
-							return (
-								<>
-									<polyline
-										points={points}
-										fill="none"
-										stroke="#10b981"
-										strokeWidth="1"
-										vectorEffect="non-scaling-stroke"
-									/>
-									{/* Current point indicator */}
-									{gradientTrace.length > 0 && (
-										<circle
-											cx={(gradientTrace.length - 1) / Math.max(gradientTrace.length - 1, 1) * 100}
-											cy={scaleY(gradientTrace[gradientTrace.length - 1].value)}
-											r="1"
-											fill="#10b981"
-											vectorEffect="non-scaling-stroke"
-										/>
-									)}
-								</>
-							);
-						})()}
-					</svg>
-					<div className="absolute top-2 right-2 text-xs text-zinc-500">
-						Langevin Descent Trace
-					</div>
-					{gradientTrace.length > 1 && (() => {
-						const energies = gradientTrace.map(p => p.value);
-						const maxE = Math.max(...energies);
-						const minE = Math.min(...energies);
-						return (
-							<>
-								<div className="absolute top-2 left-2 text-xs text-zinc-500">
-									{maxE.toFixed(1)}
-								</div>
-								<div className="absolute bottom-2 left-2 text-xs text-zinc-500">
-									{minE.toFixed(1)}
-								</div>
-							</>
-						);
-					})()}
-				</div>
+						<svg
+							className="w-full h-full"
+							viewBox="0 0 100 100"
+							preserveAspectRatio="none"
+						>
+							<title>Energy minimization trace over time</title>
+							{/* Y-axis grid lines */}
+							<line
+								x1="0"
+								y1="25"
+								x2="100"
+								y2="25"
+								stroke="currentColor"
+								strokeWidth="0.2"
+								opacity="0.2"
+								vectorEffect="non-scaling-stroke"
+							/>
+							<line
+								x1="0"
+								y1="50"
+								x2="100"
+								y2="50"
+								stroke="currentColor"
+								strokeWidth="0.2"
+								opacity="0.2"
+								vectorEffect="non-scaling-stroke"
+							/>
+							<line
+								x1="0"
+								y1="75"
+								x2="100"
+								y2="75"
+								stroke="currentColor"
+								strokeWidth="0.2"
+								opacity="0.2"
+								vectorEffect="non-scaling-stroke"
+							/>
 
-				<div
-					className={`mt-4 flex items-center gap-2 text-sm font-bold ${energy < 1 ? "text-emerald-400" : "text-orange-400"}`}
-				>
-					{energy < 1 ? <ShieldCheck size={18} /> : <Activity size={18} />}
-					{energy < 1 ? "THOUGHT CONVERGED" : "CALIBRATING LATENT STATE..."}
-				</div>
+							{gradientTrace.length > 1 &&
+								(() => {
+									// Dynamic scaling based on actual energy range
+									const energies = gradientTrace.map((p) => p.value);
+									const maxE = Math.max(...energies);
+									const minE = Math.min(...energies);
+									const range = maxE - minE;
+									const padding = range * 0.1 || 1; // Add 10% padding, minimum 1
+
+									const scaleY = (val: number) => {
+										if (range < 0.01) return 50; // Flat line in middle if no variation
+										return (
+											95 - ((val - minE + padding) / (range + 2 * padding)) * 90
+										);
+									};
+
+									const points = gradientTrace
+										.map((p, i) => {
+											const x =
+												(i / Math.max(gradientTrace.length - 1, 1)) * 100;
+											const y = scaleY(p.value);
+											return `${x},${y}`;
+										})
+										.join(" ");
+
+									return (
+										<>
+											<polyline
+												points={points}
+												fill="none"
+												stroke="#10b981"
+												strokeWidth="1"
+												vectorEffect="non-scaling-stroke"
+											/>
+											{/* Current point indicator */}
+											{gradientTrace.length > 0 && (
+												<circle
+													cx={
+														((gradientTrace.length - 1) /
+															Math.max(gradientTrace.length - 1, 1)) *
+														100
+													}
+													cy={scaleY(
+														gradientTrace[gradientTrace.length - 1].value,
+													)}
+													r="1"
+													fill="#10b981"
+													vectorEffect="non-scaling-stroke"
+												/>
+											)}
+										</>
+									);
+								})()}
+						</svg>
+						<div className="absolute top-2 right-2 text-xs text-zinc-500">
+							Langevin Descent Trace
+						</div>
+						{gradientTrace.length > 1 &&
+							(() => {
+								const energies = gradientTrace.map((p) => p.value);
+								const maxE = Math.max(...energies);
+								const minE = Math.min(...energies);
+								return (
+									<>
+										<div className="absolute top-2 left-2 text-xs text-zinc-500">
+											{maxE.toFixed(1)}
+										</div>
+										<div className="absolute bottom-2 left-2 text-xs text-zinc-500">
+											{minE.toFixed(1)}
+										</div>
+									</>
+								);
+							})()}
+					</div>
+
+					<div
+						className={`mt-4 flex items-center gap-2 text-sm font-bold ${energy < 1 ? "text-emerald-400" : "text-orange-400"}`}
+					>
+						{energy < 1 ? <ShieldCheck size={18} /> : <Activity size={18} />}
+						{energy < 1 ? "THOUGHT CONVERGED" : "CALIBRATING LATENT STATE..."}
+					</div>
 				</div>
 			</SchematicCard>
 		</div>

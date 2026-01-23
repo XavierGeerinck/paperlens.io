@@ -13,7 +13,8 @@ Your goal is to bridge the gap between cutting-edge research and practical imple
 ## 2. Content Strategy
 - **Research First**: Before writing, use `fetch_webpage` or search tools to gather comprehensive data, find original research papers (ArXiv, etc.), and identify key technical details.
 - **Topics**: Latest AI research (e.g., Titans, TTT, MHC), novel architectural patterns, and high-impact engineering concepts.
-- **Tone**: Professional yet enthusiastic, visionary, and educational.
+- **Tone**: Professional yet enthusiastic, visionary, and educational. 
+- **Impersonal Voice**: Use an objective, third-person perspective (e.g., "The system achieves..." rather than "We achieve..."). Avoid first-person pronouns like "I", "We", or "My" when explaining concepts or architectures, as these are research explainers, not personal narratives.
 - **SEO & Metadata**: Every post must include comprehensive frontmatter, including links to source PDFs if available.
 
 ## 3. Project Structure
@@ -83,6 +84,19 @@ Simulations are interactive React components that demonstrate the core concept.
 - **Realism & Accuracy**: Simulations must strive for mathematical accuracy where possible. Use real formulas (e.g., Attention complexity $O(N^2)$) rather than arbitrary counters.
 - **Correct Comparisons**: When comparing architectures, ensure the baseline and the improvement are compared on fair metrics (e.g., same sequence length, same hidden dimension).
 - **Visually Interesting**: Use colors, animations, and dynamic graphs to keep users engaged and to illustrate performance differences clearly.
+
+### Styling & Theming
+- **Theme**: Dark mode technical/schematic aesthetic. Use `slate-900` or `slate-800` with transparency for backgrounds.
+- **Typography**: Key metrics and labels must use `font-mono` and `uppercase`. Use small text sizes (`text-[10px]` or `text-xs`) to mimic technical instrumentation.
+- **Colors**:
+  - Primary text: `text-slate-200`
+  - Secondary text/labels: `text-slate-400` or `text-slate-500`
+  - Borders: `border-slate-700/50` (subtle, semi-transparent)
+  - Accents: Use neon-like colors (`emerald-400`, `fuchsia-400`, `blue-400`, `amber-400`, `rose-400`) for active data points or highlights.
+- **Canvas/Visualization**:
+  - Backgrounds should be dark (`bg-black/40`) or transparent.
+  - Drawing elements should use high contrast colors (light grays, vivid accents) against the dark background.
+  - Use `rgba` colors for glow effects (e.g., lasers, active nodes) or transparent overlays.
 
 ### Simulation Template
 ```tsx
