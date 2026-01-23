@@ -18,6 +18,7 @@ featured: true
 ---
 
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
+import ExpandableMath from '../../components/react/ExpandableMath';
 
 # Executive Summary
 
@@ -51,6 +52,28 @@ For EUV lithography, this natural chaos is unacceptable. If a laser pulses and h
  The solution is **Active Jet Breakup**. Instead of allowing random environmental noise to determine where the jet breaks, the system deliberately introduces a single, dominating frequency into the fluid.
  
  This is achieved using a **piezoelectric (PZT) transducer** attached to the nozzle. By vibrating the nozzle at a specific high frequency (e.g., 50 kHz), a standing acoustic wave is induced along the surface of the exiting liquid jet.
+
+If the frequency is chosen correctly based on the jet's diameter and velocity, this artificial perturbation grows much faster than natural noise. The jet breaks up exactly in rhythm with the vibration, creating perfectly spaced droplets of identical volume.
+
+<ExpandableMath
+  client:only="react"
+  equation="f_{opt} = \frac{v_{jet}}{4.508 \cdot d_{nozzle}}"
+  explanation="To achieve a uniform stream, the acoustic drive frequency must match the natural instability wavelength of the liquid column."
+  example={{
+    description: "Calculate optimal drive frequency for a standard EUV source:",
+    values: {
+      "v_{jet}": "100 \\text{ m/s}",
+      "d_{nozzle}": "20 \\mu\\text{m} = 2.0 \\times 10^{-5} \\text{ m}"
+    },
+    result: "f_{opt} = \\frac{100}{4.508 \\times 2.0 \\times 10^{-5}} \\approx 1,109,000 \\text{ Hz} = 1.1 \\text{ MHz}"
+  }}
+  terms={[
+    { symbol: "f_{opt}", name: "Optimal Frequency", meaning: "The frequency that produces the most uniform droplets" },
+    { symbol: "v_{jet}", name: "Jet Velocity", meaning: "Speed of the molten tin exiting the nozzle" },
+    { symbol: "4.508", name: "Rayleigh Factor", meaning: "Ideally \\( \\lambda \\approx 4.508d \\) for max instability growth" },
+    { symbol: "d_{nozzle}", name: "Nozzle Diameter", meaning: "Diameter of the orifice (approx equal to jet diameter)" }
+  ]}
+/>
 
 ## The Hardware Architecture
 
