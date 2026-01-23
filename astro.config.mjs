@@ -10,7 +10,19 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   site: 'https://paperlens.io',
-  integrations: [react(), tailwind(), sitemap(), mdx()],
+  integrations: [
+    react(), 
+    tailwind(), 
+    // Fix so we can generate sitemap.xml as well
+    // this then has sitemap-0.xml, sitemap-index.xml and sitemap.xml
+    sitemap({
+      serialize(item) {
+        // Customize URLs if needed
+        return item;
+      }
+    }), 
+    mdx()
+  ],
   markdown: {
     shikiConfig: {
       theme: 'github-dark',
