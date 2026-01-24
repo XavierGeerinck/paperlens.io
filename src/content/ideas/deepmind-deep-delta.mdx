@@ -1,0 +1,90 @@
+---
+title: "Deep Delta Learning: Beyond the Additive Bias of ResNets"
+subtitle: "Generalizing residual connections into dynamic geometric reflections, projections, and identity mappings."
+date: 2026-01-24
+status: RESEARCH
+category: deep-dive
+impact: "Enhanced Capacity for Complex State Transitions"
+readTime: "12m"
+tags:
+  - Deep Delta Learning
+  - Residual Networks
+  - Householder Transformation
+  - Geometric Linear Algebra
+coverImage: https://picsum.photos/seed/delta/800/600?grayscale
+simulation: DeepmindDeepDelta
+pdfUrl: https://arxiv.org/pdf/2601.00417
+---
+
+import AlgorithmBlock from '../../components/react/AlgorithmBlock';
+import ExpandableMath from '../../components/react/ExpandableMath';
+
+# Executive Summary
+
+Standard Deep Residual Networks rely on the **identity shortcut connection** to stabilize training. However, this "strictly additive" bias limits a network's ability to model complex, non-monotonic dynamics. **Deep Delta Learning (DDL)** introduces a **Delta Operator**—a learnable, rank-1 geometric transformation that generalizes the shortcut. By modulating a single learned gate $\beta$, the network can dynamically choose to behave as an **identity map**, an **orthogonal projection**, or a **geometric reflection**.
+
+# The Problem: The Rigidity of Addition
+
+In a standard ResNet, the update is $x_{l+1} = x_l + f(x_l)$. While effective for signal propagation, this architecture has a fixed Jacobian equal to the identity operator. This creates a "translation bias" that struggles to represent states requiring oscillations or oppositional behavior—essentially, it can only "add" to what is already there, rather than reorienting or selectively erasing it.
+
+# The Solution: The Delta Residual Block
+
+The Deep Delta Residual Block replaces the static identity shortcut with a **Delta Operator**, $\Delta_{\beta} = I - \beta k k^\top$. This operator is a rank-1 perturbation of the identity matrix, inspired by the Householder reflection.
+
+### The Core Equation
+
+The block computes the next state $X_{l+1}$ by simultaneously transforming the old state and injecting new values:
+
+<ExpandableMath
+client:only="react"
+equation="X_{l+1} = (I - \beta k k^\top) X_l + \beta k v^\top"
+explanation="The new state is a combination of a geometric transformation of the previous state and a synchronized write of new information."
+terms={[
+{ symbol: "k(X)", name: "Direction Vector", meaning: "The normal vector of the reflection hyperplane" },
+{ symbol: "\beta(X)", name: "Gate", meaning: "Determines if the layer reflects, projects, or stays identity" },
+{ symbol: "v(X)", name: "Value Vector", meaning: "The new content being written into the state" }
+]}
+/>
+
+### One Gate, Three Geometries
+
+The power of DDL lies in the spectrum of the operator $\Delta_{\beta}$. By varying the gate $\beta$ between **0 and 2**, the network unlocks different behaviors:
+
+* **$\beta = 0$ (Identity):** The operator becomes the identity matrix. The layer is effectively skipped, preserving the signal perfectly.
+
+* **$\beta = 1$ (Projection):** The operator becomes an orthogonal projector. It "erases" information along direction $k$ before writing the new value $v$.
+
+* **$\beta = 2$ (Reflection):** The operator becomes a Householder matrix. It performs a full reflection (sign flip) of the features along $k$, enabling complex oscillatory dynamics.
+
+
+
+---
+
+# Implementation: The Delta Update
+
+The following algorithm demonstrates how a single DDL layer processes a matrix-valued hidden state.
+
+<AlgorithmBlock
+client:only="react"
+title="Algorithm: Deep Delta Update"
+inputs={["Input state $X_l$", "Learned branch outputs $k, \\beta, v$"]}
+outputs={["Updated state $X_{l+1}$"]}
+steps={[
+"Project: Calculate the projection $k^\\top X_l$",
+"Compare: Compute the difference $v - k^\\top X_l$",
+"Update: $X_{l+1} = X_l + \\beta k (v - k^\\top X_l)$"
+]}
+executor="deep-delta"
+initialState={{
+X: [[0.8, -0.2], [0.1, 0.5]],
+k: [1.0, 0.0],
+beta: 1.0,
+v: [0.5, 0.5]
+}}
+/>
+
+# Relationship to the Delta Rule
+
+The paper reveals a "structural homology" between this depth-wise update and the **Delta Rule** used in fast associative memories (like DeltaNet). In DDL, the hidden state activations $X_l$ act like a "memory" that is updated as information flows deeper into the network.
+
+Instead of just accumulating features (which can lead to noisy "residual accumulation"), the DDL block uses the subtractive term $(v - k^\top X_l)$ to selectively "clean" or reorient specific feature subspaces layer-by-layer.

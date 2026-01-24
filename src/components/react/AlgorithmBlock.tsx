@@ -162,6 +162,40 @@ executors["vvpa-mechanism"] = async function* (initialState) {
 	};
 };
 
+// Deep Delta Executor
+executors["deep-delta"] = async function* (initialState) {
+	const { X, k, beta, v } = initialState;
+
+	// Step 1: Calculate projection k^T * X (simplified for 2D case)
+	const proj_scalar = k[0] * X[0][0] + k[1] * X[1][0];
+
+	yield {
+		step: 1,
+		state: { X, k, proj_scalar },
+		description: "Calculate the projection k^T * X along the direction vector",
+	};
+
+	// Step 2: Compute difference (v - proj)
+	const diff = v.map((vi: number) => vi - proj_scalar);
+
+	yield {
+		step: 2,
+		state: { v, proj_scalar, diff },
+		description: "Compute the difference between target value v and projection",
+	};
+
+	// Step 3: Update X_{l+1} = X_l + β * k * (v - proj)
+	const X_new = X.map((row: number[], i: number) =>
+		row.map((x: number) => x + beta * k[i] * diff[i]),
+	);
+
+	yield {
+		step: 3,
+		state: { X_old: X, beta, k, diff, X_new },
+		description: "Update state: X_{l+1} = X_l + β * k * (v - k^T X)",
+	};
+};
+
 // Langevin Dynamics Executor
 executors["langevin-dynamics"] = async function* (initialState) {
 	const { z, lambda, temperature, noise } = initialState;
