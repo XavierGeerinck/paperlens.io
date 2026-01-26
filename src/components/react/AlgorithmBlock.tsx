@@ -111,6 +111,100 @@ executors["ttt-e2e"] = async function* (initialState) {
 	};
 };
 
+// SEAL ReST-EM Executor
+executors["seal-rest-em"] = async function* (initialState) {
+	const { num_tasks, num_edits, top_k, iteration } = initialState;
+
+	// Step 1: Sample task from distribution
+	const task = { context: "New factual passage", type: "knowledge" };
+
+	yield {
+		step: 1,
+		state: { 
+			task_context: task.context, 
+			task_type: task.type,
+			num_tasks
+		},
+		description: "Sample a task from the distribution (e.g., knowledge incorporation or few-shot learning)",
+	};
+
+	// Step 2: Generate N self-edits
+	const edits = Array.from({ length: num_edits }, (_, i) => ({
+		id: i,
+		synthetic_data: [`Q: Fact ${i}? A: Answer ${i}`],
+		lr: (1 + Math.random() * 9) * 1e-5,
+	}));
+
+	yield {
+		step: 2,
+		state: {
+			num_edits,
+			edits: `[${edits.length} candidates]`,
+			sample_edit: JSON.stringify(edits[0], null, 2).slice(0, 60) + "...",
+		},
+		description: "Generate N candidate self-edits using current policy π_φ",
+	};
+
+	// Step 3: Apply each edit via SFT
+	const updated_models = edits.map((_edit, i) => ({
+		edit_id: i,
+		sft_steps: Math.floor(Math.random() * 100 + 50),
+	}));
+
+	yield {
+		step: 3,
+		state: {
+			updates: `${updated_models.length} models finetuned`,
+			avg_sft_steps: Math.floor(
+				updated_models.reduce((sum, m) => sum + m.sft_steps, 0) /
+					updated_models.length
+			),
+		},
+		description: "Apply each self-edit to base model via supervised finetuning",
+	};
+
+	// Step 4: Evaluate and compute rewards
+	const rewards = edits.map(() => 0.3 + Math.random() * 0.5);
+	const avg_reward = rewards.reduce((a, b) => a + b, 0) / rewards.length;
+
+	yield {
+		step: 4,
+		state: {
+			rewards: `[${rewards.map(r => r.toFixed(2)).join(", ")}]`,
+			avg_reward: avg_reward.toFixed(3),
+		},
+		description: "Evaluate updated models on downstream task to get rewards",
+	};
+
+	// Step 5: Select top-k edits
+	const sorted_indices = rewards
+		.map((r, i) => ({ reward: r, idx: i }))
+		.sort((a, b) => b.reward - a.reward)
+		.slice(0, top_k);
+
+	yield {
+		step: 5,
+		state: {
+			top_k,
+			selected_edits: sorted_indices.map(s => `Edit ${s.idx} (r=${s.reward.toFixed(2)})`),
+		},
+		description: "Rejection sampling: keep top-k highest-reward edits per task",
+	};
+
+	// Step 6: Update policy via SFT
+	const policy_improvement = (avg_reward - 0.5) * 100;
+
+	yield {
+		step: 6,
+		state: {
+			phi_update: "∇_φ E[log π_φ(e|c)]",
+			policy_improvement: `+${policy_improvement.toFixed(1)}%`,
+			next_iteration: iteration + 1,
+		},
+		description: "Finetune policy on high-reward edits to improve self-edit generation",
+	};
+};
+
 // VVPA Mechanism Executor
 executors["vvpa-mechanism"] = async function* (initialState) {
 	const { xt, m, theta } = initialState;
