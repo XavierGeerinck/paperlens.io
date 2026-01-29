@@ -120,12 +120,13 @@ executors["seal-rest-em"] = async function* (initialState) {
 
 	yield {
 		step: 1,
-		state: { 
-			task_context: task.context, 
+		state: {
+			task_context: task.context,
 			task_type: task.type,
-			num_tasks
+			num_tasks,
 		},
-		description: "Sample a task from the distribution (e.g., knowledge incorporation or few-shot learning)",
+		description:
+			"Sample a task from the distribution (e.g., knowledge incorporation or few-shot learning)",
 	};
 
 	// Step 2: Generate N self-edits
@@ -157,7 +158,7 @@ executors["seal-rest-em"] = async function* (initialState) {
 			updates: `${updated_models.length} models finetuned`,
 			avg_sft_steps: Math.floor(
 				updated_models.reduce((sum, m) => sum + m.sft_steps, 0) /
-					updated_models.length
+					updated_models.length,
 			),
 		},
 		description: "Apply each self-edit to base model via supervised finetuning",
@@ -170,7 +171,7 @@ executors["seal-rest-em"] = async function* (initialState) {
 	yield {
 		step: 4,
 		state: {
-			rewards: `[${rewards.map(r => r.toFixed(2)).join(", ")}]`,
+			rewards: `[${rewards.map((r) => r.toFixed(2)).join(", ")}]`,
 			avg_reward: avg_reward.toFixed(3),
 		},
 		description: "Evaluate updated models on downstream task to get rewards",
@@ -186,7 +187,9 @@ executors["seal-rest-em"] = async function* (initialState) {
 		step: 5,
 		state: {
 			top_k,
-			selected_edits: sorted_indices.map(s => `Edit ${s.idx} (r=${s.reward.toFixed(2)})`),
+			selected_edits: sorted_indices.map(
+				(s) => `Edit ${s.idx} (r=${s.reward.toFixed(2)})`,
+			),
 		},
 		description: "Rejection sampling: keep top-k highest-reward edits per task",
 	};
@@ -201,7 +204,58 @@ executors["seal-rest-em"] = async function* (initialState) {
 			policy_improvement: `+${policy_improvement.toFixed(1)}%`,
 			next_iteration: iteration + 1,
 		},
-		description: "Finetune policy on high-reward edits to improve self-edit generation",
+		description:
+			"Finetune policy on high-reward edits to improve self-edit generation",
+	};
+};
+
+// AlphaGenome Variant Scoring Executor
+executors["alphagenome-variant-score"] = async function* (initialState) {
+	const { ref_props, variant_effect } = initialState;
+
+	// Step 1: Predict properties for reference sequence
+	const reference = ref_props.map((v: number) => Number(v.toFixed(3)));
+
+	yield {
+		step: 1,
+		state: {
+			reference,
+		},
+		description:
+			"Run the model on the reference sequence to predict regulatory properties.",
+	};
+
+	// Step 2: Predict properties for mutated sequence
+	const mutated = reference.map(
+		(v: number, i: number) => Number((v + variant_effect[i]).toFixed(3)),
+	);
+
+	yield {
+		step: 2,
+		state: {
+			reference,
+			mutated,
+		},
+		description:
+			"Run the same model on the mutated sequence to capture the variant's effect.",
+	};
+
+	// Step 3: Compute delta and summarize impact
+	const delta = mutated.map((v: number, i: number) =>
+		Number((v - reference[i]).toFixed(3)),
+	);
+	const score =
+		delta.reduce((sum: number, d: number) => sum + Math.abs(d), 0) /
+		delta.length;
+
+	yield {
+		step: 3,
+		state: {
+			delta,
+			score: Number(score.toFixed(3)),
+		},
+		description:
+			"Summarize the variant by averaging absolute changes across modalities.",
 	};
 };
 
