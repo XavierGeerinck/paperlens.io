@@ -111,6 +111,51 @@ executors["ttt-e2e"] = async function* (initialState) {
 	};
 };
 
+executors["additive-secret-sharing"] = async function* (initialState) {
+	const { x, multiplier } = initialState;
+
+	// Step 1: Split x into random shares
+	const x1 = Math.floor(Math.random() * x); // Random share 1
+	const x2 = x - x1; // Share 2
+
+	yield {
+		step: 1,
+		state: { x, x_1: x1, x_2: x2 },
+		description: `Split secret ${x} into shares: ${x1} + ${x2} = ${x}`,
+	};
+
+	// Step 2: Distribute shares
+	yield {
+		step: 2,
+		state: { "Server 1": x1, "Server 2": x2 },
+		description: "Send shares to separate servers. Neither server knows x.",
+	};
+
+	// Step 3: Local Computation (Multiply by multiplier)
+	const y1 = x1 * multiplier;
+	const y2 = x2 * multiplier;
+
+	yield {
+		step: 3,
+		state: {
+			y_1: `${x1} \\times ${multiplier} = ${y1}`,
+			y_2: `${x2} \\times ${multiplier} = ${y2}`,
+		},
+		description: `Each server multiplies its share by ${multiplier} locally.`,
+	};
+
+	// Step 4: Reconstruct
+	const y = y1 + y2;
+	yield {
+		step: 4,
+		state: {
+			y: `${y1} + ${y2} = ${y}`,
+			Expected: `${x} \\times ${multiplier} = ${x * multiplier}`,
+		},
+		description: "Sum the results from both servers to get the final answer.",
+	};
+};
+
 // SEAL ReST-EM Executor
 executors["seal-rest-em"] = async function* (initialState) {
 	const { num_tasks, num_edits, top_k, iteration } = initialState;
