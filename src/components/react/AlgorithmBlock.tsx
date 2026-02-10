@@ -156,6 +156,76 @@ executors["additive-secret-sharing"] = async function* (initialState) {
 	};
 };
 
+// DreamZero Flow-Matching Executor
+executors["dreamzero-flow-matching"] = async function* (initialState) {
+	const { z_clean, a_clean, t, eta } = initialState;
+
+	// Step 1: Sample noise and mix with clean latents
+	const z_noise = z_clean.map(() => randn());
+	const a_noise = a_clean.map(() => randn());
+	const z_t = z_clean.map(
+		(val: number, i: number) => t * val + (1 - t) * z_noise[i],
+	);
+	const a_t = a_clean.map(
+		(val: number, i: number) => t * val + (1 - t) * a_noise[i],
+	);
+
+	yield {
+		step: 1,
+		state: {
+			"z_t": `[${z_t.map((v: number) => v.toFixed(2)).join(", ")}]`,
+			"a_t": `[${a_t.map((v: number) => v.toFixed(2)).join(", ")}]`,
+			"t": t.toFixed(2),
+		},
+		description:
+			"Mix clean video/action latents with Gaussian noise using flow-matching time t",
+	};
+
+	// Step 2: Predict velocity toward clean latents
+	const v_z = z_t.map((val: number, i: number) => z_clean[i] - val);
+	const v_a = a_t.map((val: number, i: number) => a_clean[i] - val);
+
+	yield {
+		step: 2,
+		state: {
+			"v_z": `[${v_z.map((v: number) => v.toFixed(2)).join(", ")}]`,
+			"v_a": `[${v_a.map((v: number) => v.toFixed(2)).join(", ")}]`,
+		},
+		description:
+			"Predict denoising velocity for video and action in a shared latent space",
+	};
+
+	// Step 3: Euler update
+	const z_next = z_t.map((val: number, i: number) => val + eta * v_z[i]);
+	const a_next = a_t.map((val: number, i: number) => val + eta * v_a[i]);
+
+	yield {
+		step: 3,
+		state: {
+			"z_next": `[${z_next.map((v: number) => v.toFixed(2)).join(", ")}]`,
+			"a_next": `[${a_next.map((v: number) => v.toFixed(2)).join(", ")}]`,
+			"eta": eta.toFixed(2),
+		},
+		description:
+			"Advance one denoising step; the joint update keeps video and action aligned",
+	};
+
+	// Step 4: Action alignment check
+	const alignment = 1 -
+		v_a.reduce((sum: number, v: number) => sum + Math.abs(v), 0) /
+		(v_a.length * 2);
+
+	yield {
+		step: 4,
+		state: {
+			alignment: alignment.toFixed(2),
+			"chunk_ready": "true",
+		},
+		description:
+			"Compute a simple alignment proxy before emitting the action chunk",
+	};
+};
+
 // SEAL ReST-EM Executor
 executors["seal-rest-em"] = async function* (initialState) {
 	const { num_tasks, num_edits, top_k, iteration } = initialState;
