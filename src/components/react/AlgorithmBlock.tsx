@@ -111,6 +111,74 @@ executors["ttt-e2e"] = async function* (initialState) {
 	};
 };
 
+executors["aletheia-loop"] = async function* (initialState) {
+	let { attempt, computeScale, toolUse, verifierStrictness } = initialState;
+
+	const clamp = (value: number, min: number, max: number) =>
+		Math.max(min, Math.min(max, value));
+	const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
+
+	const baseQuality = sigmoid((computeScale - 40) / 10);
+	const toolBonus = 0.25 * clamp(toolUse, 0, 1);
+	const verifierPenalty = 0.1 * clamp(1 - verifierStrictness, 0, 1);
+	let quality = clamp(baseQuality + toolBonus - verifierPenalty, 0.05, 0.98);
+
+	// Step 1: Generate
+	yield {
+		step: 1,
+		state: {
+			attempt,
+			"draft_quality": quality.toFixed(2),
+			"compute_scale": computeScale,
+		},
+		description: "Generator proposes a draft solution at the current compute scale.",
+	};
+
+	// Step 2: Verify
+	const hallucinationRisk = clamp(
+		0.45 * (1 - baseQuality) * (1 - 0.6 * toolUse),
+		0.02,
+		0.7,
+	);
+	const verificationConfidence = clamp(
+		1 - hallucinationRisk - 0.2 * (1 - verifierStrictness),
+		0.05,
+		0.98,
+	);
+
+	yield {
+		step: 2,
+		state: {
+			"hallucination_risk": hallucinationRisk.toFixed(2),
+			"verification_confidence": verificationConfidence.toFixed(2),
+			"tool_use": toolUse,
+		},
+		description: "Verifier checks the draft; tool use reduces citation errors.",
+	};
+
+	// Step 3: Revise
+	quality = clamp(quality + 0.08 * toolUse, 0.05, 0.99);
+	yield {
+		step: 3,
+		state: {
+			"revised_quality": quality.toFixed(2),
+			"verifier_strictness": verifierStrictness,
+		},
+		description: "Reviser updates the draft using verifier feedback and tools.",
+	};
+
+	// Step 4: Decide
+	const accepted = quality > 0.75 && verificationConfidence > 0.7;
+	yield {
+		step: 4,
+		state: {
+			"accepted": accepted ? "true" : "false",
+			"attempts_used": attempt,
+		},
+		description: "Stop if the verifier accepts; otherwise iterate.",
+	};
+};
+
 executors["additive-secret-sharing"] = async function* (initialState) {
 	const { x, multiplier } = initialState;
 
