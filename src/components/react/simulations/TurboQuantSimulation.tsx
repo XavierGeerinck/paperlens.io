@@ -120,6 +120,106 @@ const Histogram: React.FC<HistogramProps> = ({ bins, color, overlayBins, overlay
 
 type Stage = 1 | 2 | 3 | 4;
 
+const Stage4: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
+	const rotation = useMemo(() => randomRotation(raw.length, seed), [raw.length, seed]);
+	const rotated = useMemo(() => rotation.apply(raw), [rotation, raw]);
+
+	const pairs = useMemo(() => {
+		const out: { r: number; theta: number }[] = [];
+		for (let i = 0; i + 1 < rotated.length; i += 2) {
+			const x = rotated[i];
+			const y = rotated[i + 1];
+			out.push({ r: Math.sqrt(x * x + y * y), theta: Math.atan2(y, x) });
+		}
+		return out;
+	}, [rotated]);
+
+	const thetaBins = useMemo(() => histogram(pairs.map((p) => p.theta), 40, [-Math.PI, Math.PI]), [pairs]);
+
+	const uniformOverlay = useMemo(() => {
+		const total = pairs.length;
+		return new Array(40).fill(total / 40);
+	}, [pairs.length]);
+
+	const W = 400;
+	const H = 180;
+	const rMax = Math.max(...pairs.map((p) => p.r), 1);
+
+	return (
+		<SchematicCard title="STAGE 4 · POLAR ANGLE CONCENTRATION" status="POLARQUANT">
+			<div className="flex flex-col gap-3">
+				<p className="text-xs font-mono text-zinc-400 leading-relaxed">
+					PolarQuant maps pairs of preconditioned coordinates to (r, θ). After random preconditioning, the
+					angle distribution is analytically known — here, approximately uniform on [-π, π]. Because the
+					codec knows the distribution <em>a priori</em>, it needs no per-block scale or zero-point
+					metadata. That extra saving is what pushes compression from TurboQuant's ~3× at quality-neutrality
+					to PolarQuant's 4.2×.
+				</p>
+
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div>
+						<div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+							(r, θ) scatter
+						</div>
+						<svg width="100%" viewBox={`0 0 ${W} ${H}`} className="block">
+							<circle cx={W / 2} cy={H / 2} r={Math.min(W, H) * 0.4} fill="none" stroke="#27272a" />
+							<line
+								x1={W / 2 - Math.min(W, H) * 0.4}
+								y1={H / 2}
+								x2={W / 2 + Math.min(W, H) * 0.4}
+								y2={H / 2}
+								stroke="#27272a"
+							/>
+							<line
+								x1={W / 2}
+								y1={H / 2 - Math.min(W, H) * 0.4}
+								x2={W / 2}
+								y2={H / 2 + Math.min(W, H) * 0.4}
+								stroke="#27272a"
+							/>
+							{pairs.map((p, i) => {
+								const rr = (p.r / rMax) * Math.min(W, H) * 0.4;
+								return (
+									<circle
+										key={i}
+										cx={W / 2 + rr * Math.cos(p.theta)}
+										cy={H / 2 + rr * Math.sin(p.theta)}
+										r={1.5}
+										fill="#6366f1"
+										opacity={0.7}
+									/>
+								);
+							})}
+						</svg>
+					</div>
+
+					<div>
+						<div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+							θ histogram + analytic overlay
+						</div>
+						<Histogram
+							bins={thetaBins}
+							color="#6366f1"
+							overlayBins={uniformOverlay}
+							overlayColor="#f59e0b"
+							xRange={[-Math.PI, Math.PI]}
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-3 gap-3">
+					<DataReadout label="pairs" value={String(pairs.length)} />
+					<DataReadout
+						label="mean r"
+						value={(pairs.reduce((a, p) => a + p.r, 0) / pairs.length).toFixed(2)}
+					/>
+					<DataReadout label="compression" value="4.2×" />
+				</div>
+			</div>
+		</SchematicCard>
+	);
+};
+
 // Uniform scalar quantizer over [-qMax, qMax] with (1 << bits) levels.
 function quantize(x: number[], bits: number, qMax: number): number[] {
 	const levels = (1 << bits) - 1;
@@ -373,7 +473,7 @@ const TurboQuantSimulation: React.FC = () => {
 			{stage === 1 && <Stage1 raw={raw} />}
 			{stage === 2 && <Stage2 raw={raw} seed={seed} />}
 			{stage === 3 && <Stage3 raw={raw} seed={seed} />}
-			{stage === 4 && <div className="text-zinc-500 font-mono text-sm">Stage 4 — implemented in Task 6.</div>}
+			{stage === 4 && <Stage4 raw={raw} seed={seed} />}
 		</div>
 	);
 };
