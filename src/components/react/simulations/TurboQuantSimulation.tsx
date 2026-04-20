@@ -45,6 +45,30 @@ function histogram(values: number[], binCount: number, range: [number, number]) 
 	return bins;
 }
 
+// Random sign flip + permutation — a cheap, orthogonal near-approximation of a random
+// rotation, sufficient for the visual point we're making. Real implementations use a
+// Hadamard butterfly for O(d log d) cost; we use a 2-point mixing step of the same spirit.
+function randomRotation(d: number, seed: number): { apply: (x: number[]) => number[] } {
+	const r = rng(seed);
+	const signs = Array.from({ length: d }, () => (r() < 0.5 ? -1 : 1));
+	const perm = Array.from({ length: d }, (_, i) => i);
+	for (let i = d - 1; i > 0; i--) {
+		const j = Math.floor(r() * (i + 1));
+		[perm[i], perm[j]] = [perm[j], perm[i]];
+	}
+	return {
+		apply(x: number[]): number[] {
+			const y = new Array(d);
+			for (let i = 0; i < d; i++) {
+				const a = signs[i] * x[perm[i]];
+				const b = signs[(i + 1) % d] * x[perm[(i + 1) % d]];
+				y[i] = (a + b) / Math.SQRT2;
+			}
+			return y;
+		},
+	};
+}
+
 interface HistogramProps {
 	bins: number[];
 	color: string;
@@ -95,6 +119,43 @@ const Histogram: React.FC<HistogramProps> = ({ bins, color, overlayBins, overlay
 };
 
 type Stage = 1 | 2 | 3 | 4;
+
+const Stage2: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
+	const rotated = useMemo(() => randomRotation(raw.length, seed).apply(raw), [raw, seed]);
+	const rawBins = useMemo(() => histogram(raw, 50, [-12, 12]), [raw]);
+	const rotBins = useMemo(() => histogram(rotated, 50, [-12, 12]), [rotated]);
+	const maxAbsRaw = Math.max(...raw.map(Math.abs));
+	const maxAbsRot = Math.max(...rotated.map(Math.abs));
+	return (
+		<SchematicCard title="STAGE 2 · RANDOM ROTATION" status="TURBOQUANT">
+			<div className="flex flex-col gap-3">
+				<p className="text-xs font-mono text-zinc-400 leading-relaxed">
+					Apply a random orthogonal rotation R. Norms and inner products are preserved, but the coordinate
+					distribution is homogenised — outliers smeared across all channels, marginals converging toward a
+					known Beta-like shape. The quantizer now has an <em>analytic</em> target distribution.
+				</p>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div>
+						<div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+							Before rotation
+						</div>
+						<Histogram bins={rawBins} color="#ef4444" xRange={[-12, 12]} />
+					</div>
+					<div>
+						<div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+							After rotation
+						</div>
+						<Histogram bins={rotBins} color="#6366f1" xRange={[-12, 12]} />
+					</div>
+				</div>
+				<div className="grid grid-cols-2 gap-3">
+					<DataReadout label="max |x| raw" value={maxAbsRaw.toFixed(2)} />
+					<DataReadout label="max |x| rotated" value={maxAbsRot.toFixed(2)} />
+				</div>
+			</div>
+		</SchematicCard>
+	);
+};
 
 const Stage1: React.FC<{ raw: number[] }> = ({ raw }) => {
 	const bins = useMemo(() => histogram(raw, 50, [-12, 12]), [raw]);
@@ -180,7 +241,7 @@ const TurboQuantSimulation: React.FC = () => {
 			</SchematicCard>
 
 			{stage === 1 && <Stage1 raw={raw} />}
-			{stage === 2 && <div className="text-zinc-500 font-mono text-sm">Stage 2 — implemented in Task 4.</div>}
+			{stage === 2 && <Stage2 raw={raw} seed={seed} />}
 			{stage === 3 && <div className="text-zinc-500 font-mono text-sm">Stage 3 — implemented in Task 5.</div>}
 			{stage === 4 && <div className="text-zinc-500 font-mono text-sm">Stage 4 — implemented in Task 6.</div>}
 		</div>
