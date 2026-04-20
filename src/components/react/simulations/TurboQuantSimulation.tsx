@@ -120,6 +120,136 @@ const Histogram: React.FC<HistogramProps> = ({ bins, color, overlayBins, overlay
 
 type Stage = 1 | 2 | 3 | 4;
 
+// Uniform scalar quantizer over [-qMax, qMax] with (1 << bits) levels.
+function quantize(x: number[], bits: number, qMax: number): number[] {
+	const levels = (1 << bits) - 1;
+	const step = (2 * qMax) / levels;
+	return x.map((v) => {
+		const clipped = Math.max(-qMax, Math.min(qMax, v));
+		const code = Math.round((clipped + qMax) / step);
+		return code * step - qMax;
+	});
+}
+
+function mse(a: number[], b: number[]): number {
+	let s = 0;
+	for (let i = 0; i < a.length; i++) s += (a[i] - b[i]) ** 2;
+	return s / a.length;
+}
+
+const Stage3: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
+	const [bits, setBits] = useState<number>(4);
+	const [rotated, setRotated] = useState<boolean>(true);
+
+	const rotation = useMemo(() => randomRotation(raw.length, seed), [raw.length, seed]);
+	const y = useMemo(() => (rotated ? rotation.apply(raw) : raw.slice()), [raw, rotation, rotated]);
+	const qMax = 3 * Math.sqrt(y.reduce((a, b) => a + b * b, 0) / y.length);
+
+	const curve = useMemo(() => {
+		const points: { bits: number; mseRaw: number; mseRot: number; shannon: number }[] = [];
+		const yRaw = raw;
+		const yRot = rotation.apply(raw);
+		const varRaw = yRaw.reduce((a, b) => a + b * b, 0) / yRaw.length;
+		const varRot = yRot.reduce((a, b) => a + b * b, 0) / yRot.length;
+		for (let b = 1; b <= 8; b++) {
+			const qr = 3 * Math.sqrt(varRaw);
+			const qR = 3 * Math.sqrt(varRot);
+			points.push({
+				bits: b,
+				mseRaw: mse(yRaw, quantize(yRaw, b, qr)),
+				mseRot: mse(yRot, quantize(yRot, b, qR)),
+				shannon: varRot * Math.pow(2, -2 * b),
+			});
+		}
+		return points;
+	}, [raw, rotation]);
+
+	const reconstructed = useMemo(() => quantize(y, bits, qMax), [y, bits, qMax]);
+	const currentMse = mse(y, reconstructed);
+
+	const W = 400;
+	const H = 180;
+	const logMax = Math.log10(Math.max(...curve.map((p) => Math.max(p.mseRaw, p.mseRot)), 1e-6));
+	const logMin = Math.log10(Math.min(...curve.map((p) => p.shannon), 1e-6));
+	const xScale = (b: number) => ((b - 1) / 7) * (W - 30) + 25;
+	const yScale = (m: number) => {
+		const l = Math.log10(Math.max(m, 1e-8));
+		return H - 15 - ((l - logMin) / (logMax - logMin)) * (H - 30);
+	};
+	const pathFor = (key: "mseRaw" | "mseRot" | "shannon") =>
+		curve.map((p, i) => `${i === 0 ? "M" : "L"}${xScale(p.bits)},${yScale(p[key])}`).join(" ");
+
+	return (
+		<SchematicCard title="STAGE 3 · SCALAR QUANTIZATION + DISTORTION CURVE" status="TURBOQUANT">
+			<div className="flex flex-col gap-4">
+				<p className="text-xs font-mono text-zinc-400 leading-relaxed">
+					A uniform scalar quantizer applied per coordinate. Toggle rotation to see why it matters: the same
+					bit budget produces order-of-magnitude lower MSE on the rotated vector, landing within a small
+					constant of the Shannon rate–distortion bound.
+				</p>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<label className="flex flex-col gap-1">
+						<span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+							Bit budget: {bits} bpc
+						</span>
+						<input
+							type="range"
+							min={1}
+							max={8}
+							step={1}
+							value={bits}
+							onChange={(e) => setBits(Number(e.target.value))}
+						/>
+					</label>
+					<SchematicButton onClick={() => setRotated((v) => !v)} active={rotated}>
+						{rotated ? "Rotation: ON" : "Rotation: OFF"}
+					</SchematicButton>
+				</div>
+				<svg width="100%" viewBox={`0 0 ${W} ${H}`} className="block">
+					{[1, 2, 3, 4, 5, 6, 7, 8].map((b) => (
+						<line
+							key={b}
+							x1={xScale(b)}
+							y1={15}
+							x2={xScale(b)}
+							y2={H - 15}
+							stroke="#27272a"
+							strokeWidth={1}
+						/>
+					))}
+					<path d={pathFor("mseRaw")} fill="none" stroke="#ef4444" strokeWidth={2} />
+					<path d={pathFor("mseRot")} fill="none" stroke="#6366f1" strokeWidth={2} />
+					<path d={pathFor("shannon")} fill="none" stroke="#10b981" strokeWidth={1.5} strokeDasharray="4 3" />
+					<circle cx={xScale(bits)} cy={yScale(currentMse)} r={4} fill="#fbbf24" />
+					<text x={W - 120} y={20} fontFamily="monospace" fontSize={10} fill="#ef4444">
+						raw MSE
+					</text>
+					<text x={W - 120} y={34} fontFamily="monospace" fontSize={10} fill="#6366f1">
+						rotated MSE
+					</text>
+					<text x={W - 120} y={48} fontFamily="monospace" fontSize={10} fill="#10b981">
+						Shannon LB
+					</text>
+					<text x={6} y={H - 4} fontFamily="monospace" fontSize={9} fill="#71717a">
+						1 bpc
+					</text>
+					<text x={W - 28} y={H - 4} fontFamily="monospace" fontSize={9} fill="#71717a">
+						8 bpc
+					</text>
+				</svg>
+				<div className="grid grid-cols-3 gap-3">
+					<DataReadout label="MSE @ current" value={currentMse.toExponential(2)} />
+					<DataReadout label="Shannon LB" value={curve[bits - 1].shannon.toExponential(2)} />
+					<DataReadout
+						label="gap × shannon"
+						value={(currentMse / Math.max(curve[bits - 1].shannon, 1e-12)).toFixed(2)}
+					/>
+				</div>
+			</div>
+		</SchematicCard>
+	);
+};
+
 const Stage2: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
 	const rotated = useMemo(() => randomRotation(raw.length, seed).apply(raw), [raw, seed]);
 	const rawBins = useMemo(() => histogram(raw, 50, [-12, 12]), [raw]);
@@ -242,7 +372,7 @@ const TurboQuantSimulation: React.FC = () => {
 
 			{stage === 1 && <Stage1 raw={raw} />}
 			{stage === 2 && <Stage2 raw={raw} seed={seed} />}
-			{stage === 3 && <div className="text-zinc-500 font-mono text-sm">Stage 3 — implemented in Task 5.</div>}
+			{stage === 3 && <Stage3 raw={raw} seed={seed} />}
 			{stage === 4 && <div className="text-zinc-500 font-mono text-sm">Stage 4 — implemented in Task 6.</div>}
 		</div>
 	);
