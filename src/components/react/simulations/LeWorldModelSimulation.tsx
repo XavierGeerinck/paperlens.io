@@ -587,7 +587,7 @@ const LeWorldModelSimulation: React.FC = () => {
 		let zL = enL.forward(renderFrame(truth)).out;
 		const naivePts: [number, number][] = [decodeProbe(probeN, zN)];
 		const lewmPts: [number, number][] = [decodeProbe(probeL, zL)];
-		const HORIZON = 25;
+		const HORIZON = 15;
 		for (let k = 0; k < HORIZON; k++) {
 			truth = stepParticle(truth, 0.1);
 			truthPts.push([truth.x, truth.y]);
@@ -634,8 +634,8 @@ const LeWorldModelSimulation: React.FC = () => {
 					return next.slice(-200);
 				});
 
-				// Refresh rollouts every 25 ticks.
-				if (nextStep % 25 === 0) recomputeRollout(nextStep);
+				// Refresh rollouts often so the user sees them improve as training progresses.
+				if (nextStep % 8 === 0) recomputeRollout(nextStep);
 
 				return nextStep;
 			});
@@ -656,6 +656,17 @@ const LeWorldModelSimulation: React.FC = () => {
 	const H = 180;
 	const sx = (v: number) => v * W;
 	const sy = (v: number) => H - v * H;
+
+	// End-of-rollout error: distance between predicted final position and the truth.
+	const endErr = (pts: [number, number][]) => {
+		if (pts.length === 0 || rollout.truth.length === 0) return 0;
+		const k = Math.min(pts.length, rollout.truth.length) - 1;
+		const dx = pts[k][0] - rollout.truth[k][0];
+		const dy = pts[k][1] - rollout.truth[k][1];
+		return Math.sqrt(dx * dx + dy * dy);
+	};
+	const errNaive = endErr(rollout.naive);
+	const errLewm = endErr(rollout.lewm);
 
 	return (
 		<div className="flex flex-col gap-4 p-4 bg-slate-900 text-slate-100 rounded-xl">
@@ -791,44 +802,76 @@ const LeWorldModelSimulation: React.FC = () => {
 								width="100%"
 								viewBox={`0 0 ${W} ${H}`}
 								className="block bg-zinc-950 border border-zinc-800"
+								style={{ overflow: "hidden" }}
 							>
+								<defs>
+									<clipPath id="rolloutClip">
+										<rect x={0} y={0} width={W} height={H} />
+									</clipPath>
+								</defs>
 								<rect x={1} y={1} width={W - 2} height={H - 2} fill="none" stroke="#27272a" />
-								{rollout.truth.length > 0 && (
-									<>
-										<path
-											d={rollout.truth
-												.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
-												.join(" ")}
-											fill="none"
-											stroke="#10b981"
-											strokeWidth={2}
-										/>
-										<path
-											d={rollout.naive
-												.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
-												.join(" ")}
-											fill="none"
-											stroke="#ef4444"
-											strokeWidth={1.5}
-											strokeDasharray="3 3"
-										/>
-										<path
-											d={rollout.lewm
-												.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
-												.join(" ")}
-											fill="none"
-											stroke="#6366f1"
-											strokeWidth={1.5}
-											strokeDasharray="3 3"
-										/>
-										<circle
-											cx={sx(rollout.truth[0][0])}
-											cy={sy(rollout.truth[0][1])}
-											r={4}
-											fill="#fbbf24"
-										/>
-									</>
-								)}
+								<g clipPath="url(#rolloutClip)">
+									{rollout.truth.length > 0 && (
+										<>
+											<path
+												d={rollout.truth
+													.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
+													.join(" ")}
+												fill="none"
+												stroke="#10b981"
+												strokeWidth={2}
+											/>
+											<path
+												d={rollout.naive
+													.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
+													.join(" ")}
+												fill="none"
+												stroke="#ef4444"
+												strokeWidth={1.5}
+												strokeDasharray="3 3"
+											/>
+											<path
+												d={rollout.lewm
+													.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
+													.join(" ")}
+												fill="none"
+												stroke="#6366f1"
+												strokeWidth={1.5}
+												strokeDasharray="3 3"
+											/>
+											{/* Start marker */}
+											<circle
+												cx={sx(rollout.truth[0][0])}
+												cy={sy(rollout.truth[0][1])}
+												r={4}
+												fill="#fbbf24"
+											/>
+											{/* End markers — make the final positions explicit. */}
+											{rollout.truth.length > 1 && (
+												<>
+													<circle
+														cx={sx(rollout.truth[rollout.truth.length - 1][0])}
+														cy={sy(rollout.truth[rollout.truth.length - 1][1])}
+														r={3}
+														fill="#10b981"
+													/>
+													<circle
+														cx={sx(rollout.naive[rollout.naive.length - 1][0])}
+														cy={sy(rollout.naive[rollout.naive.length - 1][1])}
+														r={3}
+														fill="#ef4444"
+													/>
+													<circle
+														cx={sx(rollout.lewm[rollout.lewm.length - 1][0])}
+														cy={sy(rollout.lewm[rollout.lewm.length - 1][1])}
+														r={3}
+														fill="#6366f1"
+													/>
+												</>
+											)}
+										</>
+									)}
+								</g>
 								<text x={W - 110} y={14} fontFamily="monospace" fontSize={10} fill="#10b981">
 									ground truth
 								</text>
@@ -839,8 +882,16 @@ const LeWorldModelSimulation: React.FC = () => {
 									LeWM
 								</text>
 							</svg>
+							<div className="grid grid-cols-2 gap-3 text-[10px] font-mono">
+								<span className="text-zinc-400">
+									naive end-error: <span className="text-red-400">{errNaive.toFixed(3)}</span>
+								</span>
+								<span className="text-zinc-400">
+									LeWM end-error: <span className="text-indigo-400">{errLewm.toFixed(3)}</span>
+								</span>
+							</div>
 							<div className="text-[9px] font-mono text-zinc-500">
-								25-step rollout · linear probe refit every 25 training steps
+								15-step open-loop rollout · linear probe refit every 8 training steps
 							</div>
 						</div>
 					</div>
