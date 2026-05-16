@@ -55,16 +55,16 @@ The geometric content of the regularizer is the entire trick. It does not say *m
 
 ```mermaid
 graph LR
-    P[Pixel Frame x_t] --> E[Encoder]
-    E --> Z[Latent z_t]
+    P["Pixel Frame x_t"] --> E[Encoder]
+    E --> Z["Latent z_t"]
     Z --> PR[Predictor]
-    A[Action a_t] --> PR
-    PR --> ZH["Predicted ẑ_{t+1}"]
-    P2[Frame x_{t+1}] --> E
-    E --> ZT["Target z_{t+1} sg"]
+    A["Action a_t"] --> PR
+    PR --> ZH["Predicted z_hat"]
+    P2["Frame x_t+1"] --> E
+    E --> ZT["Target z_t+1 sg"]
     ZH -. "L_pred" .-> ZT
-    Z --> G["μ, Σ moments"]
-    G -. "L_gauss" .-> N[N 0 I target]
+    Z --> G["mu, Sigma moments"]
+    G -. "L_gauss" .-> N["N 0 I target"]
     style ZT stroke:#10b981,stroke-width:2px
     style ZH stroke:#6366f1,stroke-width:2px
     style N stroke:#f59e0b,stroke-width:2px
