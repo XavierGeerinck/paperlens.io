@@ -518,6 +518,11 @@ const LeWorldModelSimulation: React.FC = () => {
 	const [LpredNaive, setLpredNaive] = useState(0);
 	const [LpredLewm, setLpredLewm] = useState(0);
 	const [LgaussLewm, setLgaussLewm] = useState(0);
+
+	// Demo particle — bounces continuously so the pixel panel looks like a single
+	// object moving through time, rather than a fresh sample per training tick.
+	// Training itself still uses independent (frame_t, frame_{t+1}) batches.
+	const demoParticleRef = useRef<Particle | null>(null);
 	const [liveFrame, setLiveFrame] = useState<Float64Array>(new Float64Array(FRAME_DIM));
 
 	const [rollout, setRollout] = useState<{
@@ -532,6 +537,8 @@ const LeWorldModelSimulation: React.FC = () => {
 		predNaive.current = new TinyMLP(2, 8, 2, seed + 1);
 		encLewm.current = new TinyMLP(FRAME_DIM, 8, 2, seed);
 		predLewm.current = new TinyMLP(2, 8, 2, seed + 1);
+		demoParticleRef.current = spawnParticle(rng(seed * 97 + 5), 1.0);
+		setLiveFrame(renderFrame(demoParticleRef.current));
 		setStep(0);
 		setLatNaive([]);
 		setLatLewm([]);
@@ -539,6 +546,21 @@ const LeWorldModelSimulation: React.FC = () => {
 		setTraceLewmHist([]);
 		setRollout({ truth: [], naive: [], lewm: [] });
 	}, [seed]);
+
+	// Continuous demo-particle animation. Independent of the training tick:
+	// shows the viewer a coherent object moving so the pixel panel reads as
+	// "this is what the encoder sees", not "noise sampled per step".
+	useEffect(() => {
+		const id = window.setInterval(() => {
+			const p = demoParticleRef.current;
+			if (!p) return;
+			// dt scales with speed so the slider has a visible effect.
+			const next = stepParticle(p, 0.04 * speed);
+			demoParticleRef.current = next;
+			setLiveFrame(renderFrame(next));
+		}, 50);
+		return () => clearInterval(id);
+	}, [speed]);
 
 	// Recompute rollouts from current weights and a fresh start state.
 	const recomputeRollout = (rTick: number) => {
@@ -592,7 +614,6 @@ const LeWorldModelSimulation: React.FC = () => {
 				const resN = trainStep(enN, prN, batch.frames_t, batch.frames_tp1, 0, 0.05);
 				const resL = trainStep(enL, prL, batch.frames_t, batch.frames_tp1, lambda, 0.05);
 
-				setLiveFrame(batch.frames_t[0]);
 				setLpredNaive(resN.Lpred);
 				setLpredLewm(resL.Lpred);
 				setLgaussLewm(resL.Lgauss);
