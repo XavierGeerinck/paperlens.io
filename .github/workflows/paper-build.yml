@@ -1,0 +1,70 @@
+name: Paper build
+
+# Publishes one paper as an entry + simulation, on request.
+# Triggered by `@claude build <arxiv-id>` on the radar issue (or any issue).
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: paper-build-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Only act on an explicit build request from someone who can write to the repo
+    if: >-
+      contains(github.event.comment.body, '@claude build') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Write the entry
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          track_progress: true
+          claude_args: >-
+            --allowed-tools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch"
+          prompt: |
+            The comment that triggered this run is:
+
+            ${{ github.event.comment.body }}
+
+            Extract the arXiv ID from it and run the /scan-papers command with
+            that ID and --pr. That means: skip harvesting, verify the abstract
+            from the real arXiv page, write the entry and its simulation, run
+            `bun run build` until it passes clean, then branch, commit, push and
+            open a pull request.
+
+            This runner is headless, so `bun run preview` cannot be checked by
+            eye. Compensate: after the build passes, grep the generated page in
+            `dist/` to confirm the entry rendered, and re-read the simulation
+            component for anything that would throw on mount — undefined array
+            access, division by a length that can be zero, `document` or `window`
+            touched during render.
+
+            Stage only the two files you created. Never `git add -A`: the tree
+            carries untracked directories that must not be committed.
+
+            Finish by commenting the pull request URL on issue
+            #${{ github.event.issue.number }}, with one line on what the
+            simulation lets a reader do.
