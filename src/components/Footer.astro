@@ -1,33 +1,46 @@
 ---
-const currentYear = new Date().getFullYear();
+/**
+ * Status bar — fixed to the bottom of every page.
+ * Segments carry real state: mode, buffer path, position, live key hints.
+ */
+interface Props {
+  path: string;
+  meta?: string;
+  /** rendered as HTML so key names can be bolded */
+  keys?: string;
+  /** right-hand segments; the article page passes its scroll meter */
+  scrollMeter?: boolean;
+  position?: string;
+  exitCode?: string;
+}
 
-const socialLinks = [
-  { name: 'GitHub', href: 'https://github.com/xaviergeerinck' },
-  { name: 'Twitter', href: 'https://twitter.com/XavierGeerinck' },
-  { name: 'LinkedIn', href: 'https://linkedin.com/in/xaviergeerinck' },
-  { name: 'Website', href: 'https://xaviergeerinck.com' },
-];
+const {
+  path,
+  meta,
+  keys = '<b>?</b> keys',
+  scrollMeter = false,
+  position,
+  exitCode,
+} = Astro.props;
+
+const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-zinc-800 bg-zinc-950 py-8 mt-16">
-  <div class="max-w-7xl mx-auto px-4">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="text-xs text-zinc-500 font-mono">
-        &copy; {currentYear} Xavier Geerinck. All rights reserved.
-      </div>
-
-      <div class="flex items-center gap-6">
-        {socialLinks.map((link) => (
-          <a
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-mono uppercase tracking-wider"
-          >
-            {link.name}
-          </a>
-        ))}
-      </div>
-    </div>
-  </div>
+<footer class="statusbar" role="contentinfo">
+  <span class="seg mode" data-mode="NORMAL">NORMAL</span>
+  <span class="seg">{path}</span>
+  {position && <span class="seg hide-sm" id="pl-pos">{position}</span>}
+  {exitCode && <span class="seg c-red hide-sm">{exitCode}</span>}
+  {meta && <span class="seg hide-sm">{meta}</span>}
+  <span class="seg grow keys hide-sm" set:html={keys} />
+  <!-- the key hints carry the flex-grow on wide screens; this takes over below 720px -->
+  <span class="seg grow spacer" />
+  {scrollMeter ? (
+    <>
+      <span class="seg" id="pl-ln">Ln 1/1</span>
+      <span class="seg" id="pl-pct">Top</span>
+    </>
+  ) : (
+    <span class="seg">© {year}<span class="hide-sm">&nbsp;Xavier Geerinck</span></span>
+  )}
 </footer>

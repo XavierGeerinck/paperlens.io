@@ -826,9 +826,9 @@ const Kona1BattleshipSimulation: FC = () => {
 										const inReference = SOLUTION_MASK[cell] === 1;
 
 										let borderColor = "rgba(51,65,85,0.65)";
-										if (showReference && inReference) borderColor = "#34d399";
-										if (clue?.target === 1) borderColor = "#10b981";
-										if (clue?.target === 0) borderColor = "#475569";
+										if (showReference && inReference) borderColor = "#66e3b5";
+										if (clue?.target === 1) borderColor = "#35d492";
+										if (clue?.target === 0) borderColor = "#323944";
 
 										const bg = clue
 											? clue.target === 1
@@ -1016,7 +1016,7 @@ const Kona1BattleshipSimulation: FC = () => {
 								<polyline
 									points={tracePoints}
 									fill="none"
-									stroke="#10b981"
+									stroke="#35d492"
 									strokeWidth="1.2"
 								/>
 							)}

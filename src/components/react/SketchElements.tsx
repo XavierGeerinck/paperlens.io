@@ -1,6 +1,12 @@
 import React from "react";
 
-// --- Lab / Tech UI Components ---
+/**
+ * Shared chrome for the simulations.
+ *
+ * These follow the site's pane treatment: 1px border, 6px radius, the label
+ * sitting in the border like a legend. Colour comes from the tokens in
+ * src/styles/global.css, so simulations stay on-brand without knowing about it.
+ */
 
 export const LabCard: React.FC<{
 	children: React.ReactNode;
@@ -9,44 +15,34 @@ export const LabCard: React.FC<{
 	className?: string;
 }> = ({ children, title, status, className = "" }) => (
 	<div
-		className={`relative bg-zinc-950 border border-zinc-800 group hover:border-zinc-600 transition-colors ${className}`}
+		className={`relative bg-bg0 border border-bg2 rounded-lg ${className}`}
 	>
-		{/* Tech Corners */}
-		<div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t border-l border-zinc-500" />
-		<div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t border-r border-zinc-500" />
-		<div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b border-l border-zinc-500" />
-		<div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b border-r border-zinc-500" />
-
-		{/* Header Strip */}
 		{(title || status) && (
-			<div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900/50">
+			<div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-bg2">
 				{title && (
-					<div className="flex items-center gap-2">
-						<div className="w-1.5 h-1.5 bg-indigo-500 rounded-sm animate-pulse" />
-						<span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">
-							{title}
-						</span>
-					</div>
+					<span className="text-[12.5px] font-mono font-semibold text-mint-400 truncate">
+						{title}
+					</span>
 				)}
 				{status && (
-					<div className="text-[9px] font-mono uppercase tracking-wider text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded-sm">
+					<span className="text-[11px] font-mono text-ink4 whitespace-nowrap">
+						<span className="text-mute">// </span>
 						{status}
-					</div>
+					</span>
 				)}
 			</div>
 		)}
 
-		{/* Content */}
-		<div className="p-5">{children}</div>
+		<div className="p-4">{children}</div>
 	</div>
 );
 
 export const TechBadge: React.FC<{ label: string; color?: string }> = ({
 	label,
-	color = "text-indigo-400",
+	color = "text-mint-400",
 }) => (
 	<span
-		className={`inline-flex items-center px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider border border-zinc-800 bg-zinc-900/50 ${color}`}
+		className={`inline-flex items-center px-1.5 rounded text-[11px] font-mono font-semibold tracking-wide border border-bg3 bg-bg0h ${color}`}
 	>
 		{label}
 	</span>
@@ -57,31 +53,33 @@ export const DataReadout: React.FC<{
 	value: string | React.ReactNode;
 }> = ({ label, value }) => (
 	<div className="flex flex-col">
-		<span className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-0.5">
-			{label}
+		<span className="text-[11px] font-mono text-mute mb-0.5">{label}</span>
+		<span className="text-sm font-mono text-ink1 tabular-nums truncate">
+			{value}
 		</span>
-		<span className="text-sm font-mono text-zinc-300 truncate">{value}</span>
 	</div>
 );
 
-// --- Legacy Sketch Components (Kept for compatibility or accent) ---
+// --- Aliases kept so existing simulations keep working ---
 
 export const SketchCircle: React.FC<{
 	children: React.ReactNode;
 	className?: string;
 	color?: string;
-}> = ({ children, className = "", color = "currentColor" }) => (
+}> = ({ children, className = "" }) => (
 	<div className={`relative inline-block ${className}`}>{children}</div>
 );
 
-export const SketchBox = LabCard; // Map to new style
-export const SchematicCard = LabCard; // Map to new style
+export const SketchBox = LabCard;
+export const SchematicCard = LabCard;
+
 export const SchematicButton = ({
 	onClick,
 	children,
 	icon: Icon,
 	label,
 	active,
+	disabled,
 }: any) => {
 	const iconElement = React.isValidElement(Icon) ? (
 		Icon
@@ -91,11 +89,13 @@ export const SchematicButton = ({
 
 	return (
 		<button
+			type="button"
 			onClick={onClick}
-			className={`px-4 py-2 border font-mono text-xs uppercase transition-colors flex items-center gap-2 ${
+			disabled={disabled}
+			className={`px-3 py-1.5 rounded-lg border font-mono text-[12.5px] transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
 				active
-					? "bg-zinc-800 border-zinc-500 text-white"
-					: "bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+					? "bg-mint-400 border-mint-400 text-onhue font-semibold"
+					: "bg-bg1 border-bg3 text-ink1 hover:border-ink4 hover:text-ink"
 			}`}
 		>
 			{iconElement}
@@ -103,6 +103,7 @@ export const SchematicButton = ({
 		</button>
 	);
 };
+
 export const DataLabel = DataReadout;
 
 // --- SVGs ---
@@ -116,6 +117,7 @@ export const SketchArrowRight: React.FC<{
 		width="40"
 		height="12"
 		viewBox="0 0 40 12"
+		aria-hidden="true"
 	>
 		<path
 			d="M0,6 L38,6 M34,2 L39,6 L34,10"
@@ -129,17 +131,15 @@ export const SketchArrowRight: React.FC<{
 export const SketchUnderline: React.FC<{
 	className?: string;
 	color?: string;
-}> = ({ className = "", color = "currentColor" }) => (
-	<div
-		className={`h-[1px] w-full bg-gradient-to-r from-${color} to-transparent opacity-50 ${className}`}
-	/>
+}> = ({ className = "" }) => (
+	<div className={`h-px w-full bg-bg3 ${className}`} />
 );
 
 export const SketchHighlight: React.FC<{
 	className?: string;
 	color?: string;
-}> = ({ className = "", color = "rgba(99, 102, 241, 0.1)" }) => (
-	<div className={`absolute inset-0 bg-indigo-500/10 ${className}`} />
+}> = ({ className = "" }) => (
+	<div className={`absolute inset-0 bg-mint-400/10 ${className}`} />
 );
 
 export const SketchFilters = () => null;

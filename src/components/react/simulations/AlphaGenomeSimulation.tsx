@@ -9,20 +9,20 @@ const BASE_COLORS = {
   A: "#34a853", // Green
   G: "#ea4335", // Red
   C: "#4285f4", // Blue
-  T: "#fbbc04"  // Yellow
+  T: "#f5a623"  // Yellow
 };
 
 const PALETTE = {
   bg: "#020617",       // Slate 950
-  panelBg: "#0f172a",  // Slate 900
-  border: "#1e293b",   // Slate 800
-  grid: "#334155",     // Slate 700
+  panelBg: "#0d0f13",  // Slate 900
+  border: "#161a20",   // Slate 800
+  grid: "#22272f",     // Slate 700
   textMain: "#f8fafc", // Slate 50
-  textMuted: "#94a3b8",// Slate 400
-  accent: "#3b82f6",   // Blue 500
-  success: "#10b981",  // Emerald 500
-  danger: "#ef4444",   // Red 500
-  warning: "#f59e0b",  // Amber 500
+  textMuted: "#98a2ae",// Slate 400
+  accent: "#4c9ef5",   // Blue 500
+  success: "#35d492",  // Emerald 500
+  danger: "#f5555d",   // Red 500
+  warning: "#f5a623",  // Amber 500
 };
 
 // --- DATA GENERATORS ---
@@ -519,11 +519,11 @@ const AlphaGenomeSimulation: React.FC = () => {
         
         // Fill
         const trackColors = [
-            "#3b82f6", // Blue (Expr)
-            "#10b981", // Green (Access)
-            "#f59e0b", // Amber (Histone)
-            "#8b5cf6", // Purple (CTCF)
-            "#ec4899"  // Pink (Splicing)
+            "#4c9ef5", // Blue (Expr)
+            "#35d492", // Green (Access)
+            "#f5a623", // Amber (Histone)
+            "#7452e6", // Purple (CTCF)
+            "#c257db"  // Pink (Splicing)
         ];
         
         ctx.fillStyle = trackColors[idx % trackColors.length];

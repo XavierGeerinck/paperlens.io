@@ -1,0 +1,44 @@
+---
+/**
+ * The key map (?). Only lists keys that actually work on the current page —
+ * page-specific rows are passed in via `extra`.
+ */
+interface Props {
+  extra?: { key: string; what: string }[];
+}
+
+const { extra = [] } = Astro.props;
+
+const global = [
+  { key: '0 1 2 3', what: 'switch window: home · papers · whoami · rss' },
+  { key: '/', what: 'browse papers' },
+  { key: 'gg / G', what: 'jump to top / bottom' },
+  { key: '?', what: 'this key map' },
+  { key: 'Esc', what: 'close · leave a field' },
+];
+---
+
+<div class="overlay" id="pl-help" role="dialog" aria-modal="true" aria-labelledby="pl-help-title">
+  <section class="pane">
+    <h2 class="pane-title" id="pl-help-title"><span class="hl">keys</span><span class="extra">:map</span></h2>
+    <dl class="keylist">
+      {extra.map((row) => (
+        <>
+          <dt>{row.key}</dt>
+          <dd>{row.what}</dd>
+        </>
+      ))}
+      {global.map((row) => (
+        <>
+          <dt>{row.key}</dt>
+          <dd>{row.what}</dd>
+        </>
+      ))}
+      <dt>↑↑↓↓←→←→BA</dt>
+      <dd class="dim">still works.</dd>
+    </dl>
+    <p style="margin:1rem 0 0">
+      <button class="btn" type="button" data-action="close-help">Close <span class="kbd">Esc</span></button>
+    </p>
+  </section>
+</div>

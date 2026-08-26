@@ -471,7 +471,7 @@ const Kona1Simulation: FC = () => {
 											<polyline
 												points={points}
 												fill="none"
-												stroke="#10b981"
+												stroke="#35d492"
 												strokeWidth="1"
 												vectorEffect="non-scaling-stroke"
 											/>
@@ -487,7 +487,7 @@ const Kona1Simulation: FC = () => {
 														gradientTrace[gradientTrace.length - 1].value,
 													)}
 													r="1"
-													fill="#10b981"
+													fill="#35d492"
 													vectorEffect="non-scaling-stroke"
 												/>
 											)}

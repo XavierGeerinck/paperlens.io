@@ -67,7 +67,7 @@ export const LensAnimation: React.FC = () => {
 			<div
 				className="absolute inset-0"
 				style={{
-					backgroundImage: `linear-gradient(to right, #27272a 1px, transparent 1px), linear-gradient(to bottom, #27272a 1px, transparent 1px)`,
+					backgroundImage: `linear-gradient(to right, #22272f 1px, transparent 1px), linear-gradient(to bottom, #22272f 1px, transparent 1px)`,
 					backgroundSize: "40px 40px",
 					opacity: 0.1,
 				}}
@@ -101,14 +101,14 @@ export const LensAnimation: React.FC = () => {
 			>
 				<defs>
 					<linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-						<stop offset="0%" stopColor="#52525b" stopOpacity="0" />
-						<stop offset="50%" stopColor="#6366f1" stopOpacity="0.5" />
-						<stop offset="100%" stopColor="#818cf8" stopOpacity="1" />
+						<stop offset="0%" stopColor="#4b5563" stopOpacity="0" />
+						<stop offset="50%" stopColor="#8b6cf2" stopOpacity="0.5" />
+						<stop offset="100%" stopColor="#a992f6" stopOpacity="1" />
 					</linearGradient>
 
 					<linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-						<stop offset="0%" stopColor="#6366f1" stopOpacity="0.2" />
-						<stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+						<stop offset="0%" stopColor="#8b6cf2" stopOpacity="0.2" />
+						<stop offset="100%" stopColor="#8b6cf2" stopOpacity="0" />
 					</linearGradient>
 
 					<filter id="glow">
@@ -145,7 +145,7 @@ export const LensAnimation: React.FC = () => {
 					<path
 						d={pathData}
 						fill="none"
-						stroke="#a5b4fc"
+						stroke="#c7b6f9"
 						strokeWidth="3"
 						filter="url(#glow)"
 					/>
@@ -157,7 +157,7 @@ export const LensAnimation: React.FC = () => {
 							y1={p.y}
 							x2={p.x + 20}
 							y2={p.y - 20 - i * 5}
-							stroke="#818cf8"
+							stroke="#a992f6"
 							strokeWidth="1"
 							strokeDasharray="2 2"
 							opacity="0.5"
@@ -171,7 +171,7 @@ export const LensAnimation: React.FC = () => {
 					<circle
 						r="60"
 						fill="none"
-						stroke="#6366f1"
+						stroke="#8b6cf2"
 						strokeWidth="1"
 						strokeDasharray="4 4"
 						opacity="0.3"
@@ -179,7 +179,7 @@ export const LensAnimation: React.FC = () => {
 					<circle
 						r="55"
 						fill="none"
-						stroke="#6366f1"
+						stroke="#8b6cf2"
 						strokeWidth="0.5"
 						opacity="0.2"
 					/>
@@ -190,7 +190,7 @@ export const LensAnimation: React.FC = () => {
 						y1="-60"
 						x2="0"
 						y2="60"
-						stroke="#818cf8"
+						stroke="#a992f6"
 						strokeWidth="1"
 						opacity="0.8"
 					>
@@ -212,14 +212,14 @@ export const LensAnimation: React.FC = () => {
 							y="0"
 							width="60"
 							height="16"
-							fill="#18181b"
+							fill="#161a20"
 							rx="2"
 							opacity="0.8"
 						/>
 						<text
 							x="5"
 							y="11"
-							fill="#a5b4fc"
+							fill="#c7b6f9"
 							fontSize="8"
 							fontFamily="monospace"
 						>

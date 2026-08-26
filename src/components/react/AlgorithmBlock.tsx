@@ -719,7 +719,7 @@ export default function AlgorithmBlock({
 								key={idx}
 								className={`transition-all duration-300 ${
 									isActive
-										? "text-white font-bold bg-indigo-500/10 -mx-2 px-2 py-1 border-l-2 border-indigo-500"
+										? "text-ink font-bold bg-mint-400/10 -mx-2 px-2 py-1 border-l-2 border-mint-400"
 										: isPast
 											? "text-zinc-500"
 											: "text-zinc-300"
@@ -737,7 +737,7 @@ export default function AlgorithmBlock({
 							<button
 								onClick={togglePlay}
 								disabled={isComplete}
-								className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
+								className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mint-400 hover:brightness-110 disabled:bg-bg1 disabled:text-ink4 text-onhue font-mono text-xs font-semibold tracking-wide transition-colors cursor-pointer"
 							>
 								{isPlaying ? (
 									<>

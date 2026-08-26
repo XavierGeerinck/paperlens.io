@@ -419,8 +419,8 @@ const ScatterPanel: React.FC<{
 				<div className="text-[9px] font-mono text-zinc-500">{subtitle}</div>
 			</div>
 			<svg width="100%" viewBox={`0 0 ${W} ${H}`} className="block bg-zinc-950 border border-zinc-800">
-				<line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#27272a" />
-				<line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#27272a" />
+				<line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#22272f" />
+				<line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#22272f" />
 				{showUnitEllipse && (
 					<>
 						<ellipse
@@ -429,12 +429,12 @@ const ScatterPanel: React.FC<{
 							rx={W / 6}
 							ry={H / 6}
 							fill="none"
-							stroke="#f59e0b"
+							stroke="#f5a623"
 							strokeWidth={1}
 							strokeDasharray="3 3"
 							opacity={0.8}
 						/>
-						<text x={W / 2 + W / 6 + 4} y={H / 2 - 4} fontFamily="monospace" fontSize={9} fill="#f59e0b">
+						<text x={W / 2 + W / 6 + 4} y={H / 2 - 4} fontFamily="monospace" fontSize={9} fill="#f5a623">
 							N(0,I)
 						</text>
 					</>
@@ -468,9 +468,9 @@ const LineChart: React.FC<{
 	const sy = (v: number) => H - 14 - ((tr(v) - lo) / span) * (H - 24);
 	return (
 		<svg width="100%" viewBox={`0 0 ${W} ${H}`} className="block">
-			<line x1={25} y1={H - 14} x2={W} y2={H - 14} stroke="#3f3f46" />
+			<line x1={25} y1={H - 14} x2={W} y2={H - 14} stroke="#323944" />
 			{yLabel && (
-				<text x={4} y={14} fontFamily="monospace" fontSize={9} fill="#71717a">
+				<text x={4} y={14} fontFamily="monospace" fontSize={9} fill="#6b7583">
 					{yLabel}
 				</text>
 			)}
@@ -736,7 +736,7 @@ const LeWorldModelSimulation: React.FC = () => {
 							title="Naive  ·  λ = 0"
 							subtitle="Latent z_t scatter (last 200)"
 							points={latNaive}
-							color="#ef4444"
+							color="#f5555d"
 							status={
 								naiveCollapsed ? (
 									<span className="text-red-400 inline-flex items-center gap-1">
@@ -754,7 +754,7 @@ const LeWorldModelSimulation: React.FC = () => {
 							title={`LeWM  ·  λ = ${lambda.toFixed(2)}`}
 							subtitle="Latent z_t scatter (last 200)"
 							points={latLewm}
-							color="#6366f1"
+							color="#8b6cf2"
 							showUnitEllipse
 							status={
 								lewmHealthy ? (
@@ -777,8 +777,8 @@ const LeWorldModelSimulation: React.FC = () => {
 							</div>
 							<LineChart
 								series={[
-									{ values: traceNaiveHist, color: "#ef4444", label: "naive" },
-									{ values: traceLewmHist, color: "#6366f1", label: "LeWM" },
+									{ values: traceNaiveHist, color: "#f5555d", label: "naive" },
+									{ values: traceLewmHist, color: "#8b6cf2", label: "LeWM" },
 								]}
 								yLog
 								height={140}
@@ -809,7 +809,7 @@ const LeWorldModelSimulation: React.FC = () => {
 										<rect x={0} y={0} width={W} height={H} />
 									</clipPath>
 								</defs>
-								<rect x={1} y={1} width={W - 2} height={H - 2} fill="none" stroke="#27272a" />
+								<rect x={1} y={1} width={W - 2} height={H - 2} fill="none" stroke="#22272f" />
 								<g clipPath="url(#rolloutClip)">
 									{rollout.truth.length > 0 && (
 										<>
@@ -818,7 +818,7 @@ const LeWorldModelSimulation: React.FC = () => {
 													.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
 													.join(" ")}
 												fill="none"
-												stroke="#10b981"
+												stroke="#35d492"
 												strokeWidth={2}
 											/>
 											<path
@@ -826,7 +826,7 @@ const LeWorldModelSimulation: React.FC = () => {
 													.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
 													.join(" ")}
 												fill="none"
-												stroke="#ef4444"
+												stroke="#f5555d"
 												strokeWidth={1.5}
 												strokeDasharray="3 3"
 											/>
@@ -835,7 +835,7 @@ const LeWorldModelSimulation: React.FC = () => {
 													.map((p, i) => `${i === 0 ? "M" : "L"}${sx(p[0])},${sy(p[1])}`)
 													.join(" ")}
 												fill="none"
-												stroke="#6366f1"
+												stroke="#8b6cf2"
 												strokeWidth={1.5}
 												strokeDasharray="3 3"
 											/>
@@ -844,7 +844,7 @@ const LeWorldModelSimulation: React.FC = () => {
 												cx={sx(rollout.truth[0][0])}
 												cy={sy(rollout.truth[0][1])}
 												r={4}
-												fill="#fbbf24"
+												fill="#f8c05a"
 											/>
 											{/* End markers — make the final positions explicit. */}
 											{rollout.truth.length > 1 && (
@@ -853,32 +853,32 @@ const LeWorldModelSimulation: React.FC = () => {
 														cx={sx(rollout.truth[rollout.truth.length - 1][0])}
 														cy={sy(rollout.truth[rollout.truth.length - 1][1])}
 														r={3}
-														fill="#10b981"
+														fill="#35d492"
 													/>
 													<circle
 														cx={sx(rollout.naive[rollout.naive.length - 1][0])}
 														cy={sy(rollout.naive[rollout.naive.length - 1][1])}
 														r={3}
-														fill="#ef4444"
+														fill="#f5555d"
 													/>
 													<circle
 														cx={sx(rollout.lewm[rollout.lewm.length - 1][0])}
 														cy={sy(rollout.lewm[rollout.lewm.length - 1][1])}
 														r={3}
-														fill="#6366f1"
+														fill="#8b6cf2"
 													/>
 												</>
 											)}
 										</>
 									)}
 								</g>
-								<text x={W - 110} y={14} fontFamily="monospace" fontSize={10} fill="#10b981">
+								<text x={W - 110} y={14} fontFamily="monospace" fontSize={10} fill="#35d492">
 									ground truth
 								</text>
-								<text x={W - 110} y={26} fontFamily="monospace" fontSize={10} fill="#ef4444">
+								<text x={W - 110} y={26} fontFamily="monospace" fontSize={10} fill="#f5555d">
 									naive
 								</text>
-								<text x={W - 110} y={38} fontFamily="monospace" fontSize={10} fill="#6366f1">
+								<text x={W - 110} y={38} fontFamily="monospace" fontSize={10} fill="#8b6cf2">
 									LeWM
 								</text>
 							</svg>

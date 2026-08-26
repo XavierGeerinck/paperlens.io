@@ -447,11 +447,11 @@ const LaceLithographySimulation: React.FC = () => {
       ctx.fillStyle = clr; ctx.font = fnt ?? "bold 7px 'Courier New',monospace";
       ctx.fillText(t, W - 1, y);
     };
-    lbl("h-BN mask",    MASK_Y + 9,  "#475569");
-    lbl("↕ beam zone",  DIFF_Y + 20, "#64748b");
+    lbl("h-BN mask",    MASK_Y + 9,  "#323944");
+    lbl("↕ beam zone",  DIFF_Y + 20, "#6b7583");
     lbl("photoresist",  RES_Y + 11,  "#4ade80");
-    lbl("SiO₂ oxide",   OX_Y + 13,   "#94a3b8");
-    lbl("Si substrate", SUB_Y + 13,  "#818cf8");
+    lbl("SiO₂ oxide",   OX_Y + 13,   "#98a2ae");
+    lbl("Si substrate", SUB_Y + 13,  "#a992f6");
     ctx.textAlign = "left";
 
     // ── DOSE PROFILE CHART ────────────────────────────────────────────────
@@ -459,7 +459,7 @@ const LaceLithographySimulation: React.FC = () => {
     ctx.fillStyle = "rgba(8,12,32,0.7)";
     ctx.fillRect(0, CHART_Y - 16, W, CHART_H + 20);
 
-    ctx.fillStyle = "#334155"; ctx.font = "bold 7px 'Courier New',monospace";
+    ctx.fillStyle = "#22272f"; ctx.font = "bold 7px 'Courier New',monospace";
     ctx.textAlign = "left";
     ctx.fillText("DOSE PROFILE PER COLUMN  ─  red = expose threshold", MX + 2, CHART_Y - 5);
 

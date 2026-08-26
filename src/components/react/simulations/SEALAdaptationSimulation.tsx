@@ -157,14 +157,14 @@ const SEALAdaptationSimulation: React.FC = () => {
 
 		// Draw 4 stages of SEAL loop
 		const stages = [
-			{ label: "Generate", icon: "📝", angle: 0, color: "#3b82f6" },
-			{ label: "Apply SFT", icon: "⚙️", angle: Math.PI / 2, color: "#10b981" },
-			{ label: "Evaluate", icon: "📊", angle: Math.PI, color: "#f59e0b" },
+			{ label: "Generate", icon: "📝", angle: 0, color: "#4c9ef5" },
+			{ label: "Apply SFT", icon: "⚙️", angle: Math.PI / 2, color: "#35d492" },
+			{ label: "Evaluate", icon: "📊", angle: Math.PI, color: "#f5a623" },
 			{
 				label: "Reinforce",
 				icon: "🎯",
 				angle: (3 * Math.PI) / 2,
-				color: "#8b5cf6",
+				color: "#7452e6",
 			},
 		];
 

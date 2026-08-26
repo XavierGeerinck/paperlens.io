@@ -149,8 +149,8 @@ export const GlobeAnimation: React.FC = () => {
 			>
 				<defs>
 					<radialGradient id="globeGradient" cx="50%" cy="50%" r="50%">
-						<stop offset="0%" stopColor="#6366f1" stopOpacity="0.1" />
-						<stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+						<stop offset="0%" stopColor="#8b6cf2" stopOpacity="0.1" />
+						<stop offset="100%" stopColor="#8b6cf2" stopOpacity="0" />
 					</radialGradient>
 				</defs>
 
@@ -175,7 +175,7 @@ export const GlobeAnimation: React.FC = () => {
 							key={i}
 							d={d}
 							fill="none"
-							stroke={isBack ? "#3f3f46" : "#818cf8"}
+							stroke={isBack ? "#323944" : "#a992f6"}
 							strokeWidth={isBack ? 1 : 1.5}
 							strokeOpacity={isBack ? 0.2 : 0.6}
 							className="transition-colors duration-75"
@@ -203,7 +203,7 @@ export const GlobeAnimation: React.FC = () => {
 							<circle r={2 * scale} fill="#fff" fillOpacity={opacity} />
 							<circle
 								r={4 * scale}
-								stroke="#6366f1"
+								stroke="#8b6cf2"
 								strokeWidth="1"
 								fill="none"
 								strokeOpacity={opacity}
@@ -237,7 +237,7 @@ export const GlobeAnimation: React.FC = () => {
 							<path
 								d={backPoints.join(" ")}
 								fill="none"
-								stroke="#3f3f46"
+								stroke="#323944"
 								strokeWidth="1"
 								strokeDasharray="4 4"
 								className="opacity-30"
@@ -246,7 +246,7 @@ export const GlobeAnimation: React.FC = () => {
 							<path
 								d={frontPoints.join(" ")}
 								fill="none"
-								stroke="#6366f1"
+								stroke="#8b6cf2"
 								strokeWidth="2"
 								strokeDasharray="4 4"
 								className="opacity-80"

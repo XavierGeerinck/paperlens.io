@@ -127,10 +127,10 @@ const AletheiaSimulation: React.FC = () => {
 
 	// --- Visual Helpers ---
 	const getDraftColor = () => {
-		if (state.phase === "ACCEPTED") return "#10b981"; // Emerald
-		if (state.phase === "FAILED") return "#ef4444";   // Red
+		if (state.phase === "ACCEPTED") return "#35d492"; // Emerald
+		if (state.phase === "FAILED") return "#f5555d";   // Red
 		// Interpolate between red (poor) and blue (good)
-		return state.draftQuality > 0.7 ? "#60a5fa" : "#f472b6"; 
+		return state.draftQuality > 0.7 ? "#7bb7f7" : "#e694f2"; 
 	};
 
 	const startSimulation = () => {
@@ -166,7 +166,7 @@ const AletheiaSimulation: React.FC = () => {
 				}`}
 				style={active ? { borderColor: color, boxShadow: `0 0 20px ${color}40`, backgroundColor: `${color}20` } : {}}
 			>
-				<Icon size={20} style={{ color: active ? color : "#64748b" }} />
+				<Icon size={20} style={{ color: active ? color : "#6b7583" }} />
 			</div>
 			<span className={`text-[10px] font-mono uppercase tracking-wider ${active ? "text-white font-bold" : "text-slate-500"}`}>
 				{label}
@@ -184,7 +184,7 @@ const AletheiaSimulation: React.FC = () => {
 			<path
 				d={path}
 				fill="none"
-				stroke={active ? "#94a3b8" : "#334155"}
+				stroke={active ? "#98a2ae" : "#22272f"}
 				strokeWidth={active ? 2 : 1}
 				strokeDasharray={active ? "4 4" : "none"}
 				className={active ? "animate-[dash_1s_linear_infinite]" : ""}
@@ -293,7 +293,7 @@ const AletheiaSimulation: React.FC = () => {
 							
 							{/* Tool Connection */}
 							{state.searchActive && (
-								<line x1="400" y1="140" x2="450" y2="200" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
+								<line x1="400" y1="140" x2="450" y2="200" stroke="#f5a623" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
 							)}
 						</svg>
 
@@ -303,7 +303,7 @@ const AletheiaSimulation: React.FC = () => {
 							x={150} y={100} 
 							icon={BrainCircuit} 
 							label="Generator" 
-							color="#d946ef" 
+							color="#d977f0" 
 							active={state.activeNode === "generator"} 
 						/>
 						<Node 
@@ -311,7 +311,7 @@ const AletheiaSimulation: React.FC = () => {
 							x={400} y={100} 
 							icon={ShieldCheck} 
 							label="Verifier" 
-							color="#3b82f6" 
+							color="#4c9ef5" 
 							active={state.activeNode === "verifier"} 
 						/>
 						<Node 
@@ -345,7 +345,7 @@ const AletheiaSimulation: React.FC = () => {
 										className="h-1 rounded-full transition-all duration-500"
 										style={{ 
 											width: `${30 + Math.random() * 70}%`,
-											backgroundColor: state.draftQuality > (i * 0.15) ? getDraftColor() : "#334155",
+											backgroundColor: state.draftQuality > (i * 0.15) ? getDraftColor() : "#22272f",
 											opacity: state.hallucinationRisk > 0.4 && i > 3 ? 0.3 : 1
 										}}
 									/>

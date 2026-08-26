@@ -3,211 +3,265 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import TabsController from '../../components/react/TabsController';
+import HelpOverlay from '../../components/HelpOverlay.astro';
 import DemoView from '../../components/react/DemoView';
+import EntryThumb from '../../components/react/EntryThumb';
 
 export async function getStaticPaths() {
   const ideas = await getCollection('ideas');
-  return ideas.map((idea) => ({
+  const sorted = ideas.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+  return sorted.map((idea, i) => ({
     params: { slug: idea.slug },
-    props: { idea },
+    props: {
+      idea,
+      newer: sorted[i - 1] ?? null,
+      older: sorted[i + 1] ?? null,
+      siblings: sorted
+        .filter((other) => other.slug !== idea.slug)
+        .map((other) => ({
+          slug: other.slug,
+          title: other.data.title,
+          date: other.data.date,
+          tags: other.data.tags,
+        })),
+    },
   }));
 }
 
 interface Props {
   idea: CollectionEntry<'ideas'>;
+  newer: CollectionEntry<'ideas'> | null;
+  older: CollectionEntry<'ideas'> | null;
+  siblings: { slug: string; title: string; date: Date; tags: string[] }[];
 }
 
-const { idea } = Astro.props;
-const { title, subtitle, status, date, tags, simulation, coverImage, webUrl, githubUrl } = idea.data;
-let { pdfUrl } = idea.data;
-const { Content } = await idea.render();
+const { idea, newer, older, siblings } = Astro.props;
+const { title, subtitle, status, date, tags, simulation, coverImage, webUrl, githubUrl, category, impact, readTime } =
+  idea.data;
 
-// Parse comma-delimited PDF URLs and convert arXiv abstract URLs to PDF URLs
-let pdfUrls: string[] = [];
-if (pdfUrl) {
-  pdfUrls = pdfUrl.split(',').map(url => {
-    const trimmed = url.trim();
-    return trimmed.includes('arxiv.org/abs/') ? trimmed.replace('/abs/', '/pdf/') : trimmed;
-  });
-}
+const { Content, headings } = await idea.render();
 
-const statusColors: Record<string, string> = {
-  RESEARCH: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  CONCEPT: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  PROTOTYPE: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  ALPHA: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  ARCHIVED: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+const extension = idea.id.endsWith('.mdx') ? 'mdx' : 'md';
+
+// arXiv abstract links point at the PDF
+const pdfUrls = (idea.data.pdfUrl ?? '')
+  .split(',')
+  .map((url) => url.split('#')[0].trim())
+  .filter(Boolean)
+  .map((url) => (url.includes('arxiv.org/abs/') ? url.replace('/abs/', '/pdf/') : url));
+
+const hostOf = (url: string) => {
+  try {
+    const u = new URL(url);
+    return (u.hostname + u.pathname).replace(/^www\./, '');
+  } catch {
+    return url;
+  }
 };
 
-const formattedDate = date.toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
-
-// Build tab metadata
-const tabs = [
-  { id: 'paper', label: 'Documentation' },
+// views: documentation is always there; the rest depend on the entry
+const views = [
+  { id: 'doc', label: 'documentation' },
+  ...pdfUrls.map((_, i) => ({ id: `pdf-${i}`, label: pdfUrls.length > 1 ? `pdf ${i + 1}` : 'pdf' })),
+  ...(webUrl ? [{ id: 'web', label: 'website' }] : []),
+  ...(githubUrl ? [{ id: 'src', label: 'source' }] : []),
 ];
 
-if (simulation) {
-  tabs.push({ id: 'simulation', label: 'Simulation' });
-}
+// related: most shared tags, then most recent
+const tagSet = new Set(tags.map((t) => t.toLowerCase()));
+const related = siblings
+  .map((s) => ({ ...s, shared: s.tags.filter((t) => tagSet.has(t.toLowerCase())).length }))
+  .filter((s) => s.shared > 0)
+  .sort((a, b) => b.shared - a.shared || b.date.valueOf() - a.date.valueOf())
+  .slice(0, 4);
 
-if (pdfUrls.length > 0) {
-  if (pdfUrls.length === 1) {
-    tabs.push({ id: 'pdf', label: 'PDF' });
-  } else {
-    pdfUrls.forEach((_, idx) => {
-      tabs.push({ id: `pdf-${idx}`, label: `PDF ${idx + 1}` });
-    });
-  }
-}
+const toc = headings.filter((h) => h.depth >= 1 && h.depth <= 3);
 
-if (webUrl) {
-  tabs.push({ id: 'website', label: 'Website' });
-}
-
-if (githubUrl) {
-  tabs.push({ id: 'github', label: 'GitHub' });
-}
+const helpKeys = views.length > 1 ? [{ key: 'gt / gT', what: 'next / previous view' }] : [];
 ---
 
-<BaseLayout
-  title={title}
-  description={subtitle}
-  image={coverImage}
-  type="article"
-  date={date}
->
-  <Header />
+<BaseLayout {title} description={subtitle} image={coverImage} type="article" {date}>
+  <Header current="papers" />
 
-  <div class="min-h-screen">
-    <article class="max-w-4xl mx-auto px-4 py-8">
-      <!-- Breadcrumb -->
-      <nav class="mb-8 text-sm font-mono">
-        <a href="/" class="text-zinc-500 hover:text-zinc-300">Home</a>
-        <span class="text-zinc-700 mx-2">/</span>
-        <span class="text-zinc-400">{title}</span>
-      </nav>
+  <div class="term">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="/">~</a> / <a href="/#papers">papers</a> / <span class="cur">{idea.slug}.{extension}</span>
+    </nav>
 
-      <!-- Header -->
-      <header class="mb-8">
-        <div class="flex items-center gap-2 mb-4">
-          <span class={`px-2 py-0.5 text-[10px] font-mono uppercase border rounded ${statusColors[status]}`}>
-            {status}
-          </span>
-          <span class="text-xs text-zinc-500 font-mono">{formattedDate}</span>
-        </div>
-        <h1 class="text-3xl md:text-4xl font-heading font-bold text-zinc-100 mb-4">
-          {title}
-        </h1>
-        <p class="text-lg text-zinc-400">{subtitle}</p>
-        <div class="flex flex-wrap gap-2 mt-4">
-          {tags.map((tag) => (
-            <span class="px-2 py-1 text-xs font-mono text-zinc-500 bg-zinc-800/50 rounded">
-              {tag}
-            </span>
+    <div class="layout">
+      <article>
+        <header class="doc-head">
+          <div class="meta row-meta">
+            <span class={`chip status-${status}`}>{status}</span>
+            <span class={`cat cat-${category}`}>{category}</span>
+            <span>{iso(date)}</span>
+            <span>{readTime} read</span>
+            {simulation && <span class="c-green">sim</span>}
+            {pdfUrls[0] && (
+              <a href={pdfUrls[0]} target="_blank" rel="noopener noreferrer">{hostOf(pdfUrls[0])}</a>
+            )}
+          </div>
+          <h1>{title}</h1>
+          <p class="sub">{subtitle}</p>
+          <p class="tags">
+            {tags.map((tag) => <span class="tag">{tag.toLowerCase().replace(/\s+/g, '-')}</span>)}
+          </p>
+        </header>
+
+        <!-- The simulation sits in the reading flow, once, above the document -->
+        {simulation ? (
+          <section class="pane sunken sim-pane" id="simulation" aria-labelledby="sim-title">
+            <h2 class="pane-title" id="sim-title">
+              <span class="hl">simulation</span><span class="extra">{simulation}</span>
+            </h2>
+            <div class="pane-title-r"><span class="c-aqua">● running</span></div>
+            <div class="sim-host">
+              {/* client:only — the simulations are interactive by nature, and several
+                  seed themselves randomly, which server rendering cannot match */}
+              <DemoView client:only="react" simulationName={simulation} />
+            </div>
+            <p class="sim-note">Runs in your browser. Change a parameter and the figure changes with it.</p>
+          </section>
+        ) : (
+          <section class="pane sunken sim-pane" aria-label="Entry figure">
+            <h2 class="pane-title"><span class="hl">figure</span><span class="extra">no simulation yet</span></h2>
+            <EntryThumb client:visible slug={idea.slug} category={category} animated />
+          </section>
+        )}
+
+        <!-- Views -->
+        <div class="viewstrip" role="tablist" aria-label="Views">
+          {views.map((view, i) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls={`view-${view.id}`}
+              id={`tab-${view.id}`}
+            >
+              {view.label}
+            </button>
           ))}
         </div>
-      </header>
 
-      <!-- Cover Image or Simulation -->
-      {simulation ? (
-        <div class="mb-8">
-          <DemoView client:visible simulationName={simulation} />
-        </div>
-      ) : (
-        <div class="aspect-video overflow-hidden rounded-lg border border-zinc-800 mb-8">
-          <img
-            src={coverImage}
-            alt={title}
-            class="w-full h-full object-cover"
-          />
-        </div>
-      )}
+        <div class="viewpanel doc" id="view-doc" role="tabpanel" aria-labelledby="tab-doc">
+          <Content />
 
-      <!-- Tabbed Content -->
-      <div class="w-full">
-        <TabsController client:load tabs={tabs} />
-
-        <!-- Documentation Tab -->
-        <div id="tab-panel-paper" class="mt-6">
-          <div class="prose prose-invert prose-zinc max-w-none prose-headings:font-heading prose-code:font-mono prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
-            <Content />
-          </div>
+          <nav class="endnav" aria-label="Adjacent entries">
+            {newer ? (
+              <a href={`/idea/${newer.slug}/`}><span class="k">← newer</span> {newer.data.title}</a>
+            ) : (
+              <span />
+            )}
+            {older ? (
+              <a href={`/idea/${older.slug}/`}>{older.data.title} <span class="k">older →</span></a>
+            ) : (
+              <span />
+            )}
+          </nav>
         </div>
 
-        <!-- Simulation Tab -->
-        {simulation && (
-          <div id="tab-panel-simulation" class="mt-6" style="display: none;">
-            <DemoView client:visible simulationName={simulation} />
-          </div>
-        )}
-
-        <!-- PDF Tabs -->
-        {pdfUrls.length === 1 && (
-          <div id="tab-panel-pdf" class="mt-6" style="display: none;">
-            <div class="w-full">
-              <iframe
-                src={pdfUrls[0]}
-                class="w-full h-[800px] border border-zinc-800 rounded-lg"
-                title={`${title} - PDF`}
-              />
-            </div>
-          </div>
-        )}
-        {pdfUrls.length > 1 && pdfUrls.map((url, idx) => (
-          <div id={`tab-panel-pdf-${idx}`} class="mt-6" style="display: none;">
-            <div class="w-full">
-              <iframe
-                src={url}
-                class="w-full h-[800px] border border-zinc-800 rounded-lg"
-                title={`${title} - PDF ${idx + 1}`}
-              />
+        {pdfUrls.map((url, i) => (
+          <div class="viewpanel" id={`view-pdf-${i}`} role="tabpanel" aria-labelledby={`tab-pdf-${i}`} hidden>
+            <div class="pdfbox">
+              <p class="prompt" style="margin:0 0 .75rem;color:var(--fg1)">open {hostOf(url)}</p>
+              <iframe src={url} title={`${title} — source PDF ${i + 1}`} loading="lazy"></iframe>
+              <p style="margin:.75rem 0 0">
+                <a class="btn" href={url} target="_blank" rel="noopener noreferrer">Open in a new tab</a>
+              </p>
             </div>
           </div>
         ))}
 
-        <!-- Website Tab -->
         {webUrl && (
-          <div id="tab-panel-website" class="mt-6" style="display: none;">
-            <div class="flex flex-col items-start gap-4">
-              <p class="text-zinc-400">Visit the official project website or demo.</p>
-              <a
-                href={webUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                Open Website
-              </a>
-            </div>
+          <div class="viewpanel" id="view-web" role="tabpanel" aria-labelledby="tab-web" hidden>
+            <p class="dim">The project's own site, outside PaperLens.</p>
+            <p style="margin-top:.75rem">
+              <a class="btn primary" href={webUrl} target="_blank" rel="noopener noreferrer">{hostOf(webUrl)}</a>
+            </p>
           </div>
         )}
 
-        <!-- GitHub Tab -->
         {githubUrl && (
-          <div id="tab-panel-github" class="mt-6" style="display: none;">
-            <div class="flex flex-col items-start gap-4">
-              <p class="text-zinc-400">View the source code and implementation on GitHub.</p>
-              <a
-                href={githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors font-mono text-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-                View on GitHub
-              </a>
-            </div>
+          <div class="viewpanel" id="view-src" role="tabpanel" aria-labelledby="tab-src" hidden>
+            <p class="dim">Reference implementation.</p>
+            <p style="margin-top:.75rem">
+              <a class="btn primary" href={githubUrl} target="_blank" rel="noopener noreferrer">{hostOf(githubUrl)}</a>
+            </p>
           </div>
         )}
-      </div>
-    </article>
+      </article>
+
+      <aside class="side" aria-label="Entry sidebar">
+        {toc.length > 1 && (
+          <section class="pane">
+            <h2 class="pane-title"><span>:toc</span></h2>
+            <ol class="toc">
+              {toc.map((h) => (
+                <li class={h.depth >= 3 ? 'l3' : undefined}>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        <section class="pane">
+          <h2 class="pane-title"><span>meta</span></h2>
+          <dl class="kv">
+            <dt>status</dt>
+            <dd><span class={`chip status-${status}`}>{status}</span></dd>
+            <dt>type</dt>
+            <dd class={`cat cat-${category}`}>{category}</dd>
+            <dt>impact</dt>
+            <dd>{impact}</dd>
+            <dt>read</dt>
+            <dd>{readTime}</dd>
+            {simulation && (
+              <>
+                <dt>sim</dt>
+                <dd class="c-green">{simulation}</dd>
+              </>
+            )}
+            {pdfUrls.map((url) => (
+              <>
+                <dt>pdf</dt>
+                <dd><a href={url} target="_blank" rel="noopener noreferrer">{hostOf(url)}</a></dd>
+              </>
+            ))}
+            <dt>updated</dt>
+            <dd>{iso(date)}</dd>
+          </dl>
+        </section>
+
+        {related.length > 0 && (
+          <section class="pane">
+            <h2 class="pane-title"><span>related</span><span class="extra">by tag</span></h2>
+            <ul class="related">
+              {related.map((entry) => (
+                <li>
+                  <span class="d">{iso(entry.date).slice(0, 7)}</span>
+                  <a href={`/idea/${entry.slug}/`}>{entry.title}</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
   </div>
 
-  <Footer />
+  <Footer
+    path={`~/papers/${idea.slug}.${extension}`}
+    meta={`${category} · ${status} · ${readTime}`}
+    keys={
+      views.length > 1
+        ? '<b>gt</b> next view &nbsp; <b>gg</b>/<b>G</b> top/end &nbsp; <b>?</b> keys'
+        : '<b>gg</b>/<b>G</b> top/end &nbsp; <b>?</b> keys'
+    }
+    scrollMeter
+  />
+  <HelpOverlay extra={helpKeys} />
 </BaseLayout>

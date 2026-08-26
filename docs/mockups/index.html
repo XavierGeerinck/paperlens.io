@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaperLens Redesign Mockups</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tui.css">
+  <style>
+    .term { max-width: 1080px; }
+    .intro { padding: 2rem 0 .5rem; }
+    .intro h1 { margin: 0 0 .5rem; font-size: 1.5rem; color: var(--fg); }
+    .intro h1::before { content: '# '; color: var(--gray); font-weight: 400; }
+    .intro p { max-width: 70ch; color: var(--fg1); margin: .5rem 0; }
+    .pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: .5rem; }
+    .page-card { border: 1px solid var(--bg2); border-radius: var(--r); padding: .9rem 1rem; display: grid; gap: .35rem; align-content: start; background: var(--bg0h); }
+    .page-card:hover { border-color: var(--fg4); text-decoration: none; }
+    .page-card .f { color: var(--green); font-weight: 600; }
+    .page-card .d { color: var(--fg2); font-size: var(--fs-sm); }
+    .page-card .k { color: var(--gray); font-size: var(--fs-xs); }
+    .page-card.alt .f { color: var(--purple); }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .5rem; }
+    .sw { border: 1px solid var(--bg2); padding: .5rem; font-size: var(--fs-xs); display: grid; gap: .3rem; }
+    .sw i { display: block; height: 34px; border: 1px solid rgba(0,0,0,.15); }
+    .sw b { color: var(--fg); font-weight: 600; }
+    .sw span { color: var(--gray); }
+    .spec { display: grid; gap: .6rem; }
+    .spec .row-spec { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; border-bottom: 1px dashed var(--bg1); padding: .4rem 0; }
+    .spec .lbl { color: var(--gray); font-size: var(--fs-xs); }
+    .map { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+    .map th, .map td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--bg1); vertical-align: top; }
+    .map th { color: var(--fg); font-weight: 600; border-bottom-color: var(--bg2); }
+    .map td:first-child { color: var(--fg4); white-space: nowrap; }
+    .map code { color: var(--orange); background: var(--bg1); padding: 0 .3em; border-radius: 2px; font-size: .95em; }
+    .qa { display: grid; gap: .8rem; }
+    .qa div { border-left: 2px solid var(--bg3); padding-left: .9rem; }
+    .qa b { color: var(--fg); font-weight: 600; display: block; }
+    .qa p { margin: .25rem 0 0; color: var(--fg2); font-size: var(--fs-sm); max-width: 72ch; }
+    .demo-row { display: grid; grid-template-columns: 1.2ch 10ch 9.5ch 9ch minmax(0,1fr) 3.5ch; gap: .75rem; align-items: center; padding: .32rem .35rem; border-bottom: 1px solid var(--bg1); font-size: var(--fs-sm); }
+    .demo-row.is-sel { background: var(--bg1); }
+    .demo-row .mk { color: var(--green); }
+    .demo-row .t { color: var(--fg); font-weight: 600; }
+    ul.plain { margin: .5rem 0 0; padding-left: 1.25rem; color: var(--fg2); font-size: var(--fs-sm); }
+    ul.plain li + li { margin-top: .3rem; }
+  </style>
+</head>
+<body>
+
+  <header class="titlebar" role="banner">
+    <span class="win">paperlens</span>
+    <nav class="tabs" aria-label="Mockups">
+      <a class="tab" href="index.html" aria-current="page"><span class="n">0:</span>overview</a>
+      <a class="tab" href="home.html"><span class="n">1:</span>home</a>
+      <a class="tab" href="article.html"><span class="n">2:</span>article</a>
+      <a class="tab" href="404.html"><span class="n">3:</span>404</a>
+      <a class="tab" href="alt-preprint-home.html"><span class="n">4:</span>alt: preprint</a>
+      <a class="tab" href="brand.html"><span class="n">5:</span>brand</a>
+    </nav>
+    <div class="right">
+    </div>
+  </header>
+
+  <main class="term">
+    <section class="intro">
+      <h1>PaperLens redesign — mockups</h1>
+      <p>Two directions for a "nerdy" PaperLens. <b class="c-green">Direction A, the TUI</b>, is built out across home, article, 404 and brand, and is the chosen direction. <b class="c-purple">Direction B, the Preprint</b>, is a single home page to compare against. Both use the real 28 entries from <code>src/content/ideas</code>. Nothing in <code>src/</code> has changed.</p>
+      <p class="sm dim">Open any page and press <kbd>?</kbd> for the key map. The TUI pages are keyboard-driven on purpose: <kbd>j</kbd>/<kbd>k</kbd>, <kbd>⏎</kbd>, <kbd>/</kbd>, <kbd>gg</kbd>/<kbd>G</kbd>, <kbd>1</kbd>–<kbd>3</kbd>.</p>
+      <div class="stats" style="margin-top:.75rem;display:grid;gap:.1rem">
+        <p class="ok sm" style="margin:0">2026-08-26 — direction A (TUI) chosen</p>
+        <p class="ok sm" style="margin:0">palette: init.Habits-style dark — mint primary, amber / blue / purple semantics (Gruvbox dropped)</p>
+        <p class="ok sm" style="margin:0">dark only; no light theme</p>
+        <p class="ok sm" style="margin:0">brand rules live in <a href="brand.html">brand.html</a></p>
+        <p class="ok sm" style="margin:0">shipped: the design is implemented in <code>src/</code> — these files stay as the reference</p>
+      </div>
+    </section>
+
+    <div class="pages">
+      <a class="page-card" href="home.html"><span class="f">home.html</span><span class="d">Boot sequence + figlet logo, featured entry with a live mini-sim, <code>git log</code> of recent posts, <code>whoami</code>, and the ranger-style browser over all 28 entries.</span><span class="k">Direction A · keyboard: j k ⏎ / a p d i</span></a>
+      <a class="page-card" href="article.html"><span class="f">article.html</span><span class="d">The mHC entry: simulation split pane with a real (tiny) Sinkhorn demo, glow-style markdown, math in STIX, ASCII diagram, <code>:toc</code> sidebar, line/percent meter in the status bar.</span><span class="k">Direction A · keyboard: 1 2 3 r gg G</span></a>
+      <a class="page-card" href="404.html"><span class="f">404.html</span><span class="d">A failed <code>cd</code>, a helpful <code>grep</code>, and a cow.</span><span class="k">Direction A</span></a>
+      <a class="page-card" href="brand.html"><span class="f">brand.html</span><span class="d">The brand: logo lockups, palette with roles, type scale, the voice (<code>$</code> prompts, <code>// comments</code>, <code>[ok]</code> lines), components, motion, do / don't.</span><span class="k">Direction A · reference</span></a>
+      <a class="page-card alt" href="alt-preprint-home.html"><span class="f">alt-preprint-home.html</span><span class="d">Home as page 1 of an arXiv preprint inside a PDF viewer: two columns, rotated arXiv stamp, hyperref link boxes, entries as references [1]–[28].</span><span class="k">Direction B · not chosen, kept for reference</span></a>
+    </div>
+
+    <section class="pane" style="margin-top:1.75rem">
+      <h2 class="pane-title"><span class="hl">direction A</span><span class="extra">"the TUI" — chosen</span></h2>
+      <div class="qa">
+        <div><b>The thesis</b><p>An AI engineer's two native artifacts are the arXiv PDF and the terminal. The current site borrows the generic sci-fi HUD look (zinc, indigo accent, uppercase fake status labels). Direction A commits to the terminal fully: the site behaves like a TUI you already know how to drive — ranger for browsing, glow for reading, tmux for chrome, vim for keys.</p></div>
+        <div><b>The signature</b><p>The ranger-style two-pane browser on the home page: a dense, scannable list on the left, a live preview on the right, driven by <kbd>j</kbd>/<kbd>k</kbd>/<kbd>⏎</kbd>. Cards are gone; 28 entries fit on one screen and the preview carries the imagery. Everything else stays quiet so this one element is what people remember.</p></div>
+        <div><b>What "nerdy" buys the reader</b><p>Density without clutter (a whole index above the fold), a keyboard path through the whole site, honest labels (<code>git log</code>, <code>whoami</code>, <code>:toc</code>), and a simulation that sits in the reading flow as a split pane instead of a hero image.</p></div>
+        <div><b>The one risk taken</b><p>Monospace body text for 15–25 minute reads. Set at 15px / 1.75 on a 76ch measure it reads well in testing, and it is what the audience reads docs in all day. If it proves tiring, the fallback is IBM Plex Serif for prose only — the chrome stays mono and nothing else changes.</p></div>
+      </div>
+    </section>
+
+    <div class="two">
+      <section class="pane">
+        <h2 class="pane-title"><span>tokens</span><span class="extra">dark only · full roles in brand.html</span></h2>
+        <p class="sm dim" style="margin:0 0 .75rem">Near-black ground, cool greys, one primary (mint) and three semantic hues.</p>
+        <div class="swatches">
+          <div class="sw"><i style="background:var(--bg0)"></i><b>bg0</b><span>#0d0f13 page</span></div>
+          <div class="sw"><i style="background:var(--bg0h)"></i><b>bg0h</b><span>#080a0d sunken</span></div>
+          <div class="sw"><i style="background:var(--bg1)"></i><b>bg1</b><span>#161a20 selection</span></div>
+          <div class="sw"><i style="background:var(--bg2)"></i><b>bg2</b><span>#22272f borders</span></div>
+          <div class="sw"><i style="background:var(--fg)"></i><b>fg</b><span>#e6eaf0 text</span></div>
+          <div class="sw"><i style="background:var(--fg4)"></i><b>fg4</b><span>#6b7583 comments</span></div>
+          <div class="sw"><i style="background:var(--green)"></i><b>green</b><span>primary · NORMAL, ALPHA, sim, ✓</span></div>
+          <div class="sw"><i style="background:var(--orange)"></i><b>amber</b><span>PROTOTYPE, deep-dive, code</span></div>
+          <div class="sw"><i style="background:var(--blue)"></i><b>blue</b><span>links, paper, CONCEPT</span></div>
+          <div class="sw"><i style="background:var(--purple)"></i><b>purple</b><span>RESEARCH, idea</span></div>
+          <div class="sw"><i style="background:var(--aqua)"></i><b>aqua</b><span>running, pdf</span></div>
+          <div class="sw"><i style="background:var(--red)"></i><b>red</b><span>errors only</span></div>
+        </div>
+      </section>
+
+      <section class="pane">
+        <h2 class="pane-title"><span>type</span><span class="extra">one family + one exception</span></h2>
+        <div class="spec">
+          <div class="row-spec"><span class="lbl">display</span><span>figlet banner in a <code>&lt;pre&gt;</code>, no display font</span></div>
+          <div class="row-spec"><span class="lbl">ui + body</span><span>Geist Mono 400 / 500 / 600 / 700</span></div>
+          <div class="row-spec"><span class="lbl">math only</span><span class="imath">y = Wx, &nbsp; Σ<sub>j</sub> W<sub>ij</sub> = 1</span></div>
+          <div class="row-spec"><span class="lbl">scale</span><span>11 · 12.5 · <b>14</b> · 15 (prose) · 18 px</span></div>
+          <div class="row-spec"><span class="lbl">measure</span><span>76ch prose · 62ch lede</span></div>
+          <div class="row-spec"><span class="lbl">numerals</span><span style="font-variant-numeric:tabular-nums">tabular: 2026-05-16 · 14m · 1/28</span></div>
+        </div>
+        <p class="sm dim" style="margin:1rem 0 0">Replaces Inter + Space Grotesk + JetBrains Mono + Caveat. Fonts load from Google Fonts in the mockup; self-host in production.</p>
+      </section>
+    </div>
+
+    <section class="pane">
+      <h2 class="pane-title"><span>components</span></h2>
+      <div class="two">
+        <div>
+          <p class="sm dim" style="margin:0 0 .5rem">status chips · category colours · tags</p>
+          <p style="margin:0 0 1rem"><span class="chip status-RESEARCH">RESEARCH</span> <span class="chip status-CONCEPT">CONCEPT</span> <span class="chip status-PROTOTYPE">PROTOTYPE</span> <span class="chip status-ALPHA">ALPHA</span> <span class="chip status-ARCHIVED">ARCHIVED</span></p>
+          <p style="margin:0 0 1rem"><span class="cat cat-paper">paper</span> &nbsp; <span class="cat cat-deep-dive">deep-dive</span> &nbsp; <span class="cat cat-idea">idea</span> &nbsp; <span class="tag">jepa</span> <span class="tag">world-models</span></p>
+          <p class="sm dim" style="margin:0 0 .5rem">buttons · field · keys</p>
+          <p style="margin:0 0 1rem"><a class="btn primary" href="#">Read <kbd>⏎</kbd></a> <a class="btn" href="#">Run simulation</a> <label class="field" style="max-width:220px"><span class="sigil">/</span><input placeholder="filter…"></label></p>
+        </div>
+        <div>
+          <p class="sm dim" style="margin:0 0 .5rem">browser row (selected + idle)</p>
+          <div class="demo-row is-sel"><span class="mk">▶</span><span class="mute">2026-05-16</span><span><span class="chip status-RESEARCH">RESEARCH</span></span><span class="cat cat-paper">paper</span><span class="t">The Collapse-Proof World Model</span><span class="mute">14m</span></div>
+          <div class="demo-row"><span class="mk" style="opacity:0">▶</span><span class="mute">2026-04-20</span><span><span class="chip status-RESEARCH">RESEARCH</span></span><span class="cat cat-paper">paper</span><span>The Rotation Revolution</span><span class="mute">15m</span></div>
+          <p class="sm dim" style="margin:1rem 0 .5rem">status bar</p>
+          <div class="statusbar" style="position:static;height:28px"><span class="seg mode" data-mode="NORMAL">NORMAL</span><span class="seg">~/papers</span><span class="seg">3/28</span><span class="seg grow keys"><b>j</b>/<b>k</b> move</span><span class="seg">utf-8</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane">
+      <h2 class="pane-title"><span>what maps to what</span><span class="extra">current → redesign</span></h2>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>Current</th><th>Redesign</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Header.astro</code></td><td>title bar with numbered window tabs and <kbd>?</kbd></td><td>Sticky; "SYSTEM: NORMAL" indicators go away — the status bar carries state honestly.</td></tr>
+          <tr><td>Hero (avatar, clearance, globe, scramble text)</td><td>boot sequence: typed command → figlet → one-line thesis → counts</td><td>The globe and "Clearance: Sovereign" are dropped. The Konami code stays.</td></tr>
+          <tr><td><code>IdeaCard.astro</code> grids ×3</td><td>one ranger browser: list + preview, filter, category keys</td><td>Categories become a filter instead of three stacked sections.</td></tr>
+          <tr><td>Featured card</td><td>featured pane with the entry's live mini-simulation</td><td>Uses the sim component at small size instead of a picsum cover.</td></tr>
+          <tr><td><code>ConnectModal.tsx</code></td><td><code>whoami</code> pane on the home page</td><td>No modal; links are plain and always visible.</td></tr>
+          <tr><td><code>Footer.astro</code></td><td>fixed status bar: mode · path · position · key hints · ©</td><td>Same across all pages; mode flips to INSERT while typing in the filter.</td></tr>
+          <tr><td><code>GameOfLife.tsx</code> background</td><td>removed from the ground; keep as a <kbd>:life</kbd> easter egg if wanted</td><td>The flat terminal ground is the point; texture would fight the density.</td></tr>
+          <tr><td><code>[slug].astro</code> tabs (Documentation / Simulation / PDF / GitHub)</td><td>simulation is a split pane above the doc; tabs 1–3 = documentation · pdf · source</td><td>The sim was rendered twice before (cover + tab); now once.</td></tr>
+          <tr><td><code>prose-invert</code> typography</td><td><code>.prose</code>: glow-style headings, dashed rules, legend-style code blocks, STIX math</td><td>Mermaid diagrams keep working; pass the palette tokens to mermaid's theme variables too.</td></tr>
+          <tr><td><code>tailwind.config.mjs</code> fonts/colours</td><td>CSS custom properties (tokens above) exposed to Tailwind via <code>theme.extend.colors</code></td><td>Simulations can migrate at their own pace by reading the same variables.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="pane">
+      <h2 class="pane-title"><span class="hl">direction B</span><span class="extra">"the Preprint" — not chosen, kept for reference</span></h2>
+      <div class="qa">
+        <div><b>The thesis</b><p>The home page is page 1 of an arXiv preprint, viewed in a PDF viewer. Two justified columns, Times-like STIX, the rotated <code>arXiv:…</code> stamp, a <code>\marginpar</code>, and the exact hyperref link-box colours (red internal, green citations, cyan URLs). The index is the reference list: entries are <code>[1]</code>–<code>[28]</code>.</p></div>
+        <div><b>Why it might win</b><p>It is the more surprising joke, and it reads beautifully on paper-white. Long-form prose is at home here in a way it has to argue for in Direction A.</p></div>
+        <div><b>Why it is the alternative</b><p>The simulations — the product — look like an intruder on a printed page, and every interactive control has to be explained away. It is single-theme by nature. And a strict two-column layout collapses to a plain single column on phones, losing most of its character.</p></div>
+      </div>
+    </section>
+
+    <section class="pane">
+      <h2 class="pane-title"><span>open questions</span><span class="extra">for review</span></h2>
+      <ul class="plain">
+        <li><b>Mono prose</b> — keep it, or switch the article body to IBM Plex Serif? Read <a href="article.html">article.html</a> end to end before deciding.</li>
+        <li><b>Game of Life</b> — drop, or keep behind an easter egg?</li>
+        <li><b>Categories</b> — the three home sections (My Thoughts / Deep Dive / Papers) become one list with a filter. Fine, or do you want them visually separated?</li>
+        <li><b>Featured</b> — one featured entry with its live mini-sim, versus the current single featured card. Multiple <code>featured: true</code> entries exist in the content; the browser could pin them with a ★ instead.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="statusbar" role="contentinfo">
+    <span class="seg mode" data-mode="NORMAL">NORMAL</span>
+    <span class="seg">docs/mockups/index.html</span>
+    <span class="seg grow keys hide-sm"><b>1</b>–<b>4</b> open a mockup</span>
+    <span class="seg grow" style="display:none"></span>
+    <span class="seg">2026-08-26</span>
+  </footer>
+
+  <script src="tui.js"></script>
+  <script>
+    document.addEventListener('keydown', (e) => {
+      if (e.target.matches('input')) return;
+      const map = { 1: 'home.html', 2: 'article.html', 3: '404.html', 4: 'alt-preprint-home.html' };
+      if (map[e.key]) window.location.href = map[e.key];
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaperLens — home (TUI mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tui.css">
+  <style>
+    /* ---- page-specific: home ---- */
+    .hero { padding: 2.25rem 0 1.25rem; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 2rem 3rem; align-items: end; }
+    .hero > .pane { margin-top: 0; }
+    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .hero > .pane { margin-top: .75rem; } }
+    .hero .ps1 { margin: 0 0 .75rem; }
+    .hero .stats { display: grid; gap: .1rem; }
+    .hero .stats p { margin: 0; font-size: var(--fs-sm); }
+    .hero .typed { width: 0; animation: type .45s steps(11, end) .15s forwards; }
+    @keyframes type { to { width: 11ch; } }
+    .hero .figlet { animation-delay: .75s; }
+    .hero .tagline { margin: 1rem 0 0; max-width: 62ch; font-size: var(--fs-md); color: var(--fg1); animation-delay: .9s; }
+    .hero .tagline b { color: var(--fg); font-weight: 600; }
+    .hero .stats { margin: .5rem 0 0; animation-delay: 1.05s; }
+    .hero .stats span + span::before { content: ' · '; color: var(--bg3); }
+
+    .grid-2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.25rem; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* whoami */
+    .who { display: flex; gap: 1rem; align-items: flex-start; }
+    .avatar {
+      flex: none; width: 48px; height: 48px; display: grid; place-items: center;
+      border: 1px solid var(--bg3); background: var(--bg0h); color: var(--green); font-weight: 700; letter-spacing: .05em; border-radius: var(--r);
+    }
+    .who p { margin: .35rem 0 .5rem; max-width: 60ch; color: var(--fg2); }
+    .who .links { display: flex; flex-wrap: wrap; gap: .25rem 1rem; font-size: var(--fs-sm); }
+    .who .links a::before { content: '→ '; color: var(--gray); }
+
+    /* featured */
+    .feat-canvas { width: 100%; height: 190px; border: 1px solid var(--bg2); background: var(--bg0h); border-radius: var(--r-sm); }
+    .feat h3 { margin: .9rem 0 .25rem; font-size: var(--fs-lg); line-height: 1.3; color: var(--fg); text-wrap: balance; }
+    .feat h3 a { color: inherit; }
+    .feat .sub { margin: 0 0 .75rem; color: var(--fg2); max-width: 60ch; }
+    .feat .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+    .feat-legend { display: flex; gap: 1.25rem; font-size: var(--fs-xs); color: var(--fg4); margin-top: .4rem; }
+    .feat-legend i { display: inline-block; width: 8px; height: 8px; margin-right: .4em; vertical-align: middle; }
+
+    /* git log */
+    .gitlog { margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+    .gitlog li { display: grid; grid-template-columns: 7ch 11ch 1fr; gap: 1rem; padding: .28rem 0; border-bottom: 1px dashed var(--bg1); align-items: baseline; }
+    .gitlog li:last-child { border-bottom: 0; }
+    .gitlog .sha { color: var(--yellow); }
+    .gitlog .when { color: var(--gray); }
+    .gitlog .msg { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--fg1); }
+    .gitlog .msg a { color: inherit; }
+    .gitlog .scope { color: var(--blue); }
+    .gitlog .head { color: var(--on-hue); background: var(--green); padding: 0 .35em; border-radius: var(--r-sm); font-size: var(--fs-xs); margin-right: .35em; }
+    @media (max-width: 560px) { .gitlog li { grid-template-columns: 7ch 1fr; } .gitlog .when { display: none; } }
+    .uniq { margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); display: grid; grid-template-columns: 1fr 1fr; gap: .15rem 1.5rem; }
+    .uniq li { display: grid; grid-template-columns: 3ch 1fr auto; gap: .6rem; align-items: baseline; }
+    .uniq .n { text-align: right; color: var(--yellow); }
+    .uniq .bar { color: var(--green); letter-spacing: -.1em; overflow: hidden; white-space: nowrap; }
+    .uniq a { color: var(--fg2); }
+    @media (max-width: 560px) { .uniq { grid-template-columns: 1fr; } }
+
+    /* ranger browser */
+    .browser { margin-top: 1.5rem; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: center; margin-bottom: .75rem; }
+    .toolbar .field { flex: 1 1 260px; max-width: 420px; }
+    .filters { display: flex; gap: .25rem; font-size: var(--fs-sm); }
+    .filters button { padding: .15em .55em; color: var(--fg4); border-radius: var(--r-sm); }
+    .filters button:hover { color: var(--fg); background: var(--bg1); }
+    .filters button.is-active { color: var(--on-hue); background: var(--green); }
+    .filters button b { color: var(--green); font-weight: 600; }
+    .filters button.is-active b { color: var(--on-hue); }
+    .toolbar .hint { margin-left: auto; color: var(--gray); font-size: var(--fs-xs); }
+
+    .ranger { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 1.25rem; align-items: start; }
+    .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--bg2); }
+    .row {
+      display: grid; align-items: center; gap: .75rem;
+      grid-template-columns: 1.2ch 10ch 9.5ch 9ch minmax(0, 1fr) 3.5ch 7ch;
+      padding: .32rem .35rem; border-bottom: 1px solid var(--bg1);
+      color: var(--fg2); font-size: var(--fs-sm); text-decoration: none;
+    }
+    .row:hover { text-decoration: none; }
+    .row .mk { color: var(--green); opacity: 0; }
+    .row .d { color: var(--gray); }
+    .row .t { color: var(--fg1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs); }
+    .row .rt { color: var(--gray); text-align: right; }
+    .row .fl { color: var(--gray); font-size: var(--fs-xs); }
+    .row.is-sel { background: var(--bg1); color: var(--fg); border-radius: var(--r-sm); }
+    .row.is-sel .mk { opacity: 1; }
+    .row.is-sel .t { color: var(--fg); font-weight: 600; }
+    .row.is-sel .d { color: var(--fg2); }
+    .row:focus-visible { outline-offset: -2px; }
+
+    .preview { position: sticky; top: calc(var(--title-h) + 1rem); border: 1px solid var(--bg2); border-radius: var(--r); background: var(--bg0h); padding: 1rem; min-height: 200px; }
+    .preview .pv-head { font-size: var(--fs-xs); margin-bottom: .6rem; }
+    .preview .pv-thumb { width: 100%; height: 150px; border: 1px solid var(--bg2); border-radius: var(--r-sm); }
+    .preview .pv-title { margin: .9rem 0 .25rem; font-size: var(--fs-md); line-height: 1.35; color: var(--fg); text-wrap: balance; }
+    .preview .pv-sub { margin: 0 0 .9rem; font-size: var(--fs-sm); color: var(--fg2); }
+    .preview .kv { margin: 0 0 .9rem; }
+    .preview .pv-tags { margin: 0 0 1rem; font-size: var(--fs-xs); line-height: 1.9; }
+    .preview .pv-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .preview .chip { vertical-align: middle; }
+
+    @media (max-width: 980px) {
+      .ranger { grid-template-columns: 1fr; }
+      .preview { position: static; }
+      .row { grid-template-columns: 1.2ch 10ch minmax(0, 1fr) 3.5ch; }
+      .row .st, .row .cat, .row .fl { display: none; }
+    }
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1.2ch minmax(0, 1fr) 3.5ch; }
+      .row .d { display: none; }
+      .hero { padding-top: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="titlebar" role="banner">
+    <span class="win"><a href="home.html">paperlens</a></span>
+    <nav class="tabs" aria-label="Sections">
+      <a class="tab" href="home.html" aria-current="page"><span class="n">0:</span>home</a>
+      <a class="tab" href="home.html#browser"><span class="n">1:</span>papers</a>
+      <a class="tab" href="home.html#whoami"><span class="n">2:</span>whoami</a>
+      <a class="tab" href="#" title="RSS feed"><span class="n">3:</span>rss</a>
+    </nav>
+    <div class="right">
+      <span class="pill ok hide-sm">28 entries</span>
+      <button class="tab" data-action="help" title="Keyboard help (?)">?</button>
+    </div>
+  </header>
+
+  <main class="term">
+
+    <!-- Hero: the boot sequence. The figlet banner IS the logo. -->
+    <section class="hero" aria-label="Intro">
+    <div class="boot">
+      <p class="ps1 line"><span class="u">xavier</span><span class="role">[cto]</span>@<span class="h">paperlens</span> <span class="d">$</span> <span class="typed cmd">ls ~/papers</span></p>
+<pre class="figlet line" aria-label="paperlens">
+                              _
+  _ __   __ _ _ __   ___ _ __| | ___ _ __  ___
+ | '_ \ / _` | '_ \ / _ \ '__| |/ _ \ '_ \/ __|
+ | |_) | (_| | |_) |  __/ |  | |  __/ | | \__ \
+ | .__/ \__,_| .__/ \___|_|  |_|\___|_| |_|___/
+ |_|         |_|                               </pre>
+      <p class="tagline line cmt">papers and research for AI engineers, visualized.</p>
+      <p class="tagline line cmt" style="margin-top:.15rem">every entry ships with a simulation, the math, and the code — drag a slider instead of trusting a figure.</p>
+      <div class="stats line">
+        <p class="ok">28 entries indexed</p>
+        <p class="ok">28 simulations loaded</p>
+        <p class="ok">24 source pdfs linked</p>
+        <p class="ok">last push <span class="c-green">2026-05-16</span></p>
+      </div>
+    </div>
+
+    <!-- whoami -->
+    <section class="pane" id="whoami" aria-labelledby="who-title">
+      <h2 class="pane-title" id="who-title"><span>whoami</span></h2>
+      <div class="who">
+        <div class="avatar" aria-hidden="true">xg</div>
+        <div>
+          <div><b>Xavier Geerinck</b> <span class="dim">— CTO @ <a href="https://scrydon.com" target="_blank" rel="noopener">Scrydon</a>, Belgium</span></div>
+          <p class="sm">I read the papers, then rebuild the core mechanism as something you can poke at. If a claim survives a slider, it's probably true. Always open to collaborating on hard problems.</p>
+          <div class="links">
+            <a href="https://github.com/xaviergeerinck" target="_blank" rel="noopener">github</a>
+            <a href="https://twitter.com/XavierGeerinck" target="_blank" rel="noopener">x</a>
+            <a href="https://linkedin.com/in/xaviergeerinck" target="_blank" rel="noopener">linkedin</a>
+            <a href="https://xaviergeerinck.com" target="_blank" rel="noopener">xaviergeerinck.com</a>
+            <a href="mailto:xavier@m18x.com">mail</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    </section>
+
+    <div class="grid-2">
+      <!-- Featured -->
+      <section class="pane feat" aria-labelledby="feat-title">
+        <h2 class="pane-title"><span class="hl">featured</span><span class="extra">leworldmodel-stable-jepa.mdx</span></h2>
+        <canvas class="feat-canvas" id="feat-canvas" aria-label="Animated preview: representation collapse versus a stable JEPA embedding"></canvas>
+        <div class="feat-legend"><span><i style="background:var(--red)"></i>no regulariser → collapse</span><span><i style="background:var(--green)"></i>SIGReg → stable</span></div>
+        <h3 id="feat-title"><a href="article.html">The Collapse-Proof World Model</a></h3>
+        <p class="sub">How LeWorldModel trains a JEPA from pixels with two losses instead of six.</p>
+        <div class="row-meta">
+          <span class="chip status-RESEARCH">RESEARCH</span>
+          <span class="cat cat-paper">paper</span>
+          <span>2026-05-16</span>
+          <span>14m read</span>
+          <span class="c-green">sim</span>
+          <span class="c-blue">pdf</span>
+        </div>
+        <div class="actions">
+          <a class="btn primary" href="article.html">Read</a>
+          <a class="btn" href="article.html#sim">Run simulation</a>
+          <a class="btn" href="https://arxiv.org/pdf/2603.19312" target="_blank" rel="noopener">arxiv.org/pdf/2603.19312</a>
+        </div>
+      </section>
+
+      <!-- Latest, as a git log -->
+      <section class="pane" aria-labelledby="log-title">
+        <h2 class="pane-title" id="log-title"><span>git log</span><span class="extra">--oneline -8 -- src/content/ideas</span></h2>
+        <ol class="gitlog">
+          <li><span class="sha">8f2b3cc</span><span class="when">2026-05-16</span><span class="msg"><span class="head">HEAD</span><span class="scope">post:</span> <a href="article.html">The Collapse-Proof World Model</a></span></li>
+          <li><span class="sha">c41e0a9</span><span class="when">2026-04-20</span><span class="msg"><span class="scope">post:</span> <a href="article.html">The Rotation Revolution: Near-Optimal KV Cache Quantization</a></span></li>
+          <li><span class="sha">2d7f5b1</span><span class="when">2026-03-25</span><span class="msg"><span class="scope">post:</span> <a href="article.html">Lace Lithography: Printing with Matter Waves</a></span></li>
+          <li><span class="sha">9ab04e2</span><span class="when">2026-02-12</span><span class="msg"><span class="scope">post:</span> <a href="article.html">Towards Autonomous Mathematics Research</a></span></li>
+          <li><span class="sha">57c3d10</span><span class="when">2026-02-10</span><span class="msg"><span class="scope">post:</span> <a href="article.html">DreamZero World Action Models</a></span></li>
+          <li><span class="sha">e02b6f4</span><span class="when">2026-02-02</span><span class="msg"><span class="scope">post:</span> <a href="article.html">Privacy-Preserving Inference</a></span></li>
+          <li><span class="sha">1f9c8d3</span><span class="when">2026-01-29</span><span class="msg"><span class="scope">post:</span> <a href="article.html">AlphaGenome</a></span></li>
+          <li><span class="sha">b3a17e5</span><span class="when">2026-01-26</span><span class="msg"><span class="scope">post:</span> <a href="article.html">SEAL: Self-Adapting Language Models</a></span></li>
+        </ol>
+        <p class="sm dim" style="margin:.9rem 0 0">Subscribe to the feed: <a href="#">/rss.xml</a></p>
+        <hr class="hr" style="margin:1rem 0 .9rem">
+        <p class="sm prompt" style="margin:0 0 .4rem;color:var(--fg1)">tags | sort | uniq -c | sort -rn | head -8</p>
+        <ol class="uniq" id="uniq"></ol>
+      </section>
+    </div>
+
+    <!-- The signature: a ranger-style browser over all entries -->
+    <section class="pane browser" id="browser" aria-labelledby="browser-title">
+      <h2 class="pane-title" id="browser-title"><span class="hl">~/papers</span><span class="extra" id="count">28 entries</span></h2>
+      <div class="pane-title-r">sorted by date ↓</div>
+
+      <div class="toolbar">
+        <label class="field"><span class="sigil">/</span><input id="filter" type="search" placeholder="filter by title, tag, status…" autocomplete="off" spellcheck="false"><span class="sr-only">Filter entries</span></label>
+        <div class="filters" role="group" aria-label="Category">
+          <button data-cat="all" class="is-active"><b>a</b>ll</button>
+          <button data-cat="paper"><b>p</b>aper</button>
+          <button data-cat="deep-dive"><b>d</b>eep-dive</button>
+          <button data-cat="idea"><b>i</b>dea</button>
+        </div>
+        <span class="hint hide-sm"><kbd>j</kbd>/<kbd>k</kbd> move · <kbd>⏎</kbd> open · <kbd>/</kbd> filter</span>
+      </div>
+
+      <div class="ranger">
+        <ol class="list" id="list" aria-label="Entries"></ol>
+        <aside class="preview" id="preview" aria-live="polite" aria-label="Preview"></aside>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="statusbar" role="contentinfo">
+    <span class="seg mode" data-mode="NORMAL">NORMAL</span>
+    <span class="seg">~/papers</span>
+    <span class="seg hide-sm" id="pos">1/28</span>
+    <span class="seg grow keys hide-sm"><b>j</b>/<b>k</b> move &nbsp; <b>⏎</b> open &nbsp; <b>/</b> filter &nbsp; <b>?</b> help</span>
+    <span class="seg grow" style="display:none"></span>
+    <span class="seg hide-sm">utf-8</span>
+    <span class="seg">© 2026 Xavier Geerinck</span>
+  </footer>
+
+  <!-- Help overlay -->
+  <div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <section class="pane">
+      <h2 class="pane-title" id="help-title"><span class="hl">help</span><span class="extra">:map</span></h2>
+      <dl class="keylist">
+        <dt>j / k</dt><dd>move selection down / up</dd>
+        <dt>⏎ / l</dt><dd>open the selected entry</dd>
+        <dt>/</dt><dd>filter by title, tag, status</dd>
+        <dt>a p d i</dt><dd>all · papers · deep-dives · ideas</dd>
+        <dt>gg / G</dt><dd>jump to top / bottom</dd>
+        <dt>?</dt><dd>this help</dd>
+        <dt>Esc</dt><dd>close · leave filter</dd>
+        <dt>↑↑↓↓←→←→BA</dt><dd class="dim">still works.</dd>
+      </dl>
+      <p style="margin:1rem 0 0"><button class="btn" data-action="close-help">Close <kbd>Esc</kbd></button></p>
+    </section>
+  </div>
+
+  <script src="tui.js"></script>
+  <script>
+    // Featured mini-sim: 2 embedding clouds. Left drifts to a point (collapse),
+    // right stays spread (SIGReg). Purely illustrative, ~40 lines.
+    (function () {
+      const c = document.getElementById('feat-canvas');
+      if (!c) return;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const N = 70; let t = 0;
+      const rnd = PL.rng('leworldmodel');
+      const pts = Array.from({ length: N }, () => ({ a: rnd() * 6.283, r: .35 + rnd() * .6, w: .4 + rnd() * .8, p: rnd() * 6.283 }));
+      function frame() {
+        const dpr = window.devicePixelRatio || 1;
+        const w = c.clientWidth, h = c.clientHeight;
+        if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
+        const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = PL.cssVar('--bg0h'); ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = PL.cssVar('--bg1');
+        for (let x = 0; x < w; x += 16) { ctx.beginPath(); ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, h); ctx.stroke(); }
+        for (let y = 0; y < h; y += 16) { ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(w, y + .5); ctx.stroke(); }
+        ctx.strokeStyle = PL.cssVar('--bg2'); ctx.beginPath(); ctx.moveTo(w / 2 + .5, 8); ctx.lineTo(w / 2 + .5, h - 8); ctx.stroke();
+        const R = Math.min(w / 4, h / 2) * .78;
+        const phase = (t % 420) / 420;              // 7 s loop at 60 fps
+        const k = Math.min(1, phase * 1.6);         // collapse progress
+        const cx1 = w / 4, cx2 = (3 * w) / 4, cy = h / 2;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.fillStyle = PL.cssVar('--fg4');
+        ctx.fillText('epoch ' + Math.floor(phase * 40).toString().padStart(2, '0'), 8, h - 8);
+        ctx.fillText('rank(z) ≈ ' + (Math.max(1, Math.round(64 * (1 - k)))).toString(), cx1 - 40, 16);
+        ctx.fillText('rank(z) ≈ 64', cx2 - 40, 16);
+        pts.forEach((p, i) => {
+          const jitter = Math.sin(t * .02 * p.w + p.p) * 3;
+          const r1 = R * p.r * (1 - k * .97);
+          ctx.fillStyle = PL.cssVar('--red'); ctx.globalAlpha = .85;
+          ctx.fillRect(cx1 + Math.cos(p.a) * r1 + jitter * (1 - k) - 1.5, cy + Math.sin(p.a) * r1 - 1.5, 3, 3);
+          const r2 = R * p.r;
+          ctx.fillStyle = PL.cssVar('--green');
+          ctx.fillRect(cx2 + Math.cos(p.a + t * .002) * r2 + jitter - 1.5, cy + Math.sin(p.a + t * .002) * r2 - 1.5, 3, 3);
+        });
+        ctx.globalAlpha = 1;
+        t++;
+        if (!reduced) requestAnimationFrame(frame);
+      }
+      frame();
+      if (reduced) { t = 300; frame(); }
+      document.addEventListener('pl:theme', () => { if (reduced) frame(); });
+    })();
+
+    PL.browser({ list: 'list', preview: 'preview', filter: 'filter', count: 'count', pos: 'pos' });
+
+    // tags | sort | uniq -c | sort -rn | head -8  — clicking a tag fills the filter
+    (function () {
+      const counts = {};
+      PL.entries.forEach((e) => e.tags.forEach((t) => { const k = t.toLowerCase().replace(/\s+/g, '-'); counts[k] = (counts[k] || 0) + 1; }));
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 8);
+      const max = top[0] ? top[0][1] : 1;
+      document.getElementById('uniq').innerHTML = top.map(([t, n]) => `<li><span class="n">${n}</span><a href="#browser" data-tag="${t}">${t}</a><span class="bar">${'█'.repeat(Math.round((n / max) * 8))}</span></li>`).join('');
+      document.getElementById('uniq').addEventListener('click', (e) => {
+        const a = e.target.closest('[data-tag]'); if (!a) return;
+        const f = document.getElementById('filter'); f.value = a.dataset.tag.replace(/-/g, ' '); f.dispatchEvent(new Event('input'));
+      });
+    })();
+  </script>
+</body>
+</html>

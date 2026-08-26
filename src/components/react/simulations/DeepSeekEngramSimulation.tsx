@@ -339,25 +339,25 @@ const DeepSeekEngramSimulation: FC = () => {
 								<div className="text-[10px] font-mono text-slate-500 uppercase mb-2">
 									Per-head collision rate
 								</div>
-								{renderMiniGraph(history.avgHeadCollisionRate, "#60a5fa")}
+								{renderMiniGraph(history.avgHeadCollisionRate, "#7bb7f7")}
 							</div>
 							<div className="bg-black/40 p-4 rounded border border-slate-800">
 								<div className="text-[10px] font-mono text-slate-500 uppercase mb-2">
 									K-tuple ambiguity rate
 								</div>
-								{renderMiniGraph(history.ambiguityRate, "#f59e0b")}
+								{renderMiniGraph(history.ambiguityRate, "#f5a623")}
 							</div>
 							<div className="bg-black/40 p-4 rounded border border-slate-800">
 								<div className="text-[10px] font-mono text-slate-500 uppercase mb-2">
 									Gate α (sigmoid)
 								</div>
-								{renderMiniGraph(history.gate, "#10b981")}
+								{renderMiniGraph(history.gate, "#35d492")}
 							</div>
 							<div className="bg-black/40 p-4 rounded border border-slate-800">
 								<div className="text-[10px] font-mono text-slate-500 uppercase mb-2">
 									Effective memory signal
 								</div>
-								{renderMiniGraph(history.effectiveMemory, "#a78bfa")}
+								{renderMiniGraph(history.effectiveMemory, "#a992f6")}
 							</div>
 						</div>
 

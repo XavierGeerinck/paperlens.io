@@ -116,7 +116,7 @@ const PrivacyPreservingInferenceSimulation: React.FC = () => {
                  {/* Middle: The Pipe */}
                  <div className="relative h-16 flex items-center bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
                    {/* Background Grid */}
-                   <div className="absolute inset-0 bg-[linear-gradient(90deg,#1e293b_1px,transparent_1px)] bg-[size:20px_100%] opacity-20" />
+                   <div className="absolute inset-0 bg-[linear-gradient(90deg,#161a20_1px,transparent_1px)] bg-[size:20px_100%] opacity-20" />
                    
                    {/* Center Processing Unit Icon */}
                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">

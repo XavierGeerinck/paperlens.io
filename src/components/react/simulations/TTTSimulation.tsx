@@ -195,9 +195,9 @@ const TTTSimulation: FC = () => {
 						<div className="flex items-center gap-2 text-rose-300 font-bold font-mono text-sm uppercase border-b border-rose-500/20 pb-2">
 							<Cpu size={16} /> Transformer
 						</div>
-						{renderInternalGraph(history["transformerLatency"], "#f43f5e", "Latency (Time/Token)")}
-						{renderInternalGraph(history["transformerLoss"], "#fb7185", "Loss (Perplexity)")}
-						{renderInternalGraph(history["transformerMemory"], "#fda4af", "Memory (KV Cache)")}
+						{renderInternalGraph(history["transformerLatency"], "#e13540", "Latency (Time/Token)")}
+						{renderInternalGraph(history["transformerLoss"], "#f78289", "Loss (Perplexity)")}
+						{renderInternalGraph(history["transformerMemory"], "#f8adb1", "Memory (KV Cache)")}
 					</div>
 
 					{/* RNN Column */}
@@ -205,9 +205,9 @@ const TTTSimulation: FC = () => {
 						<div className="flex items-center gap-2 text-amber-300 font-bold font-mono text-sm uppercase border-b border-amber-500/20 pb-2">
 							<Activity size={16} /> RNN / Mamba
 						</div>
-						{renderInternalGraph(history["rnnLatency"], "#d97706", "Latency (Time/Token)")}
-						{renderInternalGraph(history["rnnLoss"], "#f59e0b", "Loss (Perplexity)")}
-						{renderInternalGraph(history["rnnMemory"], "#fbbf24", "Memory (Hidden State)")}
+						{renderInternalGraph(history["rnnLatency"], "#dc8c0c", "Latency (Time/Token)")}
+						{renderInternalGraph(history["rnnLoss"], "#f5a623", "Loss (Perplexity)")}
+						{renderInternalGraph(history["rnnMemory"], "#f8c05a", "Memory (Hidden State)")}
 					</div>
 
 					{/* TTT Column */}
@@ -215,9 +215,9 @@ const TTTSimulation: FC = () => {
 						<div className="flex items-center gap-2 text-emerald-300 font-bold font-mono text-sm uppercase border-b border-emerald-500/20 pb-2">
 							<Zap size={16} /> TTT-E2E
 						</div>
-						{renderInternalGraph(history["tttLatency"], "#059669", "Latency (Time/Token)")}
-						{renderInternalGraph(history["tttLoss"], "#10b981", "Loss (Perplexity)")}
-						{renderInternalGraph(history["tttMemory"], "#34d399", "Memory (Weights)")}
+						{renderInternalGraph(history["tttLatency"], "#1fbc7d", "Latency (Time/Token)")}
+						{renderInternalGraph(history["tttLoss"], "#35d492", "Loss (Perplexity)")}
+						{renderInternalGraph(history["tttMemory"], "#66e3b5", "Memory (Weights)")}
 					</div>
 				</div>
 			</SchematicCard>

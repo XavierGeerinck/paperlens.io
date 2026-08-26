@@ -169,24 +169,24 @@ const AdamEpsilonSimulation: React.FC = () => {
 					<div className="absolute inset-0 flex items-center justify-center">
 						<svg width="300" height="200" className="overflow-visible">
 							{/* Origin Marker */}
-							<path d="M 145 100 L 155 100 M 150 95 L 150 105" stroke="#334155" strokeWidth="1" />
+							<path d="M 145 100 L 155 100 M 150 95 L 150 105" stroke="#22272f" strokeWidth="1" />
 							
 							{/* Contours (representing the flat canyon) */}
-							<ellipse cx="150" cy="100" rx="20" ry="80" stroke="#334155" strokeWidth="1" strokeDasharray="2 2" fill="none" />
-							<ellipse cx="150" cy="100" rx="40" ry="120" stroke="#1e293b" strokeWidth="1" strokeDasharray="2 2" fill="none" />
+							<ellipse cx="150" cy="100" rx="20" ry="80" stroke="#22272f" strokeWidth="1" strokeDasharray="2 2" fill="none" />
+							<ellipse cx="150" cy="100" rx="40" ry="120" stroke="#161a20" strokeWidth="1" strokeDasharray="2 2" fill="none" />
 
 							{/* Trajectories */}
-							{renderPath(state.defaultPath, "#ef4444")}
-							{renderPath(state.karpathyPath, "#10b981")}
+							{renderPath(state.defaultPath, "#f5555d")}
+							{renderPath(state.karpathyPath, "#35d492")}
 
 							{/* Heads */}
 							<g transform={`translate(${toScreen(lastDefault).x}, ${toScreen(lastDefault).y})`}>
-								<circle r="4" fill="#ef4444" className="animate-pulse" />
+								<circle r="4" fill="#f5555d" className="animate-pulse" />
 								<text y="-8" textAnchor="middle" className="text-[8px] fill-red-400 font-mono font-bold">1e-8</text>
 							</g>
 
 							<g transform={`translate(${toScreen(lastKarpathy).x}, ${toScreen(lastKarpathy).y})`}>
-								<circle r="4" fill="#10b981" />
+								<circle r="4" fill="#35d492" />
 								<text y="-8" textAnchor="middle" className="text-[8px] fill-emerald-400 font-mono font-bold">1e-10</text>
 							</g>
 						</svg>

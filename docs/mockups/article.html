@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeepSeek mHC Protocol — PaperLens (TUI mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tui.css">
+  <style>
+    /* ---- page-specific: article ---- */
+    .crumb { margin: 1.5rem 0 1rem; font-size: var(--fs-sm); color: var(--gray); }
+    .crumb a { color: var(--fg4); }
+    .crumb .cur { color: var(--fg1); }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 272px; gap: 2rem; align-items: start; }
+    @media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { position: static !important; } }
+    .layout > article { min-width: 0; }
+
+    .doc-head { margin-bottom: 1.25rem; }
+    .doc-head .meta { display: flex; flex-wrap: wrap; gap: .4rem .9rem; align-items: center; font-size: var(--fs-sm); color: var(--fg4); margin-bottom: .75rem; }
+    .doc-head h1 { margin: 0 0 .5rem; font-size: clamp(1.35rem, 2.4vw, 1.9rem); line-height: 1.25; color: var(--fg); font-weight: 700; text-wrap: balance; max-width: 30ch; }
+    .doc-head h1::before { content: '# '; color: var(--gray); font-weight: 400; }
+    .doc-head .sub { margin: 0; font-size: var(--fs-md); color: var(--fg2); max-width: 66ch; }
+    .doc-head .tags { margin: .9rem 0 0; font-size: var(--fs-xs); line-height: 1.9; }
+
+    /* tab strip: keys 1-4 */
+    .tabstrip { display: flex; gap: .25rem; border-bottom: 1px solid var(--bg2); margin: 1.25rem 0 0; overflow-x: auto; }
+    .tabstrip button { padding: .4em .8em; color: var(--fg4); font-size: var(--fs-sm); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+    .tabstrip button .n { color: var(--gray); margin-right: .35em; }
+    .tabstrip button:hover { color: var(--fg); }
+    .tabstrip button[aria-selected="true"] { color: var(--green); border-bottom-color: var(--green); }
+    .tabstrip button[aria-selected="true"] .n { color: var(--green); }
+    .tabpanel[hidden] { display: none; }
+    .tabpanel { padding-top: 1.5rem; }
+
+    /* simulation pane */
+    .sim { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 1rem; }
+    @media (max-width: 720px) { .sim { grid-template-columns: 1fr; } }
+    .sim canvas { width: 100%; height: 280px; border: 1px solid var(--bg2); background: var(--bg0h); border-radius: var(--r-sm); }
+    .ctl { display: flex; flex-direction: column; gap: .8rem; font-size: var(--fs-sm); }
+    .ctl label { display: grid; gap: .3rem; color: var(--fg4); }
+    .ctl label .v { color: var(--green); float: right; }
+    .ctl input[type=range] { width: 100%; accent-color: var(--green); }
+    .ctl .toggles { display: grid; gap: .35rem; }
+    .ctl .toggles label { display: flex; gap: .5rem; align-items: center; color: var(--fg1); cursor: pointer; }
+    .ctl .toggles input { accent-color: var(--green); }
+    .sim-legend { display: flex; gap: 1.25rem; font-size: var(--fs-xs); color: var(--fg4); margin-top: .5rem; }
+    .sim-legend i { display: inline-block; width: 14px; height: 2px; margin-right: .4em; vertical-align: middle; }
+    .try { margin: 1rem 0 0; }
+    .try h4 { margin: 0 0 .4rem; font-size: var(--fs-sm); color: var(--fg2); font-weight: 600; }
+    .try ol { margin: 0; padding-left: 1.5rem; font-size: var(--fs-sm); color: var(--fg2); }
+    .try li + li { margin-top: .25rem; }
+
+    /* sidebar */
+    .side { position: sticky; top: calc(var(--title-h) + 1rem); display: grid; gap: 1.5rem; }
+    .toc { list-style: none; margin: 0; padding: 0; font-size: var(--fs-sm); }
+    .toc li { padding: .18rem 0; }
+    .toc li.l3 { padding-left: 1.25rem; }
+    .toc a { color: var(--fg4); display: block; border-left: 2px solid transparent; margin-left: -1rem; padding-left: calc(1rem - 2px); }
+    .toc a:hover { color: var(--fg); text-decoration: none; }
+    .toc a.is-active { color: var(--green); border-left-color: var(--green); }
+    .related { list-style: none; margin: 0; padding: 0; font-size: var(--fs-sm); }
+    .related li { padding: .3rem 0; border-bottom: 1px dashed var(--bg1); }
+    .related li:last-child { border-bottom: 0; }
+    .related a { color: var(--fg1); }
+    .related .d { color: var(--gray); margin-right: .5em; }
+
+    .pdfbox { border: 1px dashed var(--bg3); border-radius: var(--r); background: var(--bg0h); min-height: 420px; display: grid; place-items: center; text-align: center; padding: 2rem; color: var(--fg4); }
+    .pdfbox b { color: var(--fg1); }
+    .endnav { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--bg2); font-size: var(--fs-sm); }
+    .endnav a { color: var(--fg2); }
+    .endnav .k { color: var(--gray); }
+  </style>
+</head>
+<body>
+
+  <header class="titlebar" role="banner">
+    <span class="win"><a href="home.html">paperlens</a></span>
+    <nav class="tabs" aria-label="Sections">
+      <a class="tab" href="home.html"><span class="n">0:</span>home</a>
+      <a class="tab" href="home.html#browser"><span class="n">1:</span>papers</a>
+      <a class="tab" href="home.html#whoami"><span class="n">2:</span>whoami</a>
+      <a class="tab" href="#" title="RSS feed"><span class="n">3:</span>rss</a>
+    </nav>
+    <div class="right">
+      <button class="tab" data-action="help" title="Keyboard help (?)">?</button>
+    </div>
+  </header>
+
+  <main class="term">
+    <nav class="crumb" aria-label="Breadcrumb"><a href="home.html">~</a> / <a href="home.html#browser">papers</a> / <span class="cur">deepseek-mhc.md</span></nav>
+
+    <div class="layout">
+      <article>
+        <header class="doc-head">
+          <div class="meta">
+            <span class="chip status-ALPHA">ALPHA</span>
+            <span class="cat cat-paper">paper</span>
+            <span>2024-02-14</span>
+            <span>18m read</span>
+            <span class="c-green">sim</span>
+            <a href="https://arxiv.org/pdf/2512.24880" target="_blank" rel="noopener">arxiv.org/pdf/2512.24880</a>
+          </div>
+          <h1>DeepSeek mHC Protocol</h1>
+          <p class="sub">Solving the Signal Survival problem in deep networks using Manifold Constrained Hyper-Connections.</p>
+          <p class="tags"><span class="tag">deepseek</span> <span class="tag">math</span> <span class="tag">scaling-laws</span></p>
+        </header>
+
+        <!-- Simulation split pane -->
+        <section class="pane sunken" id="sim" aria-labelledby="sim-title">
+          <h2 class="pane-title" id="sim-title"><span class="hl">simulation</span><span class="extra">DeepSeekMHCSimulation.tsx</span></h2>
+          <div class="pane-title-r"><span class="c-green">● running</span></div>
+          <div class="sim">
+            <div>
+              <canvas id="sim-canvas" aria-label="Signal norm across layers: unconstrained weights versus doubly-stochastic weights"></canvas>
+              <div class="sim-legend"><span><i style="background:var(--red)"></i>unconstrained W</span><span><i style="background:var(--green)"></i>doubly-stochastic W (mHC)</span><span><i style="background:var(--bg3)"></i>‖x‖ = 1</span></div>
+            </div>
+            <div class="ctl">
+              <label>depth (layers) <span class="v" id="depth-v">100</span><input id="depth" type="range" min="10" max="400" step="10" value="100"></label>
+              <label>weight spread σ <span class="v" id="sigma-v">0.08</span><input id="sigma" type="range" min="0.01" max="0.25" step="0.01" value="0.08"></label>
+              <label>sinkhorn iterations <span class="v" id="iters-v">5</span><input id="iters" type="range" min="0" max="12" step="1" value="5"></label>
+              <div class="toggles">
+                <label><input type="checkbox" id="show-wild" checked> show unconstrained</label>
+                <label><input type="checkbox" id="show-mhc" checked> show mHC</label>
+              </div>
+              <button class="btn" id="reseed">Reseed <kbd>r</kbd></button>
+            </div>
+          </div>
+          <div class="try">
+            <h4>What to try</h4>
+            <ol>
+              <li>Push depth to 400 and watch the unconstrained curve leave the chart while mHC stays flat.</li>
+              <li>Set sinkhorn iterations to 0 — mHC degrades to the unconstrained case.</li>
+              <li>Lower σ to 0.01: even tiny drift compounds over depth.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Tabs -->
+        <div class="tabstrip" role="tablist" aria-label="Views">
+          <button role="tab" aria-selected="true" aria-controls="tp-doc" data-tab-key="1"><span class="n">1</span>documentation</button>
+          <button role="tab" aria-selected="false" aria-controls="tp-pdf" data-tab-key="2"><span class="n">2</span>pdf</button>
+          <button role="tab" aria-selected="false" aria-controls="tp-src" data-tab-key="3"><span class="n">3</span>source</button>
+        </div>
+
+        <div class="tabpanel prose" id="tp-doc" role="tabpanel">
+          <h2 id="abstract">Abstract</h2>
+          <p>As networks get deeper (100+ layers), a fundamental physics problem emerges: <strong>signal survival</strong>. In standard architectures, information behaves like a game of telephone — it gets distorted, amplified to infinity (exploding gradients), or silenced to zero (vanishing gradients) as it passes through the layers.</p>
+          <p>DeepSeek's Multi-Head Latent Attention (MLA) and Manifold Constrained Hyper-Connections (mHC) papers propose a geometric answer. By forcing the weight matrices onto a specific mathematical manifold, the signal survives intact no matter how deep the network goes.</p>
+
+          <hr>
+
+          <h2 id="highway">1. The "thinking highway" problem</h2>
+          <p>Picture a neural network as a 100-storey building. Data enters on the ground floor and has to take the lift to the roof.</p>
+          <ul>
+            <li><strong>Wild mode (standard):</strong> the lift cables are rubber. Sometimes they stretch (amplify), sometimes they slacken (vanish). By floor 50 the passenger is either crushed by g-force or floating.</li>
+            <li><strong>mHC mode (DeepSeek):</strong> the lift runs on a rigid track. The speed is mathematically constrained to be constant.</li>
+          </ul>
+
+          <h3 id="decay">Visualising signal decay</h3>
+          <div class="diagram"><span class="lang">diagram</span><pre>
+ standard network ("wild mode")                 DeepSeek mHC protocol
+
+ ┌──────────────┐  variable W   ┌───────────┐   ┌──────────────┐ doubly-stoch. ┌───────────┐
+ │ input signal │──────────────▶│ layer 10  │   │ input signal │──────────────▶│ layer 10  │
+ └──────────────┘               └─────┬─────┘   └──────────────┘               └─────┬─────┘
+                                      │ explode ─▶ <span class="bad">layer 50: NaN</span>                       │ conserved
+                                      │                                              ▼
+                                      └ vanish  ─▶ <span class="bad">layer 50: 0.00</span>                <span class="ok">layer 50: stable</span>
+                                                                                       │ conserved
+                                                                                       ▼
+                                                                                <span class="ok">layer 100: stable</span></pre></div>
+          <p class="caption"><b>Figure 1.</b> Energy is either created/destroyed per layer (left) or routed without loss (right).</p>
+
+          <h3 id="math">The mathematics of stability</h3>
+          <p>In a standard dense layer the output <span class="imath">y</span> is:</p>
+          <div class="math"><span><span class="imath">y</span> <span class="rm">=</span> <span class="imath">W x</span></span><span class="eqno">(1)</span></div>
+          <p>If the eigenvalues of <span class="imath">W</span> are &gt; 1, <span class="imath">y</span> grows exponentially with depth. If &lt; 1, it shrinks. DeepSeek constrains <span class="imath">W</span> to be <strong>doubly stochastic</strong>:</p>
+          <div class="math"><span><span class="imath">Σ<sub>j</sub> W<sub>ij</sub></span> <span class="rm">= 1</span> &nbsp;&nbsp;<span class="rm">and</span>&nbsp;&nbsp; <span class="imath">Σ<sub>i</sub> W<sub>ij</sub></span> <span class="rm">= 1</span>, &nbsp; <span class="imath">W<sub>ij</sub></span> <span class="rm">≥ 0</span></span><span class="eqno">(2)</span></div>
+          <ol>
+            <li>Every row sums to exactly 1.0</li>
+            <li>Every column sums to exactly 1.0</li>
+          </ol>
+          <p>The total "energy" of the signal is conserved. It is neither created nor destroyed — only routed. The simulation above measures exactly this: <span class="imath">‖x<sub>L</sub>‖ / ‖x<sub>0</sub>‖</span> as a function of depth <span class="imath">L</span>.</p>
+
+          <hr>
+
+          <h2 id="sinkhorn">2. The algorithm: Sinkhorn–Knopp</h2>
+          <p>How do you force a random matrix of weights to obey those rules? An iterative normalisation called the <strong>Sinkhorn–Knopp algorithm</strong>: normalise rows, normalise columns, repeat until stable.</p>
+          <div class="codeblock"><span class="lang">python</span><button class="copy" type="button">copy</button><pre><code><span class="tok-kw">def</span> <span class="tok-fn">make_doubly_stochastic</span>(matrix, iterations=<span class="tok-num">5</span>):
+    <span class="tok-cm">"""Project a positive matrix onto the Birkhoff polytope (approx.)."""</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(iterations):
+        <span class="tok-cm"># 1. rows sum to 1</span>
+        matrix = matrix <span class="tok-op">/</span> matrix.sum(dim=<span class="tok-num">1</span>, keepdim=<span class="tok-kw">True</span>)
+        <span class="tok-cm"># 2. columns sum to 1</span>
+        matrix = matrix <span class="tok-op">/</span> matrix.sum(dim=<span class="tok-num">0</span>, keepdim=<span class="tok-kw">True</span>)
+    <span class="tok-kw">return</span> matrix</code></pre></div>
+          <p>Five iterations are usually enough. This simple traffic rule lets DeepSeek train networks that are significantly deeper and wider than previous architectures without instability.</p>
+
+          <div class="tbl"><table>
+            <thead><tr><th>constraint</th><th>row sums</th><th>column sums</th><th>‖x‖ after 100 layers</th></tr></thead>
+            <tbody>
+              <tr><td>none (Gaussian init)</td><td>random</td><td>random</td><td class="c-red">10<sup>−4</sup> … 10<sup>3</sup></td></tr>
+              <tr><td>row-stochastic only</td><td>1.0</td><td>random</td><td class="c-yellow">drifts</td></tr>
+              <tr><td>doubly stochastic (mHC)</td><td>1.0</td><td>1.0</td><td class="c-green">≈ 1.0</td></tr>
+            </tbody>
+          </table></div>
+          <p class="caption"><b>Table 1.</b> Signal norm after 100 layers, averaged over 32 random draws from the simulation above.</p>
+
+          <hr>
+
+          <h2 id="scaling">3. Scaling laws &amp; efficiency</h2>
+          <p>The constraint does more than stabilise training; it changes the scaling law. Because the signal doesn't degrade, smaller models using mHC punch above their weight class, reasoning with the depth of a much larger model.</p>
+          <blockquote>"By forcing the matrix to be doubly stochastic, DeepSeek ensures that information is never lost and never amplified uncontrollably."</blockquote>
+          <p>See the companion entries on <a href="#">Multi-Head Latent Attention</a> and the <a href="#">DeepSeek-V3 MoE architecture</a> for where mHC slots into the full stack.</p>
+
+          <nav class="endnav" aria-label="Adjacent entries">
+            <a href="#"><span class="k">← prev</span> BrainMimetic Intelligence</a>
+            <a href="#">Advanced Mixture of Experts <span class="k">next →</span></a>
+          </nav>
+        </div>
+
+        <div class="tabpanel" id="tp-pdf" role="tabpanel" hidden>
+          <div class="pdfbox">
+            <div>
+              <p><b>arxiv.org/pdf/2512.24880</b></p>
+              <p class="sm">The PDF renders here in an <code>&lt;iframe&gt;</code> on the live site. In this mockup it is a placeholder so the file stays self-contained.</p>
+              <a class="btn" href="https://arxiv.org/pdf/2512.24880" target="_blank" rel="noopener">Open PDF in a new tab</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabpanel" id="tp-src" role="tabpanel" hidden>
+          <div class="codeblock"><span class="lang">sh</span><pre><code><span class="prompt">tree src/content/ideas/deepseek-mhc.md src/components/react/simulations/DeepSeekMHCSimulation.tsx</span>
+src/content/ideas/deepseek-mhc.md                            <span class="tok-cm"># the article (markdown + math)</span>
+src/components/react/simulations/DeepSeekMHCSimulation.tsx   <span class="tok-cm"># the simulation (React + canvas)</span>
+
+<span class="prompt">git log --oneline -3 -- src/content/ideas/deepseek-mhc.md</span>
+<span class="c-yellow">4501ca8</span> refactor(sim,post): single integrated dashboard + mermaid fix
+<span class="c-yellow">27e1404</span> fix(sim): show a continuously bouncing demo particle in pixel panel
+<span class="c-yellow">ad78011</span> polish(sim): clearer latent rollout panel</code></pre></div>
+          <p style="margin-top:1rem"><a class="btn" href="https://github.com/xaviergeerinck" target="_blank" rel="noopener">Open on GitHub</a></p>
+        </div>
+      </article>
+
+      <aside class="side" aria-label="Sidebar">
+        <section class="pane">
+          <h2 class="pane-title"><span>:toc</span></h2>
+          <ol class="toc">
+            <li><a href="#abstract">Abstract</a></li>
+            <li><a href="#highway">1. The thinking highway</a></li>
+            <li class="l3"><a href="#decay">Visualising decay</a></li>
+            <li class="l3"><a href="#math">Mathematics of stability</a></li>
+            <li><a href="#sinkhorn">2. Sinkhorn–Knopp</a></li>
+            <li><a href="#scaling">3. Scaling laws</a></li>
+          </ol>
+        </section>
+        <section class="pane">
+          <h2 class="pane-title"><span>meta</span></h2>
+          <dl class="kv">
+            <dt>status</dt><dd><span class="chip status-ALPHA">ALPHA</span></dd>
+            <dt>type</dt><dd class="cat cat-paper">paper</dd>
+            <dt>impact</dt><dd>Infinite depth</dd>
+            <dt>sim</dt><dd class="c-green">DeepSeekMHC</dd>
+            <dt>pdf</dt><dd><a href="https://arxiv.org/pdf/2512.24880" target="_blank" rel="noopener">2512.24880</a></dd>
+            <dt>updated</dt><dd>2026-05-16</dd>
+          </dl>
+        </section>
+        <section class="pane">
+          <h2 class="pane-title"><span>related</span><span class="extra">by tag</span></h2>
+          <ul class="related">
+            <li><span class="d">2026-01</span><a href="#">Multi-Head Latent Attention</a></li>
+            <li><span class="d">2026-01</span><a href="#">DeepSeek Engram (Conditional Memory)</a></li>
+            <li><span class="d">2024-12</span><a href="#">Advanced Mixture of Experts</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="statusbar" role="contentinfo">
+    <span class="seg mode" data-mode="NORMAL">NORMAL</span>
+    <span class="seg">~/papers/deepseek-mhc.md</span>
+    <span class="seg hide-sm">paper · ALPHA · 18m</span>
+    <span class="seg grow keys hide-sm"><b>1</b>-<b>3</b> tabs &nbsp; <b>gg</b>/<b>G</b> top/end &nbsp; <b>r</b> reseed &nbsp; <b>?</b> help</span>
+    <span class="seg grow" style="display:none"></span>
+    <span class="seg" id="ln">Ln 1/1</span>
+    <span class="seg" id="pct">Top</span>
+  </footer>
+
+  <div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <section class="pane">
+      <h2 class="pane-title" id="help-title"><span class="hl">help</span><span class="extra">:map</span></h2>
+      <dl class="keylist">
+        <dt>1 2 3</dt><dd>documentation · pdf · source</dd>
+        <dt>gg / G</dt><dd>jump to top / bottom</dd>
+        <dt>r</dt><dd>reseed the simulation</dd>
+        <dt>?</dt><dd>this help</dd>
+        <dt>Esc</dt><dd>close</dd>
+      </dl>
+      <p style="margin:1rem 0 0"><button class="btn" data-action="close-help">Close <kbd>Esc</kbd></button></p>
+    </section>
+  </div>
+
+  <script src="tui.js"></script>
+  <script>
+    // ---- tabs (1/2/3)
+    document.querySelectorAll('.tabstrip [role=tab]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tabstrip [role=tab]').forEach((t) => t.setAttribute('aria-selected', t === tab));
+        document.querySelectorAll('.tabpanel').forEach((p) => { p.hidden = p.id !== tab.getAttribute('aria-controls'); });
+      });
+    });
+
+    // ---- toc highlight
+    (function () {
+      const links = [...document.querySelectorAll('.toc a')];
+      const heads = links.map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) links.forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === '#' + en.target.id));
+        });
+      }, { rootMargin: '-10% 0px -75% 0px' });
+      heads.forEach((h) => io.observe(h));
+    })();
+
+    // ---- the simulation: signal norm vs depth, real (tiny) linear algebra.
+    (function () {
+      const c = document.getElementById('sim-canvas');
+      const $ = (id) => document.getElementById(id);
+      let seed = 1;
+      const N = 8; // matrix size
+
+      function randMat(rnd, sigma) {
+        // near-identity weights with a random per-layer gain: (1+g)(I + noise)
+        const g = (rnd() - .5) * 4 * sigma;
+        const M = [];
+        for (let i = 0; i < N; i++) { M.push([]); for (let j = 0; j < N; j++) M[i].push((1 + g) * ((i === j ? 1 : 0) + (rnd() - .5) * 2 * sigma * (i === j ? 1 : 1.6))); }
+        return M;
+      }
+      function sinkhorn(M, iters) {
+        M = M.map((r) => r.map(Math.abs)); // Sinkhorn needs a positive matrix
+        for (let k = 0; k < iters; k++) {
+          for (let i = 0; i < N; i++) { const s = M[i].reduce((a, b) => a + b, 0) || 1; for (let j = 0; j < N; j++) M[i][j] /= s; }
+          for (let j = 0; j < N; j++) { let s = 0; for (let i = 0; i < N; i++) s += M[i][j]; s = s || 1; for (let i = 0; i < N; i++) M[i][j] /= s; }
+        }
+        return M;
+      }
+      function norm(v) { return Math.sqrt(v.reduce((a, b) => a + b * b, 0)); }
+      function mul(M, v) { return M.map((r) => r.reduce((a, b, j) => a + b * v[j], 0)); }
+      function run(depth, sigma, iters, constrained) {
+        const rnd = PL.rng('mhc' + seed + (constrained ? 'c' : 'w'));
+        let x = Array.from({ length: N }, () => (1 + (rnd() - .5) * .3) / Math.sqrt(N));
+        const n0 = norm(x); x = x.map((v) => v / n0);
+        const out = [1];
+        for (let l = 0; l < depth; l++) {
+          let W = randMat(rnd, sigma);
+          if (constrained) W = sinkhorn(W, iters);
+          x = mul(W, x);
+          // keep the sum-conserving flow visible: doubly stochastic preserves the mean, so use ratio to x0
+          out.push(norm(x));
+          if (!isFinite(out[out.length - 1])) break;
+        }
+        return out;
+      }
+      function draw() {
+        const depth = +$('depth').value, sigma = +$('sigma').value, iters = +$('iters').value;
+        $('depth-v').textContent = depth; $('sigma-v').textContent = sigma.toFixed(2); $('iters-v').textContent = iters;
+        const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+        c.width = w * dpr; c.height = h * dpr;
+        const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = PL.cssVar('--bg0h'); ctx.fillRect(0, 0, w, h);
+        const padL = 46, padR = 12, padT = 14, padB = 26;
+        const X = (i) => padL + (i / depth) * (w - padL - padR);
+        const LOGMIN = -4, LOGMAX = 4;
+        const Y = (v) => { const lv = Math.max(LOGMIN, Math.min(LOGMAX, Math.log10(Math.max(v, 1e-12)))); return padT + (1 - (lv - LOGMIN) / (LOGMAX - LOGMIN)) * (h - padT - padB); };
+        // grid + axes
+        ctx.font = '10px IBM Plex Mono, monospace'; ctx.fillStyle = PL.cssVar('--fg4'); ctx.strokeStyle = PL.cssVar('--bg1');
+        for (let e = LOGMIN; e <= LOGMAX; e += 2) { const y = Y(Math.pow(10, e)); ctx.beginPath(); ctx.moveTo(padL, y + .5); ctx.lineTo(w - padR, y + .5); ctx.stroke(); ctx.fillText('1e' + e, 6, y + 3); }
+        for (let d = 0; d <= depth; d += depth / 4) { const x = X(d); ctx.beginPath(); ctx.moveTo(x + .5, padT); ctx.lineTo(x + .5, h - padB); ctx.stroke(); ctx.fillText(String(Math.round(d)), x - 6, h - 9); }
+        ctx.fillText('‖x_L‖ / ‖x_0‖', padL + 4, padT + 10);
+        ctx.fillText('layer L →', w - padR - 58, padT + 10);
+        // reference line
+        ctx.strokeStyle = PL.cssVar('--bg3'); ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(padL, Y(1) + .5); ctx.lineTo(w - padR, Y(1) + .5); ctx.stroke(); ctx.setLineDash([]);
+        const plot = (series, color, width) => {
+          ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
+          series.forEach((v, i) => { const x = X(i), y = Y(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+          ctx.stroke();
+          const last = series[series.length - 1];
+          ctx.fillStyle = color; ctx.fillRect(X(series.length - 1) - 2, Y(last) - 2, 4, 4);
+          ctx.fillText(isFinite(last) ? last.toExponential(1) : 'NaN', Math.min(X(series.length - 1) + 6, w - 50), Y(last) - 6);
+        };
+        if ($('show-wild').checked) for (let k = 0; k < 3; k++) { seed += 1000; plot(run(depth, sigma, iters, false), PL.cssVar('--red'), k ? .8 : 1.6); seed -= 1000; ctx.globalAlpha = 1; }
+        if ($('show-mhc').checked) plot(run(depth, sigma, iters, true), PL.cssVar('--green'), 1.8);
+        ctx.lineWidth = 1;
+      }
+      ['depth', 'sigma', 'iters', 'show-wild', 'show-mhc'].forEach((id) => $(id).addEventListener('input', draw));
+      $('reseed').addEventListener('click', () => { seed++; draw(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'r' && !e.target.matches('input')) { seed++; draw(); } });
+      document.addEventListener('pl:theme', draw);
+      window.addEventListener('resize', draw);
+      draw();
+    })();
+
+    PL.scrollMeter({ ln: 'ln', pct: 'pct' });
+  </script>
+</body>
+</html>

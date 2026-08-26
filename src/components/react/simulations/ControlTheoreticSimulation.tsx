@@ -445,7 +445,7 @@ const ControlTheoreticSimulationInner: React.FC<{
 									<polyline
 										points={traj.points.map((p) => `${p.x},${p.y}`).join(" ")}
 										fill="none"
-										stroke={traj.selected ? "#22d3ee" : "#22d3ee"}
+										stroke={traj.selected ? "#5cc8ff" : "#5cc8ff"}
 										strokeWidth={traj.selected ? 2 : 1}
 										strokeOpacity={traj.selected ? 1 : 0.1}
 									/>

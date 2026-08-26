@@ -1,44 +1,41 @@
 ---
-import { BookOpen, Activity } from 'lucide-react';
-import ConnectModal from './react/ConnectModal';
+/**
+ * Title bar — tmux-style numbered windows. The digits are real: 0-3 switch
+ * windows from anywhere on the site (see src/scripts/tui.ts).
+ */
+interface Props {
+  current?: 'home' | 'papers' | 'whoami' | 'rss';
+  count?: number;
+}
+
+const { current = 'home', count } = Astro.props;
+
+const windows = [
+  { key: '0', label: 'home', href: '/', id: 'home' },
+  { key: '1', label: 'papers', href: '/#papers', id: 'papers' },
+  { key: '2', label: 'whoami', href: '/#whoami', id: 'whoami' },
+  { key: '3', label: 'rss', href: '/rss.xml', id: 'rss' },
+];
 ---
 
-<header class="sticky top-0 z-50 w-full bg-zinc-950/90 backdrop-blur-sm border-b border-zinc-800">
-  <div class="container mx-auto px-4 max-w-7xl h-14 flex items-center justify-between">
-    <!-- Logo -->
-    <a class="flex items-center gap-3 group" href="/">
-      <div class="w-8 h-8 bg-zinc-900 border border-zinc-700 flex items-center justify-center group-hover:border-indigo-500 transition-colors">
-        <BookOpen className="w-4 h-4 text-zinc-400 group-hover:text-indigo-400" />
-      </div>
-      <div class="flex flex-col">
-        <span class="font-mono font-bold text-sm text-zinc-200 leading-none group-hover:text-white">
-          PAPERLENS
-        </span>
-        <span class="text-[9px] text-zinc-600 font-mono tracking-widest uppercase leading-none mt-1">
-          RESEARCH LAB
-        </span>
-      </div>
-    </a>
+<header class="titlebar" role="banner">
+  <span class="win"><a href="/">paperlens</a></span>
 
-    <!-- Status Indicators -->
-    <div class="hidden md:flex items-center gap-6 border-l border-r border-zinc-800 px-6 h-full">
-      <div class="flex items-center gap-2">
-        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-[pulse_2s_infinite]"></div>
-        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-          SYSTEM: NORMAL
-        </span>
-      </div>
-      <div class="flex items-center gap-2">
-        <Activity className="w-3 h-3 text-zinc-600" />
-        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-          LAB: ACTIVE
-        </span>
-      </div>
-    </div>
+  <nav class="tabs" aria-label="Sections">
+    {windows.map((w) => (
+      <a
+        class="tab"
+        href={w.href}
+        data-key={w.key}
+        aria-current={current === w.id ? 'page' : undefined}
+      >
+        <span class="n">{w.key}:</span>{w.label}
+      </a>
+    ))}
+  </nav>
 
-    <!-- Connect Button -->
-    <div class="flex items-center gap-4">
-      <ConnectModal client:load />
-    </div>
+  <div class="right">
+    {count !== undefined && <span class="pill ok hidden md:inline">{count} entries</span>}
+    <button class="tab" type="button" data-action="help" title="Key map (?)" aria-label="Key map">?</button>
   </div>
 </header>

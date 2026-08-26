@@ -232,7 +232,7 @@ const DeepSeekModel1Simulation: FC = () => {
 									</span>
 								</div>
 								<div className="h-10 bg-zinc-900/50 rounded border border-zinc-800 p-1">
-									{renderSparkline(history.latency, "#fbbf24", 32)}
+									{renderSparkline(history.latency, "#f8c05a", 32)}
 								</div>
 							</div>
 						</div>
@@ -356,17 +356,17 @@ const DeepSeekModel1Simulation: FC = () => {
 						<VectorViz
 							label="Semantic Value (v_t)"
 							values={state.currentValueVector}
-							color="#6366f1"
+							color="#8b6cf2"
 						/>
 						<VectorViz
 							label="Positional Signal (R_m)"
 							values={state.positionalSignal}
-							color="#f43f5e"
+							color="#e13540"
 						/>
 						<VectorViz
 							label="Combined VVPA Output"
 							values={state.combinedVector}
-							color="#10b981"
+							color="#35d492"
 						/>
 					</div>
 					<div className="mt-4 p-3 bg-zinc-900/50 rounded border border-zinc-800">

@@ -103,15 +103,15 @@ const Histogram: React.FC<HistogramProps> = ({ bins, color, overlayBins, overlay
 						y={H - (b / maxY) * (H - 20)}
 						width={barW - 1}
 						height={(b / maxY) * (H - 20)}
-						fill={overlayColor ?? "#f59e0b"}
+						fill={overlayColor ?? "#f5a623"}
 						opacity={0.5}
 					/>
 				))}
-			<line x1={0} y1={H - 1} x2={W} y2={H - 1} stroke="#3f3f46" strokeWidth={1} />
-			<text x={4} y={H - 4} fontFamily="monospace" fontSize={9} fill="#71717a">
+			<line x1={0} y1={H - 1} x2={W} y2={H - 1} stroke="#323944" strokeWidth={1} />
+			<text x={4} y={H - 4} fontFamily="monospace" fontSize={9} fill="#6b7583">
 				{xRange[0].toFixed(1)}
 			</text>
-			<text x={W - 20} y={H - 4} fontFamily="monospace" fontSize={9} fill="#71717a">
+			<text x={W - 20} y={H - 4} fontFamily="monospace" fontSize={9} fill="#6b7583">
 				{xRange[1].toFixed(1)}
 			</text>
 		</svg>
@@ -162,20 +162,20 @@ const Stage4: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
 							(r, θ) scatter
 						</div>
 						<svg width="100%" viewBox={`0 0 ${W} ${H}`} className="block">
-							<circle cx={W / 2} cy={H / 2} r={Math.min(W, H) * 0.4} fill="none" stroke="#27272a" />
+							<circle cx={W / 2} cy={H / 2} r={Math.min(W, H) * 0.4} fill="none" stroke="#22272f" />
 							<line
 								x1={W / 2 - Math.min(W, H) * 0.4}
 								y1={H / 2}
 								x2={W / 2 + Math.min(W, H) * 0.4}
 								y2={H / 2}
-								stroke="#27272a"
+								stroke="#22272f"
 							/>
 							<line
 								x1={W / 2}
 								y1={H / 2 - Math.min(W, H) * 0.4}
 								x2={W / 2}
 								y2={H / 2 + Math.min(W, H) * 0.4}
-								stroke="#27272a"
+								stroke="#22272f"
 							/>
 							{pairs.map((p, i) => {
 								const rr = (p.r / rMax) * Math.min(W, H) * 0.4;
@@ -185,7 +185,7 @@ const Stage4: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
 										cx={W / 2 + rr * Math.cos(p.theta)}
 										cy={H / 2 + rr * Math.sin(p.theta)}
 										r={1.5}
-										fill="#6366f1"
+										fill="#8b6cf2"
 										opacity={0.7}
 									/>
 								);
@@ -199,9 +199,9 @@ const Stage4: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
 						</div>
 						<Histogram
 							bins={thetaBins}
-							color="#6366f1"
+							color="#8b6cf2"
 							overlayBins={uniformOverlay}
-							overlayColor="#f59e0b"
+							overlayColor="#f5a623"
 							xRange={[-Math.PI, Math.PI]}
 						/>
 					</div>
@@ -313,27 +313,27 @@ const Stage3: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
 							y1={15}
 							x2={xScale(b)}
 							y2={H - 15}
-							stroke="#27272a"
+							stroke="#22272f"
 							strokeWidth={1}
 						/>
 					))}
-					<path d={pathFor("mseRaw")} fill="none" stroke="#ef4444" strokeWidth={2} />
-					<path d={pathFor("mseRot")} fill="none" stroke="#6366f1" strokeWidth={2} />
-					<path d={pathFor("shannon")} fill="none" stroke="#10b981" strokeWidth={1.5} strokeDasharray="4 3" />
-					<circle cx={xScale(bits)} cy={yScale(currentMse)} r={4} fill="#fbbf24" />
-					<text x={W - 120} y={20} fontFamily="monospace" fontSize={10} fill="#ef4444">
+					<path d={pathFor("mseRaw")} fill="none" stroke="#f5555d" strokeWidth={2} />
+					<path d={pathFor("mseRot")} fill="none" stroke="#8b6cf2" strokeWidth={2} />
+					<path d={pathFor("shannon")} fill="none" stroke="#35d492" strokeWidth={1.5} strokeDasharray="4 3" />
+					<circle cx={xScale(bits)} cy={yScale(currentMse)} r={4} fill="#f8c05a" />
+					<text x={W - 120} y={20} fontFamily="monospace" fontSize={10} fill="#f5555d">
 						raw MSE
 					</text>
-					<text x={W - 120} y={34} fontFamily="monospace" fontSize={10} fill="#6366f1">
+					<text x={W - 120} y={34} fontFamily="monospace" fontSize={10} fill="#8b6cf2">
 						rotated MSE
 					</text>
-					<text x={W - 120} y={48} fontFamily="monospace" fontSize={10} fill="#10b981">
+					<text x={W - 120} y={48} fontFamily="monospace" fontSize={10} fill="#35d492">
 						Shannon LB
 					</text>
-					<text x={6} y={H - 4} fontFamily="monospace" fontSize={9} fill="#71717a">
+					<text x={6} y={H - 4} fontFamily="monospace" fontSize={9} fill="#6b7583">
 						1 bpc
 					</text>
-					<text x={W - 28} y={H - 4} fontFamily="monospace" fontSize={9} fill="#71717a">
+					<text x={W - 28} y={H - 4} fontFamily="monospace" fontSize={9} fill="#6b7583">
 						8 bpc
 					</text>
 				</svg>
@@ -369,13 +369,13 @@ const Stage2: React.FC<{ raw: number[]; seed: number }> = ({ raw, seed }) => {
 						<div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
 							Before rotation
 						</div>
-						<Histogram bins={rawBins} color="#ef4444" xRange={[-12, 12]} />
+						<Histogram bins={rawBins} color="#f5555d" xRange={[-12, 12]} />
 					</div>
 					<div>
 						<div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
 							After rotation
 						</div>
-						<Histogram bins={rotBins} color="#6366f1" xRange={[-12, 12]} />
+						<Histogram bins={rotBins} color="#8b6cf2" xRange={[-12, 12]} />
 					</div>
 				</div>
 				<div className="grid grid-cols-2 gap-3">
@@ -398,7 +398,7 @@ const Stage1: React.FC<{ raw: number[] }> = ({ raw }) => {
 					classic "outlier" problem. Uniform quantization has to stretch its bins to cover them, wasting bits
 					on the common small values.
 				</p>
-				<Histogram bins={bins} color="#ef4444" xRange={[-12, 12]} />
+				<Histogram bins={bins} color="#f5555d" xRange={[-12, 12]} />
 				<div className="grid grid-cols-3 gap-3">
 					<DataReadout label="dim" value={String(raw.length)} />
 					<DataReadout label="max |x|" value={maxAbs.toFixed(2)} />

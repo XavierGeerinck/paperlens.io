@@ -20,7 +20,8 @@ const { title, description, image, type, date } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#09090b" />
+    <meta name="theme-color" content="#0d0f13" />
+    <meta name="color-scheme" content="dark" />
     <SEO {title} {description} {image} {type} {date} />
     <ViewTransitions />
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -30,14 +31,12 @@ const { title, description, image, type, date } = Astro.props;
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
 
-    <!-- Fonts -->
+    <!-- One typeface: Geist Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap"
       rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
     />
 
     <!-- KaTeX for math -->
@@ -47,17 +46,18 @@ const { title, description, image, type, date } = Astro.props;
       integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV"
       crossorigin="anonymous"
     />
+    <slot name="head" />
   </head>
-  <body class="bg-zinc-950 text-zinc-200 min-h-screen antialiased relative">
-    <!-- Background Game of Life -->
-    <GameOfLife client:load />
-
-    <main transition:animate="fade" class="relative z-10">
+  <body class="min-h-screen antialiased">
+    <main transition:animate="fade">
       <slot />
     </main>
 
-    <!-- Mermaid initialization -->
+    <!-- Easter egg: ↑↑↓↓←→←→BA -->
+    <GameOfLife client:idle />
+
     <script>
+      import '../scripts/tui.ts';
       import '../lib/mermaid-init.ts';
     </script>
   </body>

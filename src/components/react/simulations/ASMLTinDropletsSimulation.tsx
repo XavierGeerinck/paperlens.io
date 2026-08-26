@@ -210,9 +210,9 @@ const ASMLTinDropletsSimulation: React.FC = () => {
 		ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
 		// Draw Nozzle
-		ctx.fillStyle = "#94a3b8"; // slate-400
+		ctx.fillStyle = "#98a2ae"; // slate-400
 		ctx.fillRect(DROPLET_STREAM_X - 15, 0, 30, 40);
-		ctx.fillStyle = "#64748b"; // slate-500
+		ctx.fillStyle = "#6b7583"; // slate-500
 		ctx.fillRect(DROPLET_STREAM_X - 10, 40, 20, 10);
 
 		// Draw Target Zone
@@ -235,7 +235,7 @@ const ASMLTinDropletsSimulation: React.FC = () => {
 		);
 		hits.forEach((h) => {
 			// Laser Beam
-			ctx.strokeStyle = "#d946ef"; // fuchsia-500
+			ctx.strokeStyle = "#d977f0"; // fuchsia-500
 			ctx.lineWidth = 2;
 			ctx.beginPath();
 			ctx.moveTo(CANVAS_WIDTH, TARGET_ZONE_Y);
@@ -252,7 +252,7 @@ const ASMLTinDropletsSimulation: React.FC = () => {
 				40,
 			);
 			gradient.addColorStop(0, "#fff");
-			gradient.addColorStop(0.2, "#d946ef");
+			gradient.addColorStop(0.2, "#d977f0");
 			gradient.addColorStop(1, "rgba(217, 70, 239, 0)");
 			ctx.fillStyle = gradient;
 			ctx.beginPath();
@@ -268,12 +268,12 @@ const ASMLTinDropletsSimulation: React.FC = () => {
 			ctx.arc(DROPLET_STREAM_X, d.y, d.r, 0, Math.PI * 2);
 
 			if (d.isSatellite) {
-				ctx.fillStyle = "#475569"; // slate-600
+				ctx.fillStyle = "#323944"; // slate-600
 			} else {
-				ctx.fillStyle = "#e2e8f0"; // slate-200
+				ctx.fillStyle = "#d5dbe3"; // slate-200
 			}
 			ctx.fill();
-			ctx.strokeStyle = "#0f172a"; // slate-900 border
+			ctx.strokeStyle = "#0d0f13"; // slate-900 border
 			ctx.lineWidth = 1;
 			ctx.stroke();
 

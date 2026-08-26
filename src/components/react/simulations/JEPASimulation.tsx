@@ -263,7 +263,7 @@ const JEPASimulation: React.FC = () => {
 											preserveAspectRatio="none"
 											className="w-full h-full"
 										>
-											{renderLine(state.noisyObservation, "#64748b", 1)}
+											{renderLine(state.noisyObservation, "#6b7583", 1)}
 										</svg>
 									</div>
 									{/* The Underlying Signal */}
@@ -296,7 +296,7 @@ const JEPASimulation: React.FC = () => {
 										preserveAspectRatio="none"
 										className="w-full h-full absolute top-0 left-0"
 									>
-										{renderLine(state.planningGenRollout, "#f472b6", 2)}
+										{renderLine(state.planningGenRollout, "#e694f2", 2)}
 									</svg>
 
 									{/* JEPA Path (Green, stable) */}
@@ -305,7 +305,7 @@ const JEPASimulation: React.FC = () => {
 										preserveAspectRatio="none"
 										className="w-full h-full absolute top-0 left-0"
 									>
-										{renderLine(state.planningJepaRollout, "#34d399", 3)}
+										{renderLine(state.planningJepaRollout, "#66e3b5", 3)}
 									</svg>
 								</>
 							)}
@@ -324,8 +324,8 @@ const JEPASimulation: React.FC = () => {
 										className="w-full h-full opacity-70"
 									>
 										{mode === "denoise"
-											? renderLine(state.genPrediction, "#f472b6")
-											: renderLine(state.planningGenRollout, "#f472b6")}
+											? renderLine(state.genPrediction, "#e694f2")
+											: renderLine(state.planningGenRollout, "#e694f2")}
 									</svg>
 								</div>
 								<div className="text-[10px] text-pink-300/70">
@@ -352,8 +352,8 @@ const JEPASimulation: React.FC = () => {
 										className="w-full h-full"
 									>
 										{mode === "denoise"
-											? renderLine(state.jepaPrediction, "#34d399")
-											: renderLine(state.planningJepaRollout, "#34d399")}
+											? renderLine(state.jepaPrediction, "#66e3b5")
+											: renderLine(state.planningJepaRollout, "#66e3b5")}
 									</svg>
 								</div>
 								<div className="text-[10px] text-emerald-300/70">

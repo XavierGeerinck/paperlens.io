@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaperLens Brand</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tui.css">
+  <style>
+    .term { max-width: 1080px; }
+    .head { padding: 2rem 0 1rem; }
+    .head .ps1 { margin: 0 0 1rem; }
+    .head h1 { margin: 0 0 .35rem; font-size: 1.5rem; color: var(--fg); }
+    .head h1::before { content: '# '; color: var(--gray); font-weight: 400; }
+    .head p { margin: .2rem 0; }
+    .lede { max-width: 72ch; color: var(--fg1); }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start; }
+    @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+    h3.sub { margin: 1.25rem 0 .5rem; font-size: var(--fs-sm); color: var(--fg2); font-weight: 600; }
+    h3.sub:first-of-type { margin-top: .25rem; }
+    h3.sub::before { content: '## '; color: var(--gray); font-weight: 400; }
+    p.note { margin: .35rem 0 0; font-size: var(--fs-sm); color: var(--fg4); max-width: 70ch; }
+
+    /* logo */
+    .lockups { display: grid; gap: 1.25rem; }
+    .lockup { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: center; border-bottom: 1px dashed var(--bg2); padding-bottom: 1rem; }
+    .lockup:last-child { border-bottom: 0; padding-bottom: 0; }
+    .lockup .lbl { font-size: var(--fs-xs); color: var(--fg4); }
+    .lockup .lbl b { display: block; color: var(--fg2); font-weight: 600; font-size: var(--fs-sm); }
+    .wordmark { font-weight: 600; color: var(--fg); font-size: var(--fs-lg); }
+    .wordmark::before { content: '>_ '; color: var(--green); }
+    .marks { display: flex; gap: 1.25rem; align-items: center; }
+    .mark { display: grid; place-items: center; background: var(--bg0h); border: 1px solid var(--bg2); color: var(--green); font-weight: 700; border-radius: 22%; }
+    .mark.s64 { width: 64px; height: 64px; font-size: 22px; }
+    .mark.s32 { width: 32px; height: 32px; font-size: 12px; border-radius: 6px; }
+    .mark.s16 { width: 16px; height: 16px; font-size: 7px; border-radius: 3px; }
+    .mark.fill { background: var(--green); color: var(--on-hue); border-color: var(--green); }
+    @media (max-width: 560px) { .lockup { grid-template-columns: 1fr; } }
+
+    /* palette */
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6rem; }
+    .sw { border: 1px solid var(--bg2); border-radius: var(--r); padding: .55rem; font-size: var(--fs-xs); display: grid; gap: .3rem; background: var(--bg0h); }
+    .sw i { display: block; height: 40px; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,.06); }
+    .sw b { color: var(--fg); font-weight: 600; font-size: var(--fs-sm); }
+    .sw .hex { color: var(--fg2); }
+    .sw .use { color: var(--fg4); }
+
+    /* type */
+    .spec { display: grid; gap: 0; }
+    .spec .r { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; align-items: baseline; border-bottom: 1px dashed var(--bg2); padding: .5rem 0; }
+    .spec .r:last-child { border-bottom: 0; }
+    .spec .lbl { color: var(--fg4); font-size: var(--fs-xs); }
+    .t-xs { font-size: var(--fs-xs); } .t-sm { font-size: var(--fs-sm); } .t-md { font-size: var(--fs-md); } .t-lg { font-size: var(--fs-lg); }
+    .t-xl { font-size: 1.5rem; font-weight: 700; }
+
+    /* voice */
+    .voice { display: grid; gap: .45rem; font-size: var(--fs); }
+    .voice .ex { border-left: 2px solid var(--bg3); padding-left: .9rem; display: grid; gap: .15rem; }
+    .voice .ex + .ex { margin-top: .5rem; }
+    .voice .why { font-size: var(--fs-xs); color: var(--fg4); }
+    .dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 700px) { .dodont { grid-template-columns: 1fr; } }
+    .dodont ul { margin: .25rem 0 0; padding: 0; list-style: none; font-size: var(--fs-sm); color: var(--fg1); display: grid; gap: .35rem; }
+    .dodont .do li::before { content: '[✓] '; color: var(--green); }
+    .dodont .dont li::before { content: '[✗] '; color: var(--red); }
+
+    /* components */
+    .gallery { display: grid; gap: 1.25rem; }
+    .g { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 1rem; align-items: start; border-bottom: 1px dashed var(--bg2); padding-bottom: 1rem; }
+    .g:last-child { border-bottom: 0; padding-bottom: 0; }
+    .g .lbl { font-size: var(--fs-xs); color: var(--fg4); }
+    .g .lbl b { display: block; color: var(--fg2); font-weight: 600; font-size: var(--fs-sm); }
+    .g .demo { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: center; min-width: 0; }
+    .g .demo .titlebar { overflow-x: auto; }
+    @media (max-width: 560px) { .g { grid-template-columns: 1fr; } }
+    .demo-row { display: grid; grid-template-columns: 1.2ch 10ch 9.5ch 9ch minmax(0,1fr) 3.5ch; gap: .75rem; align-items: center; padding: .32rem .35rem; border-bottom: 1px solid var(--bg1); font-size: var(--fs-sm); width: 100%; }
+    .demo-row.is-sel { background: var(--bg1); border-radius: var(--r-sm); }
+    .demo-row .mk { color: var(--green); }
+    .demo-row .t { color: var(--fg); font-weight: 600; }
+    .demo-row .mute { color: var(--gray); }
+    .habit { display: grid; gap: .2rem; font-size: var(--fs); width: 100%; }
+    .habit .r { display: grid; grid-template-columns: 1fr auto; }
+    .habit .streak { color: var(--green); }
+
+    /* motion */
+    .motion { display: grid; gap: .5rem; font-size: var(--fs-sm); color: var(--fg1); }
+    .motion .m { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; }
+    .motion .m .lbl { color: var(--fg4); font-size: var(--fs-xs); }
+    @media (max-width: 560px) { .motion .m { grid-template-columns: 1fr; } }
+    .demo-typed { width: 0; animation: type 1s steps(24, end) .5s infinite alternate; }
+    @keyframes type { to { width: 24ch; } }
+  </style>
+</head>
+<body>
+
+  <header class="titlebar" role="banner">
+    <span class="win"><a href="home.html">paperlens</a></span>
+    <nav class="tabs" aria-label="Mockups">
+      <a class="tab" href="index.html"><span class="n">0:</span>overview</a>
+      <a class="tab" href="home.html"><span class="n">1:</span>home</a>
+      <a class="tab" href="article.html"><span class="n">2:</span>article</a>
+      <a class="tab" href="404.html"><span class="n">3:</span>404</a>
+      <a class="tab" href="alt-preprint-home.html"><span class="n">4:</span>alt: preprint</a>
+      <a class="tab" href="brand.html" aria-current="page"><span class="n">5:</span>brand</a>
+    </nav>
+    <div class="right"><span class="pill ok">v1 · 2026-08-26</span></div>
+  </header>
+
+  <main class="term">
+    <section class="head">
+      <p class="ps1"><span class="u">xavier</span><span class="role">[cto]</span>@<span class="h">paperlens</span> <span class="d">$</span> <span class="cmd">cat BRAND.md</span></p>
+      <h1>PaperLens brand</h1>
+      <p class="cmt">a research site that looks like a terminal — because that's where the readers already live.</p>
+      <p class="lede" style="margin-top:.75rem">PaperLens rebuilds the core mechanism of a paper as something you can drag a slider on. The brand should feel like a well-configured terminal: quiet, dense, precise, and a little bit fun. Nothing glows. Nothing is centred. Colour means something.</p>
+      <div style="margin-top:.75rem;display:grid;gap:.1rem">
+        <p class="ok sm" style="margin:0">dark only</p>
+        <p class="ok sm" style="margin:0">one typeface, one primary colour, four semantic hues</p>
+        <p class="ok sm" style="margin:0">every screen drivable from the keyboard</p>
+      </div>
+    </section>
+
+    <!-- LOGO -->
+    <section class="pane" aria-labelledby="logo-t">
+      <h2 class="pane-title" id="logo-t"><span class="hl">logo</span><span class="extra">three lockups, one idea: a prompt</span></h2>
+      <div class="lockups">
+        <div class="lockup">
+          <div class="lbl"><b>banner</b>figlet "standard" · home hero only</div>
+<pre class="figlet" aria-label="paperlens">
+                              _
+  _ __   __ _ _ __   ___ _ __| | ___ _ __  ___
+ | '_ \ / _` | '_ \ / _ \ '__| |/ _ \ '_ \/ __|
+ | |_) | (_| | |_) |  __/ |  | |  __/ | | \__ \
+ | .__/ \__,_| .__/ \___|_|  |_|\___|_| |_|___/
+ |_|         |_|                               </pre>
+        </div>
+        <div class="lockup">
+          <div class="lbl"><b>wordmark</b>title bar, footer, social cards</div>
+          <div><span class="wordmark">paperlens</span><p class="note">Always lowercase. The <span class="c-green">&gt;_</span> is the mark; the word is set in Geist Mono 600. Never letter-spaced, never with a tagline attached.</p></div>
+        </div>
+        <div class="lockup">
+          <div class="lbl"><b>mark</b>favicon, avatar, app icon</div>
+          <div>
+            <div class="marks">
+              <div class="mark s64">&gt;_</div>
+              <div class="mark s64 fill">&gt;_</div>
+              <div class="mark s32">&gt;_</div>
+              <div class="mark s32 fill">&gt;_</div>
+              <div class="mark s16">&gt;_</div>
+            </div>
+            <p class="note">A prompt and a cursor. Outline on dark surfaces, filled mint when it has to stand alone (favicon, OG image). Corner radius 22% of the size.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLOUR -->
+    <section class="pane" aria-labelledby="col-t">
+      <h2 class="pane-title" id="col-t"><span class="hl">colour</span><span class="extra">tokens in tui.css · every hue has a job</span></h2>
+      <h3 class="sub">ground &amp; ink</h3>
+      <div class="swatches">
+        <div class="sw"><i style="background:var(--bg0)"></i><b>bg0</b><span class="hex">#0d0f13</span><span class="use">page</span></div>
+        <div class="sw"><i style="background:var(--bg0h)"></i><b>bg0h</b><span class="hex">#080a0d</span><span class="use">status bar, code, sunken panes</span></div>
+        <div class="sw"><i style="background:var(--bg1)"></i><b>bg1</b><span class="hex">#161a20</span><span class="use">selection, chips, buttons</span></div>
+        <div class="sw"><i style="background:var(--bg2)"></i><b>bg2</b><span class="hex">#22272f</span><span class="use">borders, rules</span></div>
+        <div class="sw"><i style="background:var(--bg3)"></i><b>bg3</b><span class="hex">#323944</span><span class="use">strong borders, empty bars</span></div>
+        <div class="sw"><i style="background:var(--fg)"></i><b>fg</b><span class="hex">#e6eaf0</span><span class="use">titles, selected text</span></div>
+        <div class="sw"><i style="background:var(--fg1)"></i><b>fg1</b><span class="hex">#c6cdd6</span><span class="use">body text</span></div>
+        <div class="sw"><i style="background:var(--fg2)"></i><b>fg2</b><span class="hex">#98a2ae</span><span class="use">secondary text</span></div>
+        <div class="sw"><i style="background:var(--fg4)"></i><b>fg4</b><span class="hex">#6b7583</span><span class="use">// comments, labels</span></div>
+        <div class="sw"><i style="background:var(--gray)"></i><b>gray</b><span class="hex">#4b5563</span><span class="use">punctuation, dates, prefixes</span></div>
+      </div>
+      <h3 class="sub">hues</h3>
+      <div class="swatches">
+        <div class="sw"><i style="background:var(--green)"></i><b>green · primary</b><span class="hex">#35d492</span><span class="use">$ prompt, NORMAL mode, selection, active tab, [✓], sim, ALPHA, logo</span></div>
+        <div class="sw"><i style="background:var(--orange)"></i><b>amber</b><span class="hex">#f5a623</span><span class="use">PROTOTYPE, deep-dive, inline code, INSERT mode, attention</span></div>
+        <div class="sw"><i style="background:var(--blue)"></i><b>blue</b><span class="hex">#4c9ef5</span><span class="use">links, paper, CONCEPT, host in prompt</span></div>
+        <div class="sw"><i style="background:var(--purple)"></i><b>purple</b><span class="hex">#8b6cf2</span><span class="use">RESEARCH, idea, keywords in code</span></div>
+        <div class="sw"><i style="background:var(--aqua)"></i><b>aqua</b><span class="hex">#5cc8ff</span><span class="use">"running", pdf, operators</span></div>
+        <div class="sw"><i style="background:var(--yellow)"></i><b>yellow</b><span class="hex">#f7c948</span><span class="use">counts, commit hashes — sparingly</span></div>
+        <div class="sw"><i style="background:var(--red)"></i><b>red</b><span class="hex">#f5555d</span><span class="use">errors, "unconstrained" — never decoration</span></div>
+      </div>
+      <p class="note">Hues sit on the ground at full strength; they are never used as large fills except the mode chip, the primary button and the filled mark. Text on a hue is <code style="color:var(--fg2)">#0b0d11</code>, except on blue and purple where it is white.</p>
+    </section>
+
+    <div class="two">
+      <!-- TYPE -->
+      <section class="pane" aria-labelledby="type-t">
+        <h2 class="pane-title" id="type-t"><span class="hl">type</span><span class="extra">one family</span></h2>
+        <div class="spec">
+          <div class="r"><span class="lbl">family</span><span>Geist Mono <span class="dim">→ IBM Plex Mono → JetBrains Mono → ui-monospace</span></span></div>
+          <div class="r"><span class="lbl">weights</span><span>400 body · 500 labels · 600 titles, buttons · 700 h1, mode</span></div>
+          <div class="r"><span class="lbl">xl · 24/1.3</span><span class="t-xl">DeepSeek mHC Protocol</span></div>
+          <div class="r"><span class="lbl">lg · 18/1.3</span><span class="t-lg">The Collapse-Proof World Model</span></div>
+          <div class="r"><span class="lbl">md · 15/1.75</span><span class="t-md">Prose. 76 characters per line, generous leading.</span></div>
+          <div class="r"><span class="lbl">base · 14/1.6</span><span>UI text, rows, panes.</span></div>
+          <div class="r"><span class="lbl">sm · 12.5</span><span class="t-sm">Meta, captions, key hints, pane titles.</span></div>
+          <div class="r"><span class="lbl">xs · 11</span><span class="t-xs">CHIPS, status bar, kbd</span></div>
+          <div class="r"><span class="lbl">math</span><span class="imath">y = Wx, &nbsp; Σ<sub>j</sub> W<sub>ij</sub> = 1</span> <span class="dim sm">STIX Two Text italic — the one serif</span></div>
+          <div class="r"><span class="lbl">numerals</span><span style="font-variant-numeric:tabular-nums">tabular everywhere: 2026-05-16 · 14m · 3/28</span></div>
+        </div>
+        <p class="note">No display face. The figlet banner is the display. Uppercase only inside chips and the mode segment, with +4% tracking.</p>
+      </section>
+
+      <!-- VOICE -->
+      <section class="pane" aria-labelledby="voice-t">
+        <h2 class="pane-title" id="voice-t"><span class="hl">voice</span><span class="extra">the terminal talks, plainly</span></h2>
+        <div class="voice">
+          <div class="ex">
+            <p class="ps1" style="margin:0"><span class="u">xavier</span><span class="role">[cto]</span>@<span class="h">paperlens</span> <span class="d">$</span> <span class="cmd">ls ~/papers</span></p>
+            <span class="why">prompt · user grey, role amber, host blue, $ green, command white. One per page, at the top.</span>
+          </div>
+          <div class="ex">
+            <p class="cmt" style="margin:0">every entry ships with a simulation, the math, and the code.</p>
+            <span class="why">comment · secondary copy is a code comment: lowercase, no full stop needed, fg4.</span>
+          </div>
+          <div class="ex">
+            <p class="ok" style="margin:0">28 entries indexed</p>
+            <p class="ok" style="margin:0">simulation loaded</p>
+            <span class="why">status · facts and confirmations are [ok] lines. A control that says "Read" produces "[ok] opened".</span>
+          </div>
+          <div class="ex">
+            <p style="margin:0"><span class="check">simulation</span> &nbsp; <span class="uncheck">source pdf</span></p>
+            <span class="why">checks · presence / absence, done / not done.</span>
+          </div>
+          <div class="ex">
+            <p style="margin:0"><kbd>j</kbd>/<kbd>k</kbd> move · <kbd>⏎</kbd> open · <kbd>/</kbd> filter · <kbd>?</kbd> help</p>
+            <span class="why">keys · always shown, always true. Never a key hint for a key that doesn't work.</span>
+          </div>
+          <div class="ex">
+            <p style="margin:0"><span class="chip status-RESEARCH">RESEARCH</span> <span class="chip status-PROTOTYPE">PROTOTYPE</span> <span class="chip status-ALPHA">ALPHA</span> &nbsp; <span class="cat cat-paper">paper</span> <span class="cat cat-deep-dive">deep-dive</span> <span class="cat cat-idea">idea</span></p>
+            <span class="why">vocabulary · maturity is a chip, type is a coloured word. These are the only two labels an entry gets.</span>
+          </div>
+        </div>
+        <div class="dodont" style="margin-top:1.25rem">
+          <div><h3 class="sub" style="margin-top:0">do</h3><ul class="do">
+            <li>lowercase labels, sentence-case prose</li>
+            <li>name things by what they are: git log, whoami, :toc</li>
+            <li>say the number: "28 entries", not "many"</li>
+            <li>errors say what happened and what to do next</li>
+          </ul></div>
+          <div><h3 class="sub" style="margin-top:0">don't</h3><ul class="dont">
+            <li>fake status ("SYSTEM: NORMAL", "clearance")</li>
+            <li>uppercase hero copy, exclamation marks</li>
+            <li>colour as decoration — no gradients, no glow</li>
+            <li>emoji as section markers (one 🔥 for a streak is the limit)</li>
+          </ul></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- COMPONENTS -->
+    <section class="pane" aria-labelledby="comp-t">
+      <h2 class="pane-title" id="comp-t"><span class="hl">components</span><span class="extra">all in tui.css</span></h2>
+      <div class="gallery">
+        <div class="g"><div class="lbl"><b>title bar</b>sticky · numbered tabs</div><div class="demo" style="width:100%"><div class="titlebar" style="position:static;width:100%;border:1px solid var(--bg2);border-radius:var(--r)"><span class="win">paperlens</span><nav class="tabs"><a class="tab" aria-current="page"><span class="n">0:</span>home</a><a class="tab" href="#"><span class="n">1:</span>papers</a><a class="tab" href="#"><span class="n">2:</span>whoami</a></nav><div class="right"><span class="pill ok">28 entries</span><button class="tab">?</button></div></div></div></div>
+        <div class="g"><div class="lbl"><b>status bar</b>fixed · mode changes colour</div><div class="demo" style="width:100%"><div class="statusbar" style="position:static;width:100%;border:1px solid var(--bg2);border-radius:var(--r)"><span class="seg mode" data-mode="NORMAL">NORMAL</span><span class="seg">~/papers</span><span class="seg">3/28</span><span class="seg grow keys"><b>j</b>/<b>k</b> move &nbsp; <b>⏎</b> open</span><span class="seg">utf-8</span></div><div class="statusbar" style="position:static;width:100%;border:1px solid var(--bg2);border-radius:var(--r)"><span class="seg mode" data-mode="INSERT">INSERT</span><span class="seg">/ filter: jepa</span><span class="seg grow keys"><b>⏎</b> apply &nbsp; <b>Esc</b> leave</span></div></div></div>
+        <div class="g"><div class="lbl"><b>pane</b>legend in the border</div><div class="demo" style="width:100%"><section class="pane" style="width:100%;margin:0"><h2 class="pane-title"><span class="hl">simulation</span><span class="extra">DeepSeekMHCSimulation.tsx</span></h2><div class="pane-title-r"><span class="c-aqua">● running</span></div><p class="sm dim" style="margin:0">Content. Sunken variant uses bg0h.</p></section></div></div>
+        <div class="g"><div class="lbl"><b>browser row</b>selected + idle</div><div class="demo" style="width:100%;display:block"><div class="demo-row is-sel"><span class="mk">▶</span><span class="mute">2026-05-16</span><span><span class="chip status-RESEARCH">RESEARCH</span></span><span class="cat cat-paper">paper</span><span class="t">The Collapse-Proof World Model</span><span class="mute">14m</span></div><div class="demo-row"><span class="mk" style="opacity:0">▶</span><span class="mute">2026-04-20</span><span><span class="chip status-RESEARCH">RESEARCH</span></span><span class="cat cat-paper">paper</span><span>The Rotation Revolution</span><span class="mute">15m</span></div></div></div>
+        <div class="g"><div class="lbl"><b>buttons</b>one primary per view</div><div class="demo"><a class="btn primary" href="#">Read <kbd>⏎</kbd></a><a class="btn" href="#">Run simulation</a><a class="btn" href="#">arxiv.org/pdf/2603.19312</a></div></div>
+        <div class="g"><div class="lbl"><b>field</b>filter, search</div><div class="demo"><label class="field" style="width:280px"><span class="sigil">/</span><input placeholder="filter by title, tag, status…"></label></div></div>
+        <div class="g"><div class="lbl"><b>chips &amp; tags</b></div><div class="demo"><span class="chip status-RESEARCH">RESEARCH</span><span class="chip status-CONCEPT">CONCEPT</span><span class="chip status-PROTOTYPE">PROTOTYPE</span><span class="chip status-ALPHA">ALPHA</span><span class="chip status-ARCHIVED">ARCHIVED</span><span class="chip ghost">ghost</span><span class="tag">jepa</span><span class="tag">world-models</span></div></div>
+        <div class="g"><div class="lbl"><b>progress</b>ascii, never a div bar</div><div class="demo" style="display:grid;gap:.2rem"><span class="bar"><span class="on">████████</span>░░░░░░ <span class="dim">57% [16/28] papers</span></span><span class="bar amber"><span class="on">██████</span>░░░░░░░░ <span class="dim">39% [11/28] deep-dives</span></span></div></div>
+        <div class="g"><div class="lbl"><b>habit list</b>for future "what to try" / checklists</div><div class="demo"><div class="habit"><div class="r"><span class="check">push depth to 400</span><span class="streak">🔥 2</span></div><div class="r"><span class="uncheck">set sinkhorn iterations to 0</span><span class="dim">0/3</span></div><div class="r"><span class="uncheck">lower σ to 0.01 <span class="cmt">tiny drift compounds</span></span></div></div></div></div>
+        <div class="g"><div class="lbl"><b>keys</b></div><div class="demo"><kbd>j</kbd><kbd>k</kbd><kbd>⏎</kbd><kbd>/</kbd><kbd>gg</kbd><kbd>G</kbd><kbd>?</kbd><kbd>Esc</kbd></div></div>
+        <div class="g"><div class="lbl"><b>code</b>legend + copy</div><div class="demo" style="width:100%;display:block"><div class="codeblock" style="margin-top:.5rem"><span class="lang">python</span><button class="copy" type="button">copy</button><pre><code><span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">5</span>):
+    matrix = matrix <span class="tok-op">/</span> matrix.sum(dim=<span class="tok-num">1</span>, keepdim=<span class="tok-kw">True</span>)  <span class="tok-cm"># rows → 1</span></code></pre></div></div></div>
+      </div>
+    </section>
+
+    <div class="two">
+      <!-- MOTION -->
+      <section class="pane" aria-labelledby="mo-t">
+        <h2 class="pane-title" id="mo-t"><span class="hl">motion</span><span class="extra">one orchestrated moment per page</span></h2>
+        <div class="motion">
+          <div class="m"><span class="lbl">boot</span><span>The prompt types its command (steps, ~0.45 s), then output appears line by line at 100–150 ms intervals. Home and 404 only.</span></div>
+          <div class="m"><span class="lbl">demo</span><span class="ps1"><span class="d">$</span> <span class="typed demo-typed cmd">ls ~/papers --sort=date</span><span class="cursor"></span></span></div>
+          <div class="m"><span class="lbl">cursor</span><span>Blinks at 1.1 s, steps(1). Only where input is possible.</span></div>
+          <div class="m"><span class="lbl">selection</span><span>Instant. No easing on row selection or tab changes — a terminal doesn't tween.</span></div>
+          <div class="m"><span class="lbl">simulations</span><span>Run at 60 fps; the only continuous motion on a page. Pause when off-screen.</span></div>
+          <div class="m"><span class="lbl">reduced motion</span><span>Boot renders fully, cursor stops, simulations show their final frame with a play control.</span></div>
+        </div>
+      </section>
+
+      <!-- LAYOUT -->
+      <section class="pane" aria-labelledby="lay-t">
+        <h2 class="pane-title" id="lay-t"><span class="hl">layout</span><span class="extra">left-aligned, dense, 1280 max</span></h2>
+        <div class="motion">
+          <div class="m"><span class="lbl">grid</span><span>Content column 1280 px max, 16 px gutters. Panes carry a 1 px bg2 border and a 6 px radius; chips 4 px.</span></div>
+          <div class="m"><span class="lbl">density</span><span>28 rows fit above the fold on a 1440×900 screen. Row height 30 px. If it needs a card, it probably needs a row.</span></div>
+          <div class="m"><span class="lbl">measure</span><span>Prose 76ch at 15 px. Figures (code, diagrams, tables) may take the full column.</span></div>
+          <div class="m"><span class="lbl">chrome</span><span>Title bar 38 px on top, status bar 28 px at the bottom, on every page including 404.</span></div>
+          <div class="m"><span class="lbl">mobile</span><span>Panes stack, the preview pane drops below the list, key hints hide. Nothing centres.</span></div>
+          <div class="m"><span class="lbl">social card</span><span>bg0, wordmark top-left, entry title in fg 600 at 48 px, chip + type below, mark bottom-right.</span></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="statusbar" role="contentinfo">
+    <span class="seg mode" data-mode="NORMAL">NORMAL</span>
+    <span class="seg">docs/mockups/brand.html</span>
+    <span class="seg grow keys hide-sm"><b>0</b>–<b>4</b> other mockups &nbsp; <b>?</b> help</span>
+    <span class="seg grow" style="display:none"></span>
+    <span class="seg">2026-08-26</span>
+  </footer>
+
+  <script src="tui.js"></script>
+  <script>
+    document.addEventListener('keydown', (e) => {
+      if (e.target.matches('input')) return;
+      const map = { 0: 'index.html', 1: 'home.html', 2: 'article.html', 3: '404.html', 4: 'alt-preprint-home.html' };
+      if (map[e.key]) window.location.href = map[e.key];
+    });
+  </script>
+</body>
+</html>

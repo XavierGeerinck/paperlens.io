@@ -27,11 +27,11 @@ const DreamZeroSimulation: FC = () => {
     // Helper: Draw the Lab Environment
     const drawLab = (ctx: CanvasRenderingContext2D, width: number, height: number, env: 'training' | 'ood') => {
         // Background
-        ctx.fillStyle = "#0f172a";
+        ctx.fillStyle = "#0d0f13";
         ctx.fillRect(0,0,width,height);
 
         // Grid Lines (Technical Look)
-        ctx.strokeStyle = "#1e293b";
+        ctx.strokeStyle = "#161a20";
         ctx.lineWidth = 1;
         for(let i=0; i<width; i+=40) {
             ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,height); ctx.stroke();
@@ -41,11 +41,11 @@ const DreamZeroSimulation: FC = () => {
         }
 
         // Draw Base
-        ctx.fillStyle = "#475569";
+        ctx.fillStyle = "#323944";
         ctx.beginPath();
         ctx.arc(BASE_X, BASE_Y, 20, Math.PI, 0); // Semicircle base
         ctx.fill();
-        ctx.fillStyle = "#94a3b8";
+        ctx.fillStyle = "#98a2ae";
         ctx.fillRect(BASE_X - 15, BASE_Y, 30, 10);
 
         if (env === 'ood') {
@@ -56,7 +56,7 @@ const DreamZeroSimulation: FC = () => {
             
             // Draw Obstacle (Red Glass Block)
             ctx.fillStyle = "rgba(239, 68, 68, 0.2)"; // faint red fill
-            ctx.strokeStyle = "#ef4444";
+            ctx.strokeStyle = "#f5555d";
             ctx.lineWidth = 2;
             
             ctx.beginPath();
@@ -65,7 +65,7 @@ const DreamZeroSimulation: FC = () => {
             ctx.stroke();
             
             // Label
-            ctx.fillStyle = "#ef4444";
+            ctx.fillStyle = "#f5555d";
             ctx.font = "10px monospace";
             ctx.textAlign = "center";
             ctx.fillText("UNKNOWN OBSTACLE", obsX, obsY + 45);
@@ -85,7 +85,7 @@ const DreamZeroSimulation: FC = () => {
         const endY = BASE_Y + Math.sin(rad) * ARM_LENGTH;
 
         // Arm Link
-        ctx.strokeStyle = isGhost ? (collision ? "#f43f5e" : "#10b981") : "#3b82f6";
+        ctx.strokeStyle = isGhost ? (collision ? "#e13540" : "#35d492") : "#4c9ef5";
         ctx.lineWidth = isGhost ? 4 : 8;
         if(isGhost) ctx.setLineDash([5,5]);
         
@@ -100,7 +100,7 @@ const DreamZeroSimulation: FC = () => {
             ctx.stroke();
             
             // Explosion
-            ctx.fillStyle = "#f43f5e";
+            ctx.fillStyle = "#e13540";
             ctx.beginPath();
             ctx.arc(impactX, impactY, 10, 0, Math.PI*2);
             ctx.fill();
@@ -115,7 +115,7 @@ const DreamZeroSimulation: FC = () => {
             ctx.save();
             ctx.translate(endX, endY);
             ctx.rotate(rad + Math.PI/2);
-            ctx.fillStyle = isGhost ? (collision ? "#f43f5e" : "#10b981") : "#e2e8f0";
+            ctx.fillStyle = isGhost ? (collision ? "#e13540" : "#35d492") : "#d5dbe3";
             ctx.fillRect(-10, -10, 20, 20); // Gripper box
             // Fingers
             ctx.fillRect(-15, -15, 5, 15);

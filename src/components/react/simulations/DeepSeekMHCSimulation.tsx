@@ -75,9 +75,10 @@ const DeepSeekMHCSimulation: React.FC = () => {
 	const renderMiniGraph = (history: number[], color: string, max: number) => {
 		const width = 200;
 		const height = 60;
+		const span = Math.max(1, history.length - 1); // a single sample must not divide by zero
 		const points = history
 			.map((val, i) => {
-				const x = (i / (history.length - 1)) * width;
+				const x = (i / span) * width;
 				const y = height - (Math.min(val, max) / max) * height;
 				return `${x},${y}`;
 			})
@@ -135,7 +136,7 @@ const DeepSeekMHCSimulation: React.FC = () => {
 						</div>
 
 						<div className="bg-black/40 p-4 rounded border border-slate-800 flex flex-col items-center justify-center min-h-[100px] relative">
-							{renderMiniGraph(state.wildHistory, "#94a3b8", 5)}
+							{renderMiniGraph(state.wildHistory, "#98a2ae", 5)}
 							{state.wildStatus !== "STABLE" && (
 								<div className="absolute bg-red-950/90 border border-red-500 px-3 py-1 rounded text-[10px] font-bold text-red-400 animate-bounce">
 									SIGNAL_{state.wildStatus}
@@ -172,7 +173,7 @@ const DeepSeekMHCSimulation: React.FC = () => {
 						</div>
 
 						<div className="bg-black/40 p-4 rounded border border-slate-800 flex flex-col items-center justify-center min-h-[100px] relative">
-							{renderMiniGraph(state.mhcHistory, "#10b981", 5)}
+							{renderMiniGraph(state.mhcHistory, "#35d492", 5)}
 							<div className="absolute top-2 right-2">
 								<Zap size={14} className="text-emerald-500 animate-pulse" />
 							</div>

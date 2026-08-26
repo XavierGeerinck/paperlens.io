@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>404 — PaperLens (TUI mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tui.css">
+  <style>
+    .shell { padding: 3rem 0 2rem; max-width: 80ch; }
+    .shell .line { margin: 0; white-space: pre-wrap; }
+    .shell .line + .line { margin-top: .2rem; }
+    .shell .out { color: var(--fg2); }
+    .shell .err { color: var(--red); }
+    .shell .gap { height: 1rem; }
+    .shell .cmd { color: var(--fg); }
+    .shell .hit { color: var(--fg1); }
+    .shell .hit b { color: var(--green); font-weight: 600; }
+    .cow { color: var(--fg4); font-size: var(--fs-sm); line-height: 1.25; margin: 1.5rem 0 0; }
+    .hero-code { font-size: clamp(3rem, 12vw, 7rem); line-height: 1; color: var(--bg2); font-weight: 700; margin: 0 0 1rem; letter-spacing: -.04em; }
+    .hero-code span { color: var(--red); }
+    .shell .typed { width: 0; animation: type .4s steps(12, end) 1.2s forwards; }
+    @keyframes type { to { width: 5ch; } }
+    .boot .line:nth-child(1) { animation-delay: 0s; }
+    .boot .line:nth-child(2) { animation-delay: .15s; }
+    .boot .line:nth-child(3) { animation-delay: .35s; }
+    .boot .line:nth-child(4) { animation-delay: .5s; }
+    .boot .line:nth-child(5) { animation-delay: .6s; }
+    .boot .line:nth-child(6) { animation-delay: .7s; }
+    .boot .line:nth-child(7) { animation-delay: .8s; }
+    .boot .line:nth-child(8) { animation-delay: .9s; }
+    .boot .line:nth-child(9) { animation-delay: 1.1s; }
+  </style>
+</head>
+<body>
+
+  <header class="titlebar" role="banner">
+    <span class="win"><a href="home.html">paperlens</a></span>
+    <nav class="tabs" aria-label="Sections">
+      <a class="tab" href="home.html"><span class="n">0:</span>home</a>
+      <a class="tab" href="home.html#browser"><span class="n">1:</span>papers</a>
+      <a class="tab" href="home.html#whoami"><span class="n">2:</span>whoami</a>
+      <a class="tab" href="#" title="RSS feed"><span class="n">3:</span>rss</a>
+    </nav>
+    <div class="right">
+      <button class="tab" data-action="help" title="Keyboard help (?)">?</button>
+    </div>
+  </header>
+
+  <main class="term">
+    <section class="shell boot" aria-label="Not found">
+      <p class="line hero-code" aria-hidden="true">4<span>0</span>4</p>
+      <p class="line prompt cmd">cd /idea/quantum-transformers</p>
+      <p class="line err">bash: cd: /idea/quantum-transformers: No such file or directory</p>
+      <p class="line gap" aria-hidden="true"></p>
+      <p class="line prompt cmd">ls ~/papers | grep -i transformer</p>
+      <p class="line hit">multi-head-latent-attention.md      <span class="dim"># the memory-efficient future of LLMs</span></p>
+      <p class="line hit">sub-quadratic-scaling.md            <span class="dim"># breaking the quadratic wall</span></p>
+      <p class="line hit">test-time-training-long-context.mdx <span class="dim"># using context as training data</span></p>
+      <p class="line gap" aria-hidden="true"></p>
+      <p class="line prompt cmd"><span class="typed">cd ~ </span><span class="cursor"></span></p>
+    </section>
+
+    <p style="margin:0 0 1.5rem"><a class="btn primary" href="home.html">Back to ~/papers <kbd>⏎</kbd></a> <a class="btn" href="home.html#browser">Search all entries <kbd>/</kbd></a></p>
+
+<pre class="cow" aria-hidden="true">
+ ________________________________________
+/ The page you wanted is not in the      \
+\ index. The papers are. Try / to filter. /
+ ----------------------------------------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+</pre>
+  </main>
+
+  <footer class="statusbar" role="contentinfo">
+    <span class="seg mode" data-mode="NORMAL">NORMAL</span>
+    <span class="seg">/idea/quantum-transformers</span>
+    <span class="seg c-red hide-sm">exit 1</span>
+    <span class="seg grow keys hide-sm"><b>⏎</b> home &nbsp; <b>/</b> filter &nbsp; <b>?</b> help</span>
+    <span class="seg grow" style="display:none"></span>
+    <span class="seg">© 2026 Xavier Geerinck</span>
+  </footer>
+
+  <div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <section class="pane">
+      <h2 class="pane-title" id="help-title"><span class="hl">help</span><span class="extra">:map</span></h2>
+      <dl class="keylist">
+        <dt>⏎</dt><dd>back to home</dd>
+        <dt>?</dt><dd>this help</dd>
+        <dt>Esc</dt><dd>close</dd>
+      </dl>
+      <p style="margin:1rem 0 0"><button class="btn" data-action="close-help">Close <kbd>Esc</kbd></button></p>
+    </section>
+  </div>
+
+  <script src="tui.js"></script>
+  <script>
+    document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.target.matches('input, a, button')) window.location.href = 'home.html'; });
+  </script>
+</body>
+</html>

@@ -8,23 +8,23 @@ const INPUT_STREAM = [
 		id: "geo",
 		label: "Golden Gate Bridge",
 		category: "Geography",
-		color: "#3b82f6",
+		color: "#4c9ef5",
 	},
 	{
 		id: "code",
 		label: "def train_model():",
 		category: "Code",
-		color: "#10b981",
+		color: "#35d492",
 	},
-	{ id: "math", label: "E = mc²", category: "Physics", color: "#f59e0b" },
+	{ id: "math", label: "E = mc²", category: "Physics", color: "#f5a623" },
 	{
 		id: "geo",
 		label: "Alcatraz Island",
 		category: "Geography",
-		color: "#3b82f6",
+		color: "#4c9ef5",
 	},
-	{ id: "code", label: "import torch", category: "Code", color: "#10b981" },
-	{ id: "math", label: "F = ma", category: "Physics", color: "#f59e0b" },
+	{ id: "code", label: "import torch", category: "Code", color: "#35d492" },
+	{ id: "math", label: "F = ma", category: "Physics", color: "#f5a623" },
 ];
 
 const MappingTheMindSimulation: React.FC = () => {
@@ -81,7 +81,7 @@ const MappingTheMindSimulation: React.FC = () => {
 									backgroundColor: isRunning
 										? `rgba(255, 255, 255, ${state.neuronActivation})`
 										: "transparent",
-									borderColor: isRunning ? "#fff" : "#334155",
+									borderColor: isRunning ? "#fff" : "#22272f",
 									boxShadow: isRunning
 										? "0 0 20px rgba(255,255,255,0.2)"
 										: "none",
