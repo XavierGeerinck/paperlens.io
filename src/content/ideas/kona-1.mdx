@@ -107,6 +107,10 @@ The probability of a thought $z$ being correct is given by the Gibbs-Boltzmann d
   ]}
 />
 
+## Related: Iterating Without an Energy Function
+
+Kona reaches its answer by minimising an energy in latent space. [Recirculation](/idea/recirculation-inference-time-recurrence/) reaches for the same extra serial computation with no energy function and no new parameters at all: it feeds a deep layer's activation back into a shallow one and reruns the span on a frozen off-the-shelf model.
+
 ## Performance
 
 In the demos released on `logicalintelligence.com`, Kona solves "Evil" grade Sudoku puzzles in **14ms** on a single H100 GPU. This is achieved not by being smarter, but by being **differentiable**. It doesn't "search" the tree of possibilities; it "flows" to the answer.

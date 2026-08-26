@@ -158,6 +158,10 @@ Training is expensive. The meta-learning phase requires "gradients of gradients"
 
 However, the inference benefits are massive. TTT-E2E effectively solves the "Memory Wall" for LLMs, allowing us to treat context as a stream of training data that permanently improves the model's understanding for that session, rather than just filling a temporary buffer.
 
+## Related: Buying Serial Compute Without Touching Weights
+
+TTT buys extra computation by letting the weights move at inference. [Recirculation](/idea/recirculation-inference-time-recurrence/) buys it a different way — leaking a deep layer's activations back into a shallow one and rerunning that span, with the model entirely frozen. Same diagnosis (one forward pass is not enough serial computation), opposite prescription.
+
 ## Conclusion
 
 By rewriting the definition of "memory" from "storage" to "learning," TTT-E2E offers a path to models that truly learn from long context without the computational explosion of attention mechanisms. It mimics biological learning: we don't remember every pixel of every frame we've ever seen, but our neural weights update to understand the world better with every second.

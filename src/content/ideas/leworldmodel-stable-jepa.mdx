@@ -27,7 +27,7 @@ Joint-Embedding Predictive Architectures (JEPAs) are the dominant proposal for b
 
 # The Generative Trap, Recap
 
-Our [JEPA primer]([[jepa-world-models]]) makes the case for predicting in representation space instead of pixel space. The short version: generative world models waste capacity hallucinating texture and lighting that don't affect the outcome of the action the agent cares about. JEPAs sidestep this by predicting an abstract latent $z_{t+1}$ from $z_t$, leaving the unpredictable details outside the loss.
+Our [JEPA primer](/idea/jepa-world-models/) makes the case for predicting in representation space instead of pixel space. The short version: generative world models waste capacity hallucinating texture and lighting that don't affect the outcome of the action the agent cares about. JEPAs sidestep this by predicting an abstract latent $z_{t+1}$ from $z_t$, leaving the unpredictable details outside the loss.
 
 The price of that abstraction is well known. Once the latent target $z_{t+1}$ comes from the *same network* you are training, the network can trivially make $z_t = z_{t+1} = 0$ everywhere and declare victory. The literature has accumulated a sequence of defences against this.
 
