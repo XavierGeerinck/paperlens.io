@@ -214,6 +214,19 @@ async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: bool
 
 			const choice = completion.choices[0];
 			const text = choice?.message?.content ?? "";
+
+			// `slug` may be a router (openrouter/free, openrouter/auto), in which case
+			// the model that actually answered is the only thing that explains the
+			// output quality. Always say which one it was.
+			const served = (completion as { model?: string }).model;
+			if (served && served !== slug) {
+				console.error(`  · ${slug} routed to ${served}`);
+			}
+			const usage = (completion as { usage?: { completion_tokens?: number } }).usage;
+			if (usage?.completion_tokens) {
+				console.error(`  · ${usage.completion_tokens} completion tokens`);
+			}
+
 			if (!text.trim()) throw new Error("Model returned an empty reply.");
 
 			if (choice?.finish_reason === "length") {
