@@ -153,6 +153,15 @@ async function askRaw(opts: AskOptions): Promise<{ text: string }> {
 				attempt--; // the retry budget is for real failures, not this downgrade
 				continue;
 			}
+
+			// Only transient failures are worth repeating. A 402 for credits, a 401
+			// for a bad key or a 404 for a bad slug will fail identically every time,
+			// and retrying only obscures the real message.
+			const status = (err as { status?: number })?.status;
+			const transient = status === undefined || status === 408 || status === 429 || status >= 500;
+			if (!transient) {
+				throw new Error(`Model call failed (${slug}, HTTP ${status}): ${message}`);
+			}
 			if (attempt < retries) {
 				await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
 				continue;
