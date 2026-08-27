@@ -154,3 +154,7 @@ def closed_loop_control(model, env, horizon=4):
     -   **DreamZero Success**: The right screen flashes **"COLLISION"**. The predicted ghost arm stops at the point of impact. The World Action Model has successfully "dreamt" the crash and alerted the controller *before* taking the action.
 
 4.  **Why This Matters**: Standard policies need to be retrained for every new obstacle. DreamZero uses its internal physics engine (trained on massive video data) to generalize zero-shot: it knows "solid things stop movement" even if it's never seen *this specific red box* before.
+
+## Related
+
+[EchoWM: Enterable Omnimodal World Models with Unified Camera Intent](/idea/echowm-omnimodal-world-model/) covers a closely related mechanism.
