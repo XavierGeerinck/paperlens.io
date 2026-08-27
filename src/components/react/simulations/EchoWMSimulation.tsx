@@ -1,277 +1,460 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  SchematicCard,
-  SchematicButton,
-  DataReadout,
-  TechBadge,
-} from '../SketchElements';
-import {
-  ToggleLeft,
-  SliderHorizontal,
-  Video,
-  Speaker,
-  Mic,
-  Cube,
-  Activity,
-} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Play, Pause, RotateCcw, Undo2 } from "lucide-react";
+import { SchematicCard, SchematicButton, DataReadout, TechBadge } from "../SketchElements";
 
-const mulberry32 = (seed: number) => {
-  return () => {
-    let t = seed += 0x6d2b79f5;
-    t = Math.imul(t ^ (t >>> 15), 1 | t);
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-};
+// ---------------------------------------------------------------------------
+// Deterministic RNG (mulberry32). Keeps every figure identical on every load.
+// ---------------------------------------------------------------------------
+function rng(seed: number) {
+	let s = seed >>> 0;
+	return () => {
+		s = (s + 0x6d2b79f5) >>> 0;
+		let t = s;
+		t = Math.imul(t ^ (t >>> 15), t | 1);
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
 
-type Mode = 'first' | 'third';
+// ---------------------------------------------------------------------------
+// A toy of the interface, not of the model.
+//
+// EchoWM's claim is that one signal — camera intent — is enough to drive an
+// enterable world. Two things follow from that, and both are visible here:
+//
+//   1. Discrete commands ("move forward") and continuous poses are not separate
+//      control paths. Both are mapped into a single relative 6-DoF trajectory,
+//      and every modality is generated from that one trajectory at once.
+//
+//   2. That trajectory is metric-scale. Training data comes from sources whose
+//      native units disagree wildly, so "forward" would otherwise mean a
+//      different distance depending on which dataset an example came from.
+//      Dataset-level calibration is what makes the interface mean one thing.
+//
+// Nothing here generates video or audio. The lanes show *when* each modality is
+// produced relative to the trajectory, which is the synchronisation claim.
+// ---------------------------------------------------------------------------
+
+type CmdKind = "fwd" | "back" | "left" | "right" | "up" | "down";
+
+const COMMANDS: { kind: CmdKind; label: string }[] = [
+	{ kind: "fwd", label: "forward" },
+	{ kind: "back", label: "back" },
+	{ kind: "left", label: "turn left" },
+	{ kind: "right", label: "turn right" },
+	{ kind: "up", label: "rise" },
+	{ kind: "down", label: "descend" },
+];
+
+/** Heterogeneous training sources, with the step size each one natively uses. */
+const SOURCES = [
+	{ key: "aerial", label: "aerial capture", native: 2.4, color: "var(--purple)" },
+	{ key: "indoor", label: "indoor walkthrough", native: 0.45, color: "var(--orange)" },
+	{ key: "engine", label: "game engine", native: 1.0, color: "var(--aqua)" },
+];
+
+const MODALITIES = [
+	{ key: "video", label: "720p video", color: "var(--green)" },
+	{ key: "ambient", label: "environmental sound", color: "var(--aqua)" },
+	{ key: "music", label: "music", color: "var(--purple)" },
+	{ key: "speech", label: "speech", color: "var(--orange)" },
+];
+
+const DEFAULT_SEQUENCE: CmdKind[] = ["fwd", "fwd", "right", "fwd", "left", "fwd", "fwd", "left", "fwd", "right", "fwd"];
+
+interface Pose {
+	x: number;
+	y: number;
+	z: number;
+	yaw: number;
+}
+
+/**
+ * Fold a command sequence into a 6-DoF trajectory at one source's native scale.
+ * Calibration replaces that native scale with the shared metric one.
+ */
+function trajectory(seq: CmdKind[], step: number, jitterSeed: number): Pose[] {
+	const r = rng(jitterSeed);
+	const out: Pose[] = [{ x: 0, y: 0, z: 0, yaw: 0 }];
+
+	for (const kind of seq) {
+		const prev = out[out.length - 1];
+		// Real capture is never exact; a little per-step noise keeps the paths honest.
+		const noise = 1 + (r() - 0.5) * 0.08;
+		const d = step * noise;
+		const next: Pose = { ...prev };
+
+		if (kind === "fwd" || kind === "back") {
+			const sign = kind === "fwd" ? 1 : -1;
+			next.x = prev.x + Math.cos(prev.yaw) * d * sign;
+			next.z = prev.z + Math.sin(prev.yaw) * d * sign;
+		} else if (kind === "left") {
+			next.yaw = prev.yaw - Math.PI / 4;
+		} else if (kind === "right") {
+			next.yaw = prev.yaw + Math.PI / 4;
+		} else if (kind === "up") {
+			next.y = prev.y + d * 0.6;
+		} else {
+			next.y = prev.y - d * 0.6;
+		}
+		out.push(next);
+	}
+	return out;
+}
+
+function pathLength(poses: Pose[]): number {
+	let total = 0;
+	for (let i = 1; i < poses.length; i++) {
+		const a = poses[i - 1];
+		const b = poses[i];
+		total += Math.hypot(b.x - a.x, b.z - a.z, b.y - a.y);
+	}
+	return total;
+}
+
+// ---------------------------------------------------------------------------
 
 const EchoWMSimulation: React.FC = () => {
-  const [mode, setMode] = useState<Mode>('first');
-  const [calibration, setCalibration] = useState(1); // 0.5 - 2.0
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [pathPoints, setPathPoints] = useState<{ x: number; z: number }[]>([]);
-  const [modalities, setModalities] = useState<string[]>([]);
-  const [drawProgress, setDrawProgress] = useState(0); // 0..1
-  const rng = useRef(mulberry32(0x12345678));
+	const [seq, setSeq] = useState<CmdKind[]>(DEFAULT_SEQUENCE);
+	const [calibrated, setCalibrated] = useState(true);
+	const [thirdPerson, setThirdPerson] = useState(false);
+	const [playing, setPlaying] = useState(true);
+	const [head, setHead] = useState(0);
 
-  // Detect prefers-reduced-motion
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mq.matches);
-    const handler = () => setReducedMotion(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const wrapRef = useRef<HTMLDivElement>(null);
+	const [width, setWidth] = useState(560);
 
-  // Recompute path when mode or calibration changes
-  useEffect(() => {
-    const steps = [
-      { type: 'forward' as const, label: 'Move Forward' },
-      { type: 'turnLeft' as const, label: 'Turn Left' },
-      { type: 'forward' as const, label: 'Move Forward' },
-      { type: 'turnRight' as const, label: 'Turn Right' },
-      { type: 'forward' as const, label: 'Move Forward' },
-    ];
+	const paths = useMemo(
+		() =>
+			SOURCES.map((s, i) => ({
+				...s,
+				poses: trajectory(seq, calibrated ? 1.0 : s.native, 0x51ed + i * 977),
+			})),
+		[seq, calibrated],
+	);
 
-    const points: { x: number; z: number }[] = [{ x: 0, z: 0 }];
-    let yaw = 0;
-    const baseForward = 0.5;
-    const baseTurn = 0.2;
+	const lengths = paths.map((p) => pathLength(p.poses));
+	const spread = lengths.length
+		? ((Math.max(...lengths) - Math.min(...lengths)) / Math.max(...lengths)) * 100
+		: 0;
 
-    steps.forEach((step) => {
-      const jitter = (rng.current() - 0.5) * 0.2; // -0.1..0.1
-      const jitterTurn = (rng.current() - 0.5) * 0.1; // -0.05..0.05
-      let forward = (baseForward + jitter) * calibration;
-      let turn = (baseTurn + jitterTurn) * calibration;
+	// --- responsive canvas: fill the pane, never overflow it -----------------
+	useEffect(() => {
+		if (typeof window === "undefined" || !wrapRef.current) return;
+		const el = wrapRef.current;
+		const measure = () => setWidth(el.clientWidth || 560);
+		measure();
+		const ro = new ResizeObserver(measure);
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
 
-      if (step.type === 'forward') {
-        const dx = forward * Math.cos(yaw);
-        const dz = forward * Math.sin(yaw);
-        const last = points[points.length - 1];
-        points.push({ x: last.x + dx, z: last.z + dz });
-      } else if (step.type === 'turnLeft') {
-        yaw -= turn;
-      } else if (step.type === 'turnRight') {
-        yaw += turn;
-      }
-    });
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+			setPlaying(false);
+			setHead(seq.length);
+		}
+	}, [seq.length]);
 
-    setPathPoints(points);
+	useEffect(() => {
+		if (!playing) return;
+		const id = window.setInterval(() => setHead((h) => (h >= seq.length ? 0 : h + 1)), 420);
+		return () => window.clearInterval(id);
+	}, [playing, seq.length]);
 
-    // Assign modalities cyclically: video, sound, speech
-    const mods: string[] = [];
-    const cycle = ['video', 'sound', 'speech'];
-    for (let i = 0; i < points.length - 1; i++) {
-      mods.push(cycle[i % cycle.length]);
-    }
-    setModalities(mods);
-  }, [mode, calibration]);
+	useEffect(() => setHead(seq.length), [seq]);
 
-  // Animation loop for drawing progress
-  useEffect(() => {
-    if (pathPoints.length < 2) return;
-    if (reducedMotion) {
-      setDrawProgress(1);
-      return;
-    }
-    let startTime: number | null = null;
-    const duration = 3000; // ms
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      setDrawProgress(progress);
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-    return () => {
-      startTime = null;
-    };
-  }, [pathPoints.length, reducedMotion]);
+	// --- the top-down map ----------------------------------------------------
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
 
-  // Draw on canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+		const height = Math.round(Math.min(300, Math.max(200, width * 0.42)));
+		const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+		canvas.width = width * dpr;
+		canvas.height = height * dpr;
+		canvas.style.width = `${width}px`;
+		canvas.style.height = `${height}px`;
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Resize canvas to container size
-    const container = containerRef.current;
-    if (!container) return;
-    const dpr = window.devicePixelRatio || 1;
-    const width = container.clientWidth * 0.9;
-    const height = container.clientWidth * 0.9; // square
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, height);
+		const css = getComputedStyle(document.documentElement);
+		const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+		/** "var(--purple)" -> "#8b6cf2". Canvas needs a resolved colour. */
+		const resolve = (token: string, fallback: string) => {
+			const m = token.match(/var\((--[\w-]+)\)/);
+			return m ? v(m[1], fallback) : token;
+		};
 
-    if (pathPoints.length < 2) return;
+		ctx.clearRect(0, 0, width, height);
+		ctx.fillStyle = v("--bg0h", "#080a0d");
+		ctx.fillRect(0, 0, width, height);
 
-    // Normalize points to fit canvas with padding
-    const xs = pathPoints.map((p) => p.x);
-    const zs = pathPoints.map((p) => p.z);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minZ = Math.min(...zs);
-    const maxZ = Math.max(...zs);
-    const pad = 20;
-    const widthUsable = width - pad * 2;
-    const heightUsable = height - pad * 2;
-    const rangeX = maxX - minX || 1;
-    const rangeZ = maxZ - minZ || 1;
-    const scale = Math.min(widthUsable / rangeX, heightUsable / rangeZ);
+		// Fit every path, so switching calibration visibly changes the extent.
+		const all = paths.flatMap((p) => p.poses);
+		const xs = all.map((p) => p.x);
+		const zs = all.map((p) => p.z);
+		const pad = 26;
+		const minX = Math.min(...xs);
+		const maxX = Math.max(...xs);
+		const minZ = Math.min(...zs);
+		const maxZ = Math.max(...zs);
+		const scale = Math.min(
+			(width - pad * 2) / Math.max(maxX - minX, 0.001),
+			(height - pad * 2) / Math.max(maxZ - minZ, 0.001),
+		);
+		const cx = width / 2 - ((minX + maxX) / 2) * scale;
+		const cy = height / 2 - ((minZ + maxZ) / 2) * scale;
+		const px = (p: Pose) => [p.x * scale + cx, p.z * scale + cy] as const;
 
-    const toCanvasX = (x: number) => pad + (x - minX) * scale;
-    const toCanvasZ = (z: number) => pad + (maxZ - z) * scale; // flip Z for screen Y
+		// Metric grid — one line per metre, so scale is readable rather than implied.
+		ctx.strokeStyle = v("--bg2", "#22272f");
+		ctx.lineWidth = 1;
+		const gridStep = Math.max(scale, 12);
+		for (let gx = cx % gridStep; gx < width; gx += gridStep) {
+			ctx.beginPath();
+			ctx.moveTo(gx, 0);
+			ctx.lineTo(gx, height);
+			ctx.stroke();
+		}
+		for (let gy = cy % gridStep; gy < height; gy += gridStep) {
+			ctx.beginPath();
+			ctx.moveTo(0, gy);
+			ctx.lineTo(width, gy);
+			ctx.stroke();
+		}
 
-    const drawUpTo = Math.floor(drawProgress * (pathPoints.length - 1));
-    ctx.beginPath();
-    ctx.strokeStyle = 'var(--fg)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i <= drawUpTo; i++) {
-      const p = pathPoints[i];
-      const cx = toCanvasX(p.x);
-      const cz = toCanvasZ(p.z);
-      if (i === 0) ctx.moveTo(cx, cz);
-      else ctx.lineTo(cx, cz);
-    }
-    ctx.stroke();
+		const shown = Math.max(1, head);
 
-    // Draw points
-    ctx.fillStyle = 'var(--orange)';
-    for (let i = 0; i <= drawUpTo; i++) {
-      const p = pathPoints[i];
-      const cx = toCanvasX(p.x);
-      const cz = toCanvasZ(p.z);
-      ctx.beginPath();
-      ctx.arc(cx, cz, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
+		paths.forEach((path, idx) => {
+			const poses = path.poses.slice(0, shown + 1);
+			if (poses.length < 2) return;
 
-    // Draw start and end markers
-    ctx.fillStyle = 'var(--green)';
-    const start = pathPoints[0];
-    ctx.beginPath();
-    ctx.arc(toCanvasX(start.x), toCanvasZ(start.z), 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'var(--red)';
-    const end = pathPoints[drawUpTo];
-    ctx.beginPath();
-    ctx.arc(toCanvasX(end.x), toCanvasZ(end.z), 5, 0, Math.PI * 2);
-    ctx.fill();
-  }, [pathPoints, drawProgress]);
+			// Nudge each strand sideways so coincident paths stay individually
+			// readable; the offset is in screen pixels and never changes the geometry.
+			const off = (idx - (paths.length - 1) / 2) * 2.6;
 
-  // What to try block
-  const whatToTry = (
-    <div className="mt-4 text-sm text-ink">
-      <strong>What to try:</strong> Switch between first‑ and third‑person
-      modes, move the calibration slider, and observe how the same command
-      sequence yields a consistent trajectory length. The timeline below shows
-      which modality (video, sound, speech) would be generated at each step.
-    </div>
-  );
+			const stroke = resolve(path.color, "#98a2ae");
+			ctx.strokeStyle = stroke;
+			ctx.lineWidth = 2.4;
+			ctx.lineJoin = "round";
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			poses.forEach((p, i) => {
+				const [x, y] = px(p);
+				if (i === 0) ctx.moveTo(x, y + off);
+				else ctx.lineTo(x, y + off);
+			});
+			ctx.stroke();
 
-  // Note about toy nature
-  const note = (
-    <div className="mt-3 text-xs text-mute">
-      This is a toy abstraction; the paper’s real measured numbers are left to
-      the entry.
-    </div>
-  );
+			// The observer, with its heading — this is the camera intent made visible.
+			const last = poses[poses.length - 1];
+			const [hx0, hy0] = px(last);
+			const hx = hx0;
+			const hy = hy0 + off;
+			ctx.fillStyle = stroke;
+			ctx.beginPath();
+			ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
+			ctx.fill();
 
-  return (
-    <SchematicCard title="EchoWM Control Unification" className="w-full max-w-xl">
-      <div className="space-y-4">
-        {/* Controls */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <TechBadge label="Camera Mode">
-              {mode === 'first' ? 'First‑Person' : 'Third‑Person'}
-            </TechBadge>
-            <SchematicButton
-              onClick={() => setMode(mode === 'first' ? 'third' : 'first')}
-              label="Toggle Mode"
-              icon={ToggleLeft}
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <TechBadge label="Motion Calibration">
-              {calibration.toFixed(2)}×
-            </TechBadge>
-            <input
-              type="range"
-              min={0.5}
-              max={2}
-              step={0.05}
-              value={calibration}
-              onChange={(e) => setCalibration(parseFloat(e.target.value))}
-              className="flex-1 h-1"
-            />
-          </div>
-        </div>
+			ctx.strokeStyle = stroke;
+			ctx.lineWidth = 1.5;
+			ctx.beginPath();
+			ctx.moveTo(hx, hy);
+			ctx.lineTo(hx + Math.cos(last.yaw) * 14, hy + Math.sin(last.yaw) * 14);
+			ctx.stroke();
 
-        {/* 3D Viewport */}
-        <div className="relative w-full">
-          <div ref={containerRef} className="w-full aspect-[1/1] bg-bg1 rounded overflow-hidden">
-            <canvas ref={canvasRef} className="absolute inset-0" aria-hidden="true" />
-          </div>
-        </div>
+			// In third person the camera trails the subject rather than being it.
+			if (thirdPerson) {
+				const ox = hx - Math.cos(last.yaw) * 30;
+				const oy = hy - Math.sin(last.yaw) * 30;
+				ctx.globalAlpha = 0.5;
+				ctx.setLineDash([3, 3]);
+				ctx.beginPath();
+				ctx.moveTo(ox, oy);
+				ctx.lineTo(hx, hy);
+				ctx.stroke();
+				ctx.setLineDash([]);
+				ctx.strokeRect(ox - 3, oy - 3, 6, 6);
+				ctx.globalAlpha = 1;
+			}
+		});
 
-        {/* Timeline Strip */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-[12px] font-mono text-ink4">
-            <TechBadge label="Modality Timeline" />
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {modalities.map((mod, idx) => {
-              let color = 'var(--fg2)';
-              if (mod === 'video') color = 'var(--green)';
-              else if (mod === 'sound') color = 'var(--orange)';
-              else if (mod === 'speech') color = 'var(--purple)';
-              return (
-                <div
-                  key={idx}
-                  className={`w-2 h-2 rounded bg-${color.replace(
-                    'var(--',
-                    ''
-                  ).replace(')', '')}`}
-                />
-              );
-            })}
-          </div>
-        </div>
+		// Scale bar: one metre, so "metric-scale" is something you can measure.
+		ctx.strokeStyle = v("--fg4", "#6b7583");
+		ctx.fillStyle = v("--fg4", "#6b7583");
+		ctx.lineWidth = 1;
+		const barY = height - 14;
+		ctx.beginPath();
+		ctx.moveTo(14, barY);
+		ctx.lineTo(14 + scale, barY);
+		ctx.moveTo(14, barY - 3);
+		ctx.lineTo(14, barY + 3);
+		ctx.moveTo(14 + scale, barY - 3);
+		ctx.lineTo(14 + scale, barY + 3);
+		ctx.stroke();
+		ctx.font = "10px ui-monospace, monospace";
+		ctx.fillText("1 m", 18 + scale, barY + 3);
+	}, [paths, width, head, calibrated, thirdPerson]);
 
-        {whatToTry}
-        {note}
-      </div>
-    </SchematicCard>
-  );
+	const push = (kind: CmdKind) => setSeq((s) => [...s, kind].slice(-16));
+
+	return (
+		<div className="flex flex-col gap-4">
+			<SchematicCard
+				title="ECHOWM · one camera intent, every modality"
+				status={`${thirdPerson ? "third" : "first"} person · ${calibrated ? "calibrated" : "raw source units"}`}
+			>
+				<p className="text-[12.5px] text-ink2 leading-relaxed mb-3">
+					Three training sources run the <span className="text-ink">same command sequence</span>. Their native
+					units disagree — an aerial clip's “forward” covers far more ground than an indoor walkthrough's. The
+					shared 6-DoF trajectory is what makes one command mean one thing.
+				</p>
+
+				<div ref={wrapRef} className="w-full">
+					<canvas ref={canvasRef} className="block rounded border border-bg2" />
+				</div>
+
+				<div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] font-mono">
+					{paths.map((p, i) => (
+						<span key={p.key} className="flex items-center gap-1.5">
+							<span className="inline-block w-2.5 h-2.5 rounded-[1px]" style={{ background: p.color }} />
+							<span className="text-mute">{p.label}</span>
+							<span className="text-ink1 tabular-nums">{lengths[i].toFixed(1)} m</span>
+						</span>
+					))}
+				</div>
+			</SchematicCard>
+
+			<div className="grid gap-4 md:grid-cols-2">
+				<SchematicCard title="CAMERA INTENT">
+					<span className="text-[11px] font-mono text-mute block mb-1.5">discrete commands</span>
+					<div className="flex flex-wrap gap-1.5 mb-4">
+						{COMMANDS.map((c) => (
+							<SchematicButton key={c.kind} onClick={() => push(c.kind)}>
+								{c.label}
+							</SchematicButton>
+						))}
+					</div>
+
+					<div className="flex flex-wrap gap-2 mb-4">
+						<SchematicButton active={calibrated} onClick={() => setCalibrated((v) => !v)}>
+							dataset calibration {calibrated ? "on" : "off"}
+						</SchematicButton>
+						<SchematicButton active={thirdPerson} onClick={() => setThirdPerson((v) => !v)}>
+							{thirdPerson ? "third person" : "first person"}
+						</SchematicButton>
+					</div>
+
+					<div className="flex flex-wrap gap-2">
+						<SchematicButton onClick={() => setPlaying((p) => !p)} icon={playing ? Pause : Play}>
+							{playing ? "pause" : "play"}
+						</SchematicButton>
+						<SchematicButton onClick={() => setSeq((s) => s.slice(0, -1))} icon={Undo2} disabled={seq.length < 2}>
+							undo
+						</SchematicButton>
+						<SchematicButton
+							onClick={() => {
+								setSeq(DEFAULT_SEQUENCE);
+								setCalibrated(true);
+								setThirdPerson(false);
+							}}
+							icon={RotateCcw}
+						>
+							reset
+						</SchematicButton>
+					</div>
+
+					<div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-4 pt-3 border-t border-bg2">
+						<DataReadout label="commands" value={`${seq.length}`} />
+						<DataReadout
+							label="path-length spread"
+							value={
+								<span style={{ color: spread > 5 ? "var(--red)" : "var(--green)" }}>
+									{spread.toFixed(0)}%
+								</span>
+							}
+						/>
+					</div>
+					<p className="text-[11px] font-mono text-mute mt-2">
+						{calibrated
+							? "one metric scale — the same command travels the same distance in every source"
+							: "raw source units — the same command means a different distance in each source"}
+					</p>
+				</SchematicCard>
+
+				<SchematicCard title="MODALITIES" status="generated together">
+					<p className="text-[12px] text-ink2 leading-relaxed mb-3">
+						Every modality is produced from the same trajectory step, not stitched together afterwards. The
+						playhead is the step being generated.
+					</p>
+
+					<div className="flex flex-col gap-2">
+						{MODALITIES.map((m) => (
+							<div key={m.key}>
+								<div className="flex items-baseline justify-between mb-1">
+									<span className="text-[11px] font-mono" style={{ color: m.color }}>
+										{m.label}
+									</span>
+								</div>
+								<div className="flex gap-[2px]">
+									{seq.map((_, i) => (
+										<div
+											key={i}
+											className="flex-1 rounded-[1px]"
+											style={{
+												height: 14,
+												minWidth: 3,
+												background: m.color,
+												opacity: i < head ? 0.85 : 0.13,
+												outline: i === head - 1 ? "1px solid var(--fg)" : undefined,
+											}}
+										/>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+
+					<div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-4 pt-3 border-t border-bg2">
+						<DataReadout label="step" value={`${head} / ${seq.length}`} />
+						<DataReadout label="in sync" value={<span className="text-mint-400">4 / 4 modalities</span>} />
+					</div>
+				</SchematicCard>
+			</div>
+
+			<SchematicCard title="WHAT TO TRY">
+				<ul className="text-[12.5px] text-ink2 leading-relaxed flex flex-col gap-2">
+					<li>
+						<TechBadge label="calibration off" /> — the three paths fan apart and the spread jumps. The same
+						command sequence now traces a different route in every source, which is the problem calibration
+						exists to solve.
+					</li>
+					<li>
+						<TechBadge label="add commands" /> — every button writes into the same 6-DoF trajectory. There is no
+						separate path for discrete commands and continuous poses; that unification is the paper's interface
+						claim.
+					</li>
+					<li>
+						<TechBadge label="third person" /> — the camera detaches and trails the subject. The trajectory does
+						not change, which is why no view-specific controller is needed.
+					</li>
+					<li>
+						<TechBadge label="watch the lanes" /> — all four modalities advance on the same step. Omnimodal means
+						generated together, not generated separately and aligned later.
+					</li>
+				</ul>
+				<p className="text-[11.5px] text-mute mt-4 leading-relaxed">
+					A toy of the control interface, not of the model. Nothing here generates video or audio, the source
+					scales are invented to make the calibration problem visible, and the paths are a 2D projection of a
+					6-DoF trajectory. The paper's measured results are in the entry above.
+				</p>
+			</SchematicCard>
+		</div>
+	);
 };
 
 export default EchoWMSimulation;
