@@ -15,10 +15,34 @@
 
 import OpenAI from "openai";
 
-export const DEFAULT_MODEL = "~anthropic/claude-opus-latest";
+/**
+ * Ordered fallback chain.
+ *
+ * Free models are individually capable but individually rate-limited: a single
+ * pinned slug returns 429 whenever that provider is saturated, and the router
+ * (openrouter/free) can hand back anything down to a 2.6B model with an 8k
+ * output cap — which produces a truncated stub rather than an entry. Trying
+ * capable models in order gets both capability and availability.
+ *
+ * Ordered by output budget and structured-output support, router last.
+ */
+export const DEFAULT_MODELS = [
+	"z-ai/glm-5.2:free",
+	"nvidia/nemotron-3-super-120b-a12b:free",
+	"dots-studio/dots-3-note-preview:free",
+	"minimax/minimax-m3:free",
+	"openrouter/free",
+];
+
+/** PAPERLENS_MODEL may be a single slug or a comma-separated chain. */
+export function models(): string[] {
+	const configured = process.env.PAPERLENS_MODEL?.trim();
+	if (!configured) return DEFAULT_MODELS;
+	return configured.split(",").map((m) => m.trim()).filter(Boolean);
+}
 
 export function model(): string {
-	return process.env.PAPERLENS_MODEL?.trim() || DEFAULT_MODEL;
+	return models()[0];
 }
 
 export function client(): OpenAI {
@@ -47,7 +71,7 @@ export function client(): OpenAI {
  * Fail early and loudly on a bad model slug rather than after a long harvest.
  * Suggests near matches, since OpenRouter slugs are easy to mistype.
  */
-export async function assertModelAvailable(slug = model()): Promise<void> {
+export async function assertModelAvailable(): Promise<void> {
 	const baseURL = process.env.OPENAI_API_URL?.trim() || "https://openrouter.ai/api/v1";
 	let ids: string[];
 	try {
@@ -58,14 +82,20 @@ export async function assertModelAvailable(slug = model()): Promise<void> {
 		return;
 	}
 
-	if (ids.includes(slug)) return;
+	const chain = models();
+	const missing = chain.filter((slug) => !ids.includes(slug));
 
-	const stem = slug.replace(/^~/, "").split("/")[0];
-	const near = ids.filter((id) => id.includes(stem)).slice(0, 12);
-	throw new Error(
-		`Model "${slug}" is not available at this endpoint.\n` +
-			(near.length ? `Close matches:\n  ${near.join("\n  ")}` : `No slugs matched "${stem}".`),
-	);
+	// Only a chain with nothing usable left is fatal; a stale entry just gets skipped.
+	if (missing.length === chain.length) {
+		const stem = chain[0].replace(/^~/, "").split("/")[0];
+		const near = ids.filter((id) => id.includes(stem)).slice(0, 12);
+		throw new Error(
+			`None of the configured models exist at this endpoint: ${chain.join(", ")}\n` +
+				(near.length ? `Close matches:\n  ${near.join("\n  ")}` : `No slugs matched "${stem}".`),
+		);
+	}
+	for (const slug of missing) console.error(`  ! ${slug} is not offered here; it will be skipped`);
+	console.error(`  · model chain: ${chain.filter((s) => ids.includes(s)).join(" → ")}`);
 }
 
 interface AskOptions {
@@ -179,9 +209,30 @@ export async function askJsonChecked<T = unknown>(opts: AskOptions): Promise<{ v
 }
 
 async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: boolean }> {
+	const chain = models();
+	let lastFailure: unknown;
+
+	for (let i = 0; i < chain.length; i++) {
+		const slug = chain[i];
+		try {
+			return await askOne(opts, slug);
+		} catch (err) {
+			lastFailure = err;
+			const status = (err as { status?: number })?.status;
+			const exhausted = status === 429 || status === 402 || status === 404 || status === 503;
+			if (exhausted && i < chain.length - 1) {
+				console.error(`  · ${slug} unavailable (HTTP ${status}); falling back to ${chain[i + 1]}`);
+				continue;
+			}
+			throw err;
+		}
+	}
+	throw lastFailure instanceof Error ? lastFailure : new Error(String(lastFailure));
+}
+
+async function askOne(opts: AskOptions, slug: string): Promise<{ text: string; truncated: boolean }> {
 	const { system, user, schema, maxTokens = 16000, temperature = 0.3, retries = 2 } = opts;
 	const api = client();
-	const slug = model();
 
 	// Some slugs reject response_format outright; drop it and lean on the prompt.
 	let useResponseFormat = Boolean(schema);
@@ -263,10 +314,12 @@ async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: bool
 				const retryAfter = Number(
 					(err as { headers?: Record<string, string> })?.headers?.["retry-after"] ?? NaN,
 				);
+				// A 429 means this provider is saturated; the chain moves on rather
+				// than waiting minutes here, so keep the in-model pause short.
 				const wait = Number.isFinite(retryAfter)
-					? retryAfter * 1000
+					? Math.min(retryAfter * 1000, 20_000)
 					: status === 429
-						? 30_000 * (attempt + 1)
+						? 5000 * (attempt + 1)
 						: 2000 * (attempt + 1);
 				console.error(`    waiting ${Math.round(wait / 1000)}s before retrying`);
 				await new Promise((r) => setTimeout(r, wait));
