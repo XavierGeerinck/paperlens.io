@@ -82,3 +82,7 @@ flowchart LR
         style S_y_pred stroke:#f00,stroke-width:2px
         style S_y stroke:#0f0,stroke-width:2px
     end
+
+## Related
+
+[EchoWM: Enterable Omnimodal World Models with Unified Camera Intent](/idea/echowm-omnimodal-world-model/) covers a closely related mechanism.

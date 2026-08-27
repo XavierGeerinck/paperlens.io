@@ -157,3 +157,7 @@ The era of "Pure RL" and "Pure Autoregression" is ending. The future AGI archite
 4.  **Reasoning**: An online MPC Planner (ToT/DiffTORI) effectively "thinking" by simulating trajectories.
 
 In this paradigm, intelligence is defined not by static knowledge, but by the dynamic capacity to simulate, evaluate, and choose.
+
+## Related
+
+[EchoWM: Enterable Omnimodal World Models with Unified Camera Intent](/idea/echowm-omnimodal-world-model/) covers a closely related mechanism.
