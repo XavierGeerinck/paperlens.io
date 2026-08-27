@@ -346,8 +346,15 @@ async function askOne(opts: AskOptions, slug: string): Promise<{ text: string; t
 		}
 	}
 
-	throw new Error(
-		`Model call failed after ${retries + 1} attempts (${slug}): ` +
-			(lastError instanceof Error ? lastError.message : String(lastError)),
+	// Carry the status through: the fallback chain decides whether to move on by
+	// inspecting it, and a bare wrapper Error made every rate limit look like an
+	// unknown failure, so the chain gave up on the first model every time.
+	const aggregate = Object.assign(
+		new Error(
+			`Model call failed after ${retries + 1} attempts (${slug}): ` +
+				(lastError instanceof Error ? lastError.message : String(lastError)),
+		),
+		{ status: (lastError as { status?: number })?.status },
 	);
+	throw aggregate;
 }

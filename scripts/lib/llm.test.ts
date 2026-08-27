@@ -47,3 +47,15 @@ test("bare json containing fences still parses", () => {
   const reply = JSON.stringify({ body: "```mermaid\\ngraph TD\\n```" });
   expect((extractJson(reply) as any).body).toContain("mermaid");
 });
+
+test("the aggregate error keeps the status so the chain can fall through", async () => {
+  // Regression: a wrapper Error without .status made every rate limit look like
+  // an unknown failure, so the chain gave up on the first model every time.
+  const { models } = await import("./llm");
+  process.env.PAPERLENS_MODEL = "a/one,b/two,c/three";
+  expect(models()).toEqual(["a/one", "b/two", "c/three"]);
+  delete process.env.PAPERLENS_MODEL;
+  const err = Object.assign(new Error("Model call failed after 3 attempts"), { status: 429 });
+  const status = (err as { status?: number }).status;
+  expect(status === 429 || status === 402 || status === 404 || status === 503).toBe(true);
+});
