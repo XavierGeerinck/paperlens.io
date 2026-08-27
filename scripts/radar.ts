@@ -37,7 +37,7 @@ interface Ranked {
 interface Verdict {
 	shortlist: Ranked[];
 	duplicates: { id: string; title: string; coveredBy: string; why: string }[];
-	pick: { id: string; why: string; beatOut: string; targetQuery: string };
+	pick: { id: string; why: string; beatOut: string; targetQuery: string; shortName?: string; oneLine?: string };
 }
 
 const SCHEMA = {
@@ -108,6 +108,23 @@ function arg(name: string, fallback?: string): string | undefined {
 	return i === -1 ? fallback : Bun.argv[i + 1];
 }
 
+/** ISO week, e.g. 2026-W35 — the same label the HuggingFace weekly pages use. */
+export function isoWeek(d = new Date()): string {
+	const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+	// Thursday of the current week determines the ISO year.
+	t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+	const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+	const week = Math.ceil(((t.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+	return `${t.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+/** GitHub shows roughly 90 characters before truncating; keep the suffix if it fits. */
+export function clampTitle(head: string, suffix: string, max = 90): string {
+	if (head.length + suffix.length <= max) return head + suffix;
+	if (head.length <= max) return head;
+	return head.slice(0, max - 1).trimEnd() + "…";
+}
+
 function catalogueDigest(entries: Entry[]): string {
 	return entries
 		.map((e) => `- ${e.slug} | ${e.title} | tags: ${e.tags.join(", ") || "—"} | arxiv: ${e.arxiv.join(", ") || "—"}`)
@@ -118,6 +135,7 @@ async function main() {
 	const days = Number(arg("days", "7"));
 	const top = Number(arg("top", "6"));
 	const out = arg("out");
+	const titleOut = arg("title-out");
 
 	await assertModelAvailable();
 	console.error(`# radar · last ${days} days · model ${model()}`);
@@ -182,6 +200,8 @@ async function main() {
 			"hard exclusions. Then name the single best paper to publish in \"pick\".",
 			"",
 			'For "targetQuery", give the actual search query the entry would be trying to win.',
+			'For "shortName", give the artefact name on its own — "EchoWM", not the full title.',
+			'For "oneLine", say what it does in under 60 lowercase characters, no trailing period.',
 			"Score search demand on the evidence you can see: a named artefact, upvote count,",
 			"a lab people follow. Be honest when a candidate is a system report.",
 			"",
@@ -266,15 +286,34 @@ async function main() {
 		"Reply `/build <arxiv-id>` on this issue to publish one.",
 	);
 
+	// "Paper radar" tells a reader nothing. Lead with the recommendation.
+	const shortName =
+		verdict.pick.shortName?.trim() ||
+		(picked?.title ?? "").split(/[:—-]/)[0].trim() ||
+		verdict.pick.id;
+	const oneLine = verdict.pick.oneLine?.trim().replace(/\.$/, "") ?? "";
+	const head = oneLine ? `${shortName} — ${oneLine}` : shortName;
+	const title = clampTitle(
+		`Radar ${isoWeek()} · ${head}`,
+		` · ${verdict.shortlist.length} of ${all.length}`,
+	);
+
 	const report = lines.join("\n");
 	if (out) {
 		await Bun.write(out, report);
 		console.error(`wrote ${out}`);
 	}
+	if (titleOut) {
+		await Bun.write(titleOut, title);
+		console.error(`wrote ${titleOut}: ${title}`);
+	}
+	console.error(`\ntitle: ${title}`);
 	console.log(report);
 }
 
-main().catch((err) => {
-	console.error(err instanceof Error ? err.message : String(err));
-	process.exit(1);
-});
+if (import.meta.main) {
+	main().catch((err) => {
+		console.error(err instanceof Error ? err.message : String(err));
+		process.exit(1);
+	});
+}

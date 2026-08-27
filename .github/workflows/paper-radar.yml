@@ -39,23 +39,31 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
           PAPERLENS_MODEL: ${{ vars.PAPERLENS_MODEL }}
-        run: bun scripts/radar.ts --days "${{ inputs.days || '7' }}" --out radar.md
+        run: bun scripts/radar.ts --days "${{ inputs.days || '7' }}" --out radar.md --title-out radar-title.txt
 
-      - name: Post to the radar issue
+      - name: Open the week's radar issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          NUM=$(gh issue list --state open --search "Paper radar in:title" \
-                  --json number,title --jq '[.[] | select(.title == "Paper radar")][0].number // empty')
+          TITLE=$(cat radar-title.txt)
+          echo "Title: $TITLE"
 
-          if [ -z "$NUM" ]; then
-            NUM=$(gh issue create --title "Paper radar" \
-              --body $'Running log of the weekly paper scan.\n\nEach comment is one week: what was scanned, what scored well, and what was dropped as already covered.\n\nReply `/build <arxiv-id>` on this issue to publish one.' \
-              --json number --jq .number 2>/dev/null \
-              || gh issue create --title "Paper radar" --body "Running log of the weekly paper scan. Reply \`/build <arxiv-id>\` to publish one." | grep -oE '[0-9]+$')
-            echo "created issue #$NUM"
+          # A label makes the whole series findable even as titles vary.
+          gh label create radar --color 0E8A16 --description "Weekly paper scan" 2>/dev/null || true
+
+          # Re-running in the same week updates that week's issue rather than
+          # opening a second one. The ISO week prefix is the identity.
+          WEEK=$(printf '%s' "$TITLE" | grep -oE '[0-9]{4}-W[0-9]{2}' | head -1)
+          NUM=$(gh issue list --state open --label radar --limit 50 \
+                  --json number,title --jq \
+                  "[.[] | select(.title | contains(\"$WEEK\"))][0].number // empty")
+
+          if [ -n "$NUM" ]; then
+            gh issue edit "$NUM" --title "$TITLE"
+            gh issue comment "$NUM" --body-file radar.md
+            echo "updated issue #$NUM"
+          else
+            URL=$(gh issue create --title "$TITLE" --label radar --body-file radar.md)
+            echo "opened $URL"
           fi
-
-          gh issue comment "$NUM" --body-file radar.md
-          echo "posted to issue #$NUM"
