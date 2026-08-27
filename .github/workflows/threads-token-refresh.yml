@@ -1,0 +1,87 @@
+name: Threads token refresh
+
+# A Threads long-lived token lasts 60 days and can only be refreshed while it is
+# still valid — one that lapses cannot be revived, only re-authorized by hand.
+#
+# This runs weekly rather than monthly on purpose: each refresh resets the full
+# 60 days, so roughly eight attempts happen before a token could ever expire and
+# a run of transient failures cannot quietly kill the integration.
+on:
+  schedule:
+    - cron: "0 5 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: threads-token-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Refresh and store
+        id: rotate
+        env:
+          # Needs a PAT: the built-in GITHUB_TOKEN cannot write secrets.
+          GH_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "GH_SECRETS_TOKEN is not set — cannot write the refreshed token back." >&2
+            echo "Add a fine-grained PAT with the repository Secrets permission set to read and write." >&2
+            exit 1
+          fi
+          bun scripts/threads-token.ts rotate
+
+      - name: Report a failure loudly
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="Threads token refresh failed"
+          NUM=$(gh issue list --state open --search "$TITLE in:title" \
+                  --json number,title --jq "[.[] | select(.title == \"$TITLE\")][0].number // empty")
+          BODY="The weekly Threads token refresh failed on $(date -u +%Y-%m-%d).
+
+          [Run log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          The long-lived token expires 60 days after its last successful refresh, and once it
+          lapses it cannot be refreshed — it has to be re-authorized from the Threads OAuth
+          window. There are several weekly attempts left before that happens, but if these keep
+          failing, re-authorize and run:
+
+          \`\`\`
+          bun scripts/threads-token.ts exchange --token <short-lived> --secret <app-secret>
+          gh secret set THREADS_ACCESS_TOKEN --body '<long-lived>'
+          \`\`\`"
+
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi
+
+      - name: Close the failure issue on success
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          NUM=$(gh issue list --state open --search "Threads token refresh failed in:title" \
+                  --json number,title --jq "[.[] | select(.title == \"Threads token refresh failed\")][0].number // empty")
+          if [ -n "$NUM" ]; then
+            gh issue close "$NUM" --comment "Refresh succeeded; token renewed for another 60 days."
+          fi

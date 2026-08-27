@@ -83,7 +83,7 @@ jobs:
         if: steps.find.outputs.slugs != ''
         env:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
-          THREADS_USER_ID: ${{ vars.THREADS_USER_ID }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID || vars.THREADS_USER_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
           PAPERLENS_MODEL: ${{ vars.PAPERLENS_MODEL }}

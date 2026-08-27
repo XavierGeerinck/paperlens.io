@@ -10,6 +10,7 @@
  *   bun scripts/threads-token.ts check     --token <long-lived>
  *   bun scripts/threads-token.ts exchange  --token <short-lived> --secret <app-secret>
  *   bun scripts/threads-token.ts refresh   --token <long-lived>
+ *   bun scripts/threads-token.ts rotate    --token <long-lived>   # refresh + store
  *
  * `--token` falls back to THREADS_ACCESS_TOKEN, `--secret` to THREADS_APP_SECRET.
  */
@@ -39,8 +40,8 @@ const command = Bun.argv[2];
 const token = arg("token") ?? process.env.THREADS_ACCESS_TOKEN;
 const secret = arg("secret") ?? process.env.THREADS_APP_SECRET;
 
-if (!command || !["check", "exchange", "refresh"].includes(command)) {
-	console.error("usage: bun scripts/threads-token.ts <check|exchange|refresh> [--token …] [--secret …]");
+if (!command || !["check", "exchange", "refresh", "rotate"].includes(command)) {
+	console.error("usage: bun scripts/threads-token.ts <check|exchange|refresh|rotate> [--token …] [--secret …]");
 	process.exit(2);
 }
 if (!token) {
@@ -80,6 +81,46 @@ try {
 		console.log(`refreshed (valid another ${days(out.expires_in ?? 0)}):\n`);
 		console.log(out.access_token);
 		console.log(`\n  gh secret set THREADS_ACCESS_TOKEN --body '${out.access_token}'`);
+	}
+	if (command === "rotate") {
+		// Unattended renewal. The new token must never reach the run log, so it
+		// is masked before it is used and written straight into the secret.
+		const out = await get("/refresh_access_token", {
+			grant_type: "th_refresh_token",
+			access_token: token,
+		});
+		const next = out.access_token as string;
+		if (!next) throw new Error(`No access_token in the refresh response: ${JSON.stringify(out)}`);
+
+		if (process.env.GITHUB_ACTIONS === "true") {
+			// Registers the value with the runner so it is redacted everywhere.
+			console.log(`::add-mask::${next}`);
+		}
+
+		const validFor = out.expires_in ?? 0;
+		if (next === token) {
+			console.error("The API returned the same token; nothing to store.");
+		} else {
+			const proc = Bun.spawnSync(["gh", "secret", "set", "THREADS_ACCESS_TOKEN"], {
+				stdin: new TextEncoder().encode(next),
+				stdout: "pipe",
+				stderr: "pipe",
+			});
+			if (proc.exitCode !== 0) {
+				throw new Error(
+					`Refreshed the token but could not store it: ${proc.stderr.toString().trim()}\n` +
+						"The PAT in GH_TOKEN needs the repository Secrets permission set to read and write.",
+				);
+			}
+			console.error("stored the refreshed token in THREADS_ACCESS_TOKEN");
+		}
+
+		console.error(`valid for another ${days(validFor)}`);
+		if (process.env.GITHUB_OUTPUT) {
+			// Must append: this file collects the outputs of every step.
+			const { appendFile } = await import("node:fs/promises");
+			await appendFile(process.env.GITHUB_OUTPUT, `valid_days=${Math.floor(validFor / 86400)}\n`);
+		}
 	}
 } catch (err) {
 	console.error(err instanceof Error ? err.message : String(err));
