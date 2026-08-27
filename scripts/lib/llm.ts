@@ -80,20 +80,81 @@ interface AskOptions {
 }
 
 /** Pull JSON out of a reply that may be fenced or prefaced with prose. */
-function extractJson(text: string): unknown {
+export function extractJson(text: string): unknown {
 	const trimmed = text.trim();
 	const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
 	const candidate = fenced ? fenced[1] : trimmed;
 
 	try {
 		return JSON.parse(candidate);
-	} catch {
-		// Fall back to the outermost balanced braces.
-		const start = candidate.indexOf("{");
-		const end = candidate.lastIndexOf("}");
-		if (start !== -1 && end > start) return JSON.parse(candidate.slice(start, end + 1));
-		throw new Error(`Reply was not JSON:\n${text.slice(0, 400)}`);
+	} catch {}
+
+	// Outermost balanced braces, for a reply wrapped in prose.
+	const start = candidate.indexOf("{");
+	const end = candidate.lastIndexOf("}");
+	if (start !== -1 && end > start) {
+		try {
+			return JSON.parse(candidate.slice(start, end + 1));
+		} catch {}
 	}
+
+	// Last resort: the reply was cut off mid-structure. Drop the incomplete
+	// trailing element and close whatever is still open. Recovering four of five
+	// ranked papers beats discarding the whole run.
+	if (start !== -1) {
+		const repaired = repairTruncatedJson(candidate.slice(start));
+		if (repaired) {
+			try {
+				return JSON.parse(repaired);
+			} catch {}
+		}
+	}
+
+	throw new Error(`Reply was not JSON. Tail of what came back:\n…${text.slice(-500)}`);
+}
+
+/** Close the open brackets of a truncated JSON document, discarding a partial tail. */
+function repairTruncatedJson(s: string): string | null {
+	const stack: string[] = [];
+	let inString = false;
+	let escaped = false;
+	/** index of the last `}`/`]` that closed a complete element near the top level */
+	let lastSafe = -1;
+
+	for (let i = 0; i < s.length; i++) {
+		const ch = s[i];
+		if (escaped) { escaped = false; continue; }
+		if (ch === "\\") { escaped = true; continue; }
+		if (ch === '"') { inString = !inString; continue; }
+		if (inString) continue;
+
+		if (ch === "{" || ch === "[") stack.push(ch);
+		else if (ch === "}" || ch === "]") {
+			stack.pop();
+			// A completed element inside an array is a safe place to cut.
+			if (stack.length <= 2) lastSafe = i;
+		}
+	}
+
+	// A truncation landing inside a string is fine: the incomplete trailing
+	// element is discarded at lastSafe anyway. Only the absence of any completed
+	// element makes the reply unsalvageable.
+	if (lastSafe === -1) return null;
+
+	// Re-walk to the cut point to learn what is still open there.
+	const head = s.slice(0, lastSafe + 1);
+	const open: string[] = [];
+	let str = false, esc = false;
+	for (const ch of head) {
+		if (esc) { esc = false; continue; }
+		if (ch === "\\") { esc = true; continue; }
+		if (ch === '"') { str = !str; continue; }
+		if (str) continue;
+		if (ch === "{" || ch === "[") open.push(ch);
+		else if (ch === "}" || ch === "]") open.pop();
+	}
+
+	return head + open.reverse().map((c) => (c === "{" ? "}" : "]")).join("");
 }
 
 export async function ask(opts: AskOptions): Promise<string> {
@@ -140,8 +201,15 @@ async function askRaw(opts: AskOptions): Promise<{ text: string }> {
 					: {}),
 			});
 
-			const text = completion.choices[0]?.message?.content ?? "";
+			const choice = completion.choices[0];
+			const text = choice?.message?.content ?? "";
 			if (!text.trim()) throw new Error("Model returned an empty reply.");
+
+			if (choice?.finish_reason === "length") {
+				console.error(
+					`  ! reply hit the ${maxTokens}-token cap and was truncated; attempting to salvage it`,
+				);
+			}
 			if (schema) extractJson(text); // validate parseability before returning
 			return { text };
 		} catch (err) {

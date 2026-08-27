@@ -142,7 +142,7 @@ async function main() {
 	}));
 	candidates = scored
 		.sort((a, b) => (b.c.upvotes ?? 0) - (a.c.upvotes ?? 0) || b.best - a.best)
-		.slice(0, 60)
+		.slice(0, 40)
 		.map((s) => s.c);
 
 	console.error(`  ${hardDropped.length} already covered by ID, ${candidates.length} sent for ranking`);
@@ -171,7 +171,7 @@ async function main() {
 					(c) =>
 						`## ${c.id} — ${c.title}\n` +
 						`upvotes: ${c.upvotes ?? 0} | published: ${c.published} | sources: ${c.sources.join(", ")}\n` +
-						`${c.abstract.slice(0, 1100)}`,
+						`${c.abstract.slice(0, 600)}`,
 				)
 				.join("\n\n"),
 			"",
@@ -184,9 +184,13 @@ async function main() {
 			'For "targetQuery", give the actual search query the entry would be trying to win.',
 			"Score search demand on the evidence you can see: a named artefact, upvote count,",
 			"a lab people follow. Be honest when a candidate is a system report.",
+			"",
+			"Keep every \"reason\" to one sentence under 140 characters, and \"why\" under 400.",
+			"Cap \"duplicates\" at 6 entries. Brevity matters: the reply must be complete,",
+			"valid JSON, and a truncated reply is worse than a terse one.",
 		].join("\n"),
 		schema: SCHEMA,
-		maxTokens: 8000,
+		maxTokens: 14000,
 	});
 
 	const picked = verdict.shortlist.find((s) => s.id === verdict.pick.id) ?? verdict.shortlist[0];

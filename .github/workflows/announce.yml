@@ -1,0 +1,101 @@
+name: Announce
+
+# Posts newly published entries to Threads.
+#
+# Runs after a successful Pages deploy rather than on push, so an entry is only
+# announced once its page is actually live. The script also HEADs the URL before
+# posting and refuses if it is not serving.
+on:
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Entry slug to announce (skips detection)"
+        required: true
+        type: string
+      post:
+        description: "Actually publish (unchecked = dry run)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: announce
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Find entries to announce
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLUG_INPUT: ${{ inputs.slug }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${SLUG_INPUT:-}" ]; then
+            echo "slugs=$SLUG_INPUT" >> "$GITHUB_OUTPUT"
+            echo "Announcing $SLUG_INPUT (manual)"
+            exit 0
+          fi
+
+          # Diff against the previous successful deploy so a push carrying several
+          # commits does not lose the entries added in the earlier ones.
+          PREV=$(gh run list --workflow=deploy.yml --status=success --limit 10 \
+                   --json headSha,databaseId --jq \
+                   "[.[] | select(.headSha != \"$HEAD_SHA\")][0].headSha // empty")
+
+          if [ -z "$PREV" ] || ! git cat-file -e "$PREV^{commit}" 2>/dev/null; then
+            echo "No usable previous deploy to diff against; falling back to the last commit."
+            PREV="$HEAD_SHA^"
+          fi
+
+          ADDED=$(git diff --name-only --diff-filter=A "$PREV" "$HEAD_SHA" -- src/content/ideas/ \
+                  | sed -E 's|src/content/ideas/||; s|\.mdx?$||' | tr '\n' ' ' | xargs || true)
+
+          echo "Added since $PREV: ${ADDED:-none}"
+          echo "slugs=$ADDED" >> "$GITHUB_OUTPUT"
+
+      - name: Post to Threads
+        if: steps.find.outputs.slugs != ''
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID: ${{ vars.THREADS_USER_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
+          PAPERLENS_MODEL: ${{ vars.PAPERLENS_MODEL }}
+          POST_FLAG: ${{ (github.event_name == 'workflow_dispatch' && inputs.post != true) && ' ' || '--post' }}
+        run: |
+          set -euo pipefail
+          for SLUG in ${{ steps.find.outputs.slugs }}; do
+            echo "::group::$SLUG"
+            bun scripts/announce.ts "$SLUG" $POST_FLAG
+            echo "::endgroup::"
+          done
+
+      - name: Nothing to do
+        if: steps.find.outputs.slugs == ''
+        run: echo "No new entries in this deploy."
