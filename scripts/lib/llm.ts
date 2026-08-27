@@ -1,0 +1,167 @@
+/**
+ * Model access for the paper pipeline.
+ *
+ * The endpoint is OpenAI-compatible (OpenRouter), so the official `openai` SDK
+ * talks to it directly — only the base URL changes:
+ *
+ *   OPENAI_API_KEY   secret   the OpenRouter key
+ *   OPENAI_API_URL   var      https://openrouter.ai/api/v1
+ *   PAPERLENS_MODEL  var      optional model slug override
+ *
+ * Structured output is requested through `response_format` where the model
+ * supports it, and falls back to prompt-enforced JSON where it does not, so
+ * changing PAPERLENS_MODEL cannot silently break the pipeline.
+ */
+
+import OpenAI from "openai";
+
+export const DEFAULT_MODEL = "~anthropic/claude-opus-latest";
+
+export function model(): string {
+	return process.env.PAPERLENS_MODEL?.trim() || DEFAULT_MODEL;
+}
+
+export function client(): OpenAI {
+	const apiKey = process.env.OPENAI_API_KEY;
+	const baseURL = process.env.OPENAI_API_URL?.trim() || "https://openrouter.ai/api/v1";
+
+	if (!apiKey) {
+		throw new Error(
+			"OPENAI_API_KEY is not set. In CI it comes from repository secrets; " +
+				"locally, export it before running this script.",
+		);
+	}
+
+	return new OpenAI({
+		apiKey,
+		baseURL,
+		// Attribution headers OpenRouter uses for its dashboard; harmless elsewhere.
+		defaultHeaders: {
+			"HTTP-Referer": "https://paperlens.io",
+			"X-Title": "PaperLens paper pipeline",
+		},
+	});
+}
+
+/**
+ * Fail early and loudly on a bad model slug rather than after a long harvest.
+ * Suggests near matches, since OpenRouter slugs are easy to mistype.
+ */
+export async function assertModelAvailable(slug = model()): Promise<void> {
+	const baseURL = process.env.OPENAI_API_URL?.trim() || "https://openrouter.ai/api/v1";
+	let ids: string[];
+	try {
+		const res = await fetch(`${baseURL}/models`);
+		if (!res.ok) return; // not fatal — let the completion call be the real test
+		ids = ((await res.json()) as { data: { id: string }[] }).data.map((m) => m.id);
+	} catch {
+		return;
+	}
+
+	if (ids.includes(slug)) return;
+
+	const stem = slug.replace(/^~/, "").split("/")[0];
+	const near = ids.filter((id) => id.includes(stem)).slice(0, 12);
+	throw new Error(
+		`Model "${slug}" is not available at this endpoint.\n` +
+			(near.length ? `Close matches:\n  ${near.join("\n  ")}` : `No slugs matched "${stem}".`),
+	);
+}
+
+interface AskOptions {
+	system: string;
+	user: string;
+	/** JSON Schema; when given, the reply is parsed and returned as an object */
+	schema?: { name: string; schema: Record<string, unknown> };
+	maxTokens?: number;
+	temperature?: number;
+	/** retries for transient failures and unparseable JSON */
+	retries?: number;
+}
+
+/** Pull JSON out of a reply that may be fenced or prefaced with prose. */
+function extractJson(text: string): unknown {
+	const trimmed = text.trim();
+	const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
+	const candidate = fenced ? fenced[1] : trimmed;
+
+	try {
+		return JSON.parse(candidate);
+	} catch {
+		// Fall back to the outermost balanced braces.
+		const start = candidate.indexOf("{");
+		const end = candidate.lastIndexOf("}");
+		if (start !== -1 && end > start) return JSON.parse(candidate.slice(start, end + 1));
+		throw new Error(`Reply was not JSON:\n${text.slice(0, 400)}`);
+	}
+}
+
+export async function ask(opts: AskOptions): Promise<string> {
+	const { text } = await askRaw(opts);
+	return text;
+}
+
+export async function askJson<T = unknown>(opts: AskOptions): Promise<T> {
+	const { text } = await askRaw(opts);
+	return extractJson(text) as T;
+}
+
+async function askRaw(opts: AskOptions): Promise<{ text: string }> {
+	const { system, user, schema, maxTokens = 16000, temperature = 0.3, retries = 2 } = opts;
+	const api = client();
+	const slug = model();
+
+	// Some slugs reject response_format outright; drop it and lean on the prompt.
+	let useResponseFormat = Boolean(schema);
+	let lastError: unknown;
+
+	for (let attempt = 0; attempt <= retries; attempt++) {
+		try {
+			const completion = await api.chat.completions.create({
+				model: slug,
+				temperature,
+				max_tokens: maxTokens,
+				messages: [
+					{ role: "system", content: system },
+					{
+						role: "user",
+						content: schema
+							? `${user}\n\nReply with JSON only, matching this schema:\n${JSON.stringify(schema.schema, null, 2)}`
+							: user,
+					},
+				],
+				...(useResponseFormat && schema
+					? {
+							response_format: {
+								type: "json_schema" as const,
+								json_schema: { name: schema.name, schema: schema.schema, strict: false },
+							},
+						}
+					: {}),
+			});
+
+			const text = completion.choices[0]?.message?.content ?? "";
+			if (!text.trim()) throw new Error("Model returned an empty reply.");
+			if (schema) extractJson(text); // validate parseability before returning
+			return { text };
+		} catch (err) {
+			lastError = err;
+			const message = err instanceof Error ? err.message : String(err);
+
+			if (useResponseFormat && /response_format|json_schema|not support/i.test(message)) {
+				useResponseFormat = false;
+				attempt--; // the retry budget is for real failures, not this downgrade
+				continue;
+			}
+			if (attempt < retries) {
+				await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+				continue;
+			}
+		}
+	}
+
+	throw new Error(
+		`Model call failed after ${retries + 1} attempts (${slug}): ` +
+			(lastError instanceof Error ? lastError.message : String(lastError)),
+	);
+}

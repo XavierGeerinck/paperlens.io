@@ -8,9 +8,10 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch:
     inputs:
-      week:
-        description: "ISO week to scan, e.g. 2026-W35 (defaults to last week)"
+      days:
+        description: "How many days back to scan"
         required: false
+        default: "7"
         type: string
 
 permissions:
@@ -31,38 +32,30 @@ jobs:
         with:
           bun-version: latest
 
+      - run: bun install --frozen-lockfile
+
       - name: Rank this week's papers
-        uses: anthropics/claude-code-action@v1
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
+          PAPERLENS_MODEL: ${{ vars.PAPERLENS_MODEL }}
+        run: bun scripts/radar.ts --days "${{ inputs.days || '7' }}" --out radar.md
+
+      - name: Post to the radar issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SCAN_WEEK: ${{ inputs.week }}
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: >-
-            --allowed-tools "Bash,Read,Glob,Grep,WebFetch,WebSearch"
-          prompt: |
-            Run the /scan-papers command in --shortlist mode for the week
-            $SCAN_WEEK (use the previous ISO week if that is empty).
+        run: |
+          set -euo pipefail
+          NUM=$(gh issue list --state open --search "Paper radar in:title" \
+                  --json number,title --jq '[.[] | select(.title == "Paper radar")][0].number // empty')
 
-            Stop at the ranked shortlist. Write no content files, create no
-            branch, open no pull request.
+          if [ -z "$NUM" ]; then
+            NUM=$(gh issue create --title "Paper radar" \
+              --body $'Running log of the weekly paper scan.\n\nEach comment is one week: what was scanned, what scored well, and what was dropped as already covered.\n\nReply `/build <arxiv-id>` on this issue to publish one.' \
+              --json number --jq .number 2>/dev/null \
+              || gh issue create --title "Paper radar" --body "Running log of the weekly paper scan. Reply \`/build <arxiv-id>\` to publish one." | grep -oE '[0-9]+$')
+            echo "created issue #$NUM"
+          fi
 
-            Then publish the result to the radar issue:
-
-            1. Find the open issue titled "Paper radar" with
-               `gh issue list --state open --search "Paper radar in:title" --json number,title`.
-            2. If none exists, create it with `gh issue create`, titled
-               "Paper radar", body explaining that this issue is the running log
-               of weekly scans and that replying `@claude build <arxiv-id>` on it
-               publishes that paper.
-            3. Comment on it with `gh issue comment` containing:
-               - a heading with the ISO week and date range
-               - the ranked shortlist table, search demand doubled as the rubric says
-               - the recommended pick, the query it would target, and what
-                 currently ranks for that query
-               - a short "already covered" list naming which existing entry
-                 covered each rejected paper
-               - a closing line: "Reply `@claude build <arxiv-id>` to publish one."
-
-            Keep the comment under 400 words of prose. The table carries the detail.
+          gh issue comment "$NUM" --body-file radar.md
+          echo "posted to issue #$NUM"
