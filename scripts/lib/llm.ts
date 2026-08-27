@@ -112,8 +112,19 @@ interface AskOptions {
 /** Pull JSON out of a reply that may be fenced or prefaced with prose. */
 export function extractJson(text: string): unknown {
 	const trimmed = text.trim();
-	const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-	const candidate = fenced ? fenced[1] : trimmed;
+
+	// Strip an outer code fence by taking everything between the first newline
+	// and the LAST fence. A non-greedy regex stops at the first inner ``` —
+	// and the entries we ask for contain mermaid and python fences, so that
+	// silently shredded otherwise-valid replies.
+	let candidate = trimmed;
+	if (trimmed.startsWith("```")) {
+		const firstNewline = trimmed.indexOf("\n");
+		const lastFence = trimmed.lastIndexOf("```");
+		if (firstNewline !== -1 && lastFence > firstNewline) {
+			candidate = trimmed.slice(firstNewline + 1, lastFence).trim();
+		}
+	}
 
 	try {
 		return JSON.parse(candidate);
@@ -219,7 +230,14 @@ async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: bool
 		} catch (err) {
 			lastFailure = err;
 			const status = (err as { status?: number })?.status;
-			const exhausted = status === 429 || status === 402 || status === 404 || status === 503;
+			const message = err instanceof Error ? err.message : String(err);
+			const exhausted =
+				status === 429 ||
+				status === 402 ||
+				status === 404 ||
+				status === 503 ||
+				// Repeated unparseable replies mean this model cannot hold the schema.
+				/Reply was not JSON/.test(message);
 			if (exhausted && i < chain.length - 1) {
 				console.error(`  · ${slug} unavailable (HTTP ${status}); falling back to ${chain[i + 1]}`);
 				continue;

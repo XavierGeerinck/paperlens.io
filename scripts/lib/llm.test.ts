@@ -31,3 +31,19 @@ test("truncated with nested arrays", () => {
   expect(out.shortlist[0].tags).toEqual(["p", "q"]);
   expect(out.pick.id).toBe("x");
 });
+
+test("fenced json containing inner fences survives (the mermaid case)", () => {
+  // Exactly the shape that broke a live build: the reply is fenced, and the
+  // body it carries contains its own mermaid and python fences.
+  const body = "# Summary\\n\\n```mermaid\\ngraph TD\\nA-->B\\n```\\n\\n```python\\nx = 1\\n```\\n\\nDone.";
+  const reply = "```json\n" + JSON.stringify({ slug: "x", body }) + "\n```";
+  const out = extractJson(reply) as any;
+  expect(out.slug).toBe("x");
+  expect(out.body).toContain("mermaid");
+  expect(out.body).toContain("python");
+});
+
+test("bare json containing fences still parses", () => {
+  const reply = JSON.stringify({ body: "```mermaid\\ngraph TD\\n```" });
+  expect((extractJson(reply) as any).body).toContain("mermaid");
+});
