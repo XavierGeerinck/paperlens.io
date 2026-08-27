@@ -225,11 +225,12 @@ async function main() {
 		process.exit(1);
 	}
 
-	console.error(`\n--- post (${bytes(text)}/${LIMIT} bytes) ---`);
-	console.log(text);
-	console.error(`--- link attachment ---`);
-	console.log(url);
-	console.error("");
+	const rule = "─".repeat(56);
+	console.error(`\n${rule}\n${text}\n${rule}`);
+	console.error(`${bytes(text)}/${LIMIT} bytes · link: ${url}\n`);
+
+	// stdout stays machine-readable for the workflow.
+	console.log(JSON.stringify({ slug: entry.slug, url, text, bytes: bytes(text) }));
 
 	if (!post) {
 		console.error("Dry run. Pass --post to publish.");
