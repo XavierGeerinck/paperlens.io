@@ -13,7 +13,6 @@ tags:
   - Quantum Physics
   - EUV
   - Nanotechnology
-coverImage: https://picsum.photos/seed/lace-lithography/800/600?grayscale
 simulation: LaceLithography
 pdfUrl: https://arxiv.org/pdf/2111.12582
 webUrl: https://arxiv.org/abs/2207.08723
@@ -23,7 +22,7 @@ featured: true
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# Executive Summary
+## Executive Summary
 
 Every generation of chip manufacturing has needed a shorter ruler. Optical lithography moved from visible light to deep ultraviolet to extreme ultraviolet (EUV) at 13.5 nm, shrinking transistor features step by step. Now a Norwegian startup called **Lace Lithography**, co-founded by physicists Bodil Holst and Adrià Salvador Palau from the University of Bergen, claims to have identified the next ruler: a beam of neutral helium atoms.
 
@@ -35,7 +34,7 @@ This article traces that convergence, starting with the microscopy origins and e
 
 ---
 
-# The Problem: The EUV Wall
+## The Problem: The EUV Wall
 
 Semiconductor lithography works by projecting a pattern onto a photoresist, then chemically etching the exposed regions. Finer features require shorter wavelengths: shorter wavelength → smaller diffraction limit → narrower lines.
 
@@ -52,9 +51,9 @@ Lace Lithography is pursuing path 4.
 
 ---
 
-# The Solution: Matter-Wave Lithography with Neutral Helium
+## The Solution: Matter-Wave Lithography with Neutral Helium
 
-## From Quantum Mechanics to Resolution Limits
+### From Quantum Mechanics to Resolution Limits
 
 Every moving particle has a wave-like character described by its **de Broglie wavelength**:
 
@@ -87,7 +86,7 @@ $$R \approx \sqrt{\lambda_{dB} \cdot g}$$
 
 where $g$ is the gap between mask and substrate (typically 1–10 μm in proximity mode). For He* at 0.06 nm and a 1 μm gap: $R \approx \sqrt{0.06 \times 10^{-9} \times 1 \times 10^{-6}} \approx 7.7 \text{ nm}$ — a single-digit nanometre figure without multi-patterning. Reduced gap and optimised beam energy push this further. Holography-based mask approaches aim to bypass this limit entirely by encoding the far-field pattern rather than using geometric shadows.
 
-## Why Helium in Particular
+### Why Helium in Particular
 
 Helium is the lightest noble gas and is completely chemically inert in its ground state. The metastable state He\* (2³S₁, ~20 eV internal excitation) is special:
 
@@ -100,11 +99,11 @@ This unique combination — quantum wave character, surface sensitivity, chemica
 
 ---
 
-# Five Papers: A Reading Order
+## Five Papers: A Reading Order
 
 Rather than a single paper, Lace Lithography's scientific foundation spans multiple publications from the same Bergen research group. Reading them in order tells the complete story from imaging instrument to commercial lithography pitch.
 
-## Paper 1 — The Comprehensive Microscopy Review (2022)
+### Paper 1 — The Comprehensive Microscopy Review (2022)
 
 **"Neutral Helium Microscopy (SHeM): A Review"**  
 *Adrià Salvador Palau, Sabrina D. Eder, Gianangelo Bracco, Bodil Holst*  
@@ -112,7 +111,7 @@ arXiv:2111.12582
 
 This is the definitive technical reference for scanning helium microscopy (SHeM), co-authored by both Lace Lithography founders. It walks the helium atom step by step through an instrument: supersonic expansion source → beam shaping optics → sample interaction → scattered-beam detection. The review documents all the material physics that makes He unique as a probe: sub-Ångström de Broglie wavelength, zero penetration depth, contrast from surface topology and quantum scattering rather than electron density. This review is the scientific bedrock on which the lithography pitch rests.
 
-## Paper 2 — Reflection Imaging with a Helium Zone Plate (2023)
+### Paper 2 — Reflection Imaging with a Helium Zone Plate (2023)
 
 **"Reflection imaging with a helium zone plate microscope"**  
 *Ranveig Flatabø, Sabrina D. Eder, Thomas Reisinger, Gianangelo Bracco, Peter Baltzer, Björn Samelin, Bodil Holst*  
@@ -120,7 +119,7 @@ arXiv:2308.11749
 
 This paper demonstrates an actual helium zone-plate microscope operating in reflection mode — physically implementing the atom-optical focusing ideas from the review. Zone plates for matter waves are the atom-optic equivalent of a lens: a nanofabricated diffraction grating that focuses an atom beam to a small spot. This implementation paper shows true-size surface images obtained by scanning the focused spot across a sample and recording the total scattered intensity — the hardware proof-of-concept for scanning nano-imaging.
 
-## Paper 3 — Dispersion Forces at the Mask Wall (2022)
+### Paper 3 — Dispersion Forces at the Mask Wall (2022)
 
 **"An atom passing through a hole in a dielectric membrane: Impact of dispersion forces on mask-based matter-wave lithography"**  
 *Johannes Fiedler, Bodil Holst*  
@@ -128,7 +127,7 @@ arXiv:2201.03845
 
 This is where the engineering gets hard. When a helium atom passes through a sub-20 nm hole in a thin membrane (the mask), it comes within Ångströms of the hole wall. At those distances, **van der Waals dispersion forces** sculpt the atom's trajectory — they are not negligible and cannot be treated as a simple phase mask. This paper provides the quantum-mechanical calculation of this interaction for metastable and ground-state helium atoms at realistic wavelengths (0.05–1 nm) and membrane thicknesses (5–50 nm). The key result: dispersion forces reduce the *effective* hole radius by **1–7 nm** for He\* and 0.5–3.5 nm for ground-state He. Thicker membranes and slower atoms suffer more. This is why the inverse problem (choosing hole positions to print a desired pattern) cannot be solved with classical scalar-wave theory — it requires quantum mechanics plus material-specific dispersion coefficients.
 
-## Paper 4 — Machine-Learning Mask Generation (2022)
+### Paper 4 — Machine-Learning Mask Generation (2022)
 
 **"Realistic mask generation for matter-wave lithography via machine learning"**  
 *Johannes Fiedler, Adrià Salvador Palau, Eivind Kristen Osestad, Pekka Parviainen, Bodil Holst*  
@@ -136,7 +135,7 @@ arXiv:2207.08723
 
 Having established that the inverse mask problem cannot be solved analytically, this paper shows how to solve it numerically. A **genetic optimisation algorithm** is seeded with an initial guess from a **deep neural network** trained on simulated atom propagation. Together, they converge on mask hole patterns that produce arbitrary 1D target features at nanometre resolution, accounting for the full quantum wave mechanics including dispersion forces. This is directly the FabouLACE mask design engine: a software stack that takes a target pattern and outputs the set of hole positions and sizes for a binary holography mask.
 
-## Paper 5 — h-BN Nanoholes and Resolution Limits (2024)
+### Paper 5 — h-BN Nanoholes and Resolution Limits (2024)
 
 **"Atomic diffraction by nanoholes in hexagonal boron nitride"**  
 *Eivind Kristen Osestad, Ekaterina Zossimova, Michael Walter, Bodil Holst, Johannes Fiedler*  
@@ -146,7 +145,7 @@ This 2024 paper investigates hexagonal boron nitride (h-BN) as a mask material. 
 
 ---
 
-# How the Beam is Made
+## How the Beam is Made
 
 The atom beam that drives the lithography process is not simply hot gas vented through a nozzle. Two decades of atom-optic engineering are compressed into the source:
 
@@ -194,7 +193,7 @@ The mask design algorithm (Papers 4 and 5 above) pre-distorts the hole positions
 
 ---
 
-# The Algorithm: Mask Inversion with Quantum Physics
+## The Algorithm: Mask Inversion with Quantum Physics
 
 The core engineering challenge is the inverse mask problem: *given a desired resist exposure pattern P(x), compute the set of hole positions and radii $(x_i, r_i)$ in the mask*.
 
@@ -222,7 +221,7 @@ The paper (arXiv:2207.08723) demonstrates this for arbitrary 1D patterns in the 
 
 ---
 
-# Implementation: Physics Simulation
+## Implementation: Physics Simulation
 
 Below is a Python simulation of helium atom propagation through a single mask aperture, modelling both the quantum diffraction and the approximate dispersion-force correction.
 
@@ -310,7 +309,7 @@ The He\* beam through the same 10 nm hole produces a central lobe more than 100 
 
 ---
 
-# The FabouLACE Commercialisation Angle
+## The FabouLACE Commercialisation Angle
 
 The EU-funded **FabouLACE** project (Fabrication Opportunities via Atom Lithography Cutting Edge) is the bridge between the University of Bergen research and industrial validation. Key aspects:
 
@@ -323,9 +322,9 @@ The co-founders' publication record suggests the initial commercialisation focus
 
 ---
 
-# Feasibility Analysis
+## Feasibility Analysis
 
-## What the Physics Supports
+### What the Physics Supports
 
 | Parameter | EUV (current) | He* Atom Beam (projected) |
 |-----------|--------------|--------------------------|
@@ -336,7 +335,7 @@ The co-founders' publication record suggests the initial commercialisation focus
 | Required vacuum | High (< 10⁻¹ mbar) | Ultra-high (< 10⁻⁷ mbar) |
 | Throughput | ~100 wafers/hr (NXE:3600HB) | Unknown — key open challenge |
 
-## Where the Challenges Lie
+### Where the Challenges Lie
 
 **Throughput** is the central unresolved question. A helium atom beam from a supersonic nozzle has a typical flux of ~10¹⁵–10¹⁶ atoms/cm²/s at the source. After collimation, skimming, and mask transmission (holes occupy a fraction of mask area), the flux at the wafer is orders of magnitude lower. EUV resists need roughly 20+ mJ/cm², while SAM resists used in He\* lithography require on the order of 10¹⁴–10¹⁵ atoms/cm² for full activation. Whether a practical beam can deliver this dose at wafer scale in a reasonable time remains to be demonstrated.
 
@@ -348,7 +347,7 @@ The co-founders' publication record suggests the initial commercialisation focus
 
 ---
 
-# Conclusion
+## Conclusion
 
 Neutral helium atom lithography is not "magic atomic printing from nowhere." It is the convergence of three mature research threads:
 

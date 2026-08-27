@@ -11,13 +11,12 @@ tags:
   - LeCun
   - Self-Supervised Learning
   - World Models
-coverImage: https://picsum.photos/seed/jepa/800/600?grayscale
 simulation: JEPASimulation
 pdfUrl: https://arxiv.org/pdf/2301.08243.pdf
 featured: true
 ---
 
-# Executive Summary
+## Executive Summary
 
 In our previous analysis of the **Control-Theoretic Imperative**, we established that true AGI requires Model Predictive Control (MPC)—a "System 2" loop that plans rather than reacts. However, MPC has a fatal dependency: it requires an accurate, fast, and robust **World Model**.
 
@@ -25,7 +24,7 @@ Current Generative AI (LLMs, Diffusion) fails as a World Model for planning beca
 
 Enter **JEPA (Joint Embedding Predictive Architecture)**. Proposed by Yann LeCun, JEPA abandons the generative objective entirely. Instead of predicting the next pixel, it predicts the next **abstract representation**. This shift enables the creation of hierarchical world models capable of reasoning over long time horizons without drowning in noise.
 
-# The Problem: The Generative Trap
+## The Problem: The Generative Trap
 
 To plan effectively, an agent must simulate the future. Generative models simulate the future by reconstructing it entirely.
 
@@ -35,11 +34,11 @@ Mathematically, generative models maximize the likelihood of the observation $x$
 $$P(x|y)$$
 This forces the model to allocate capacity to every stochastic detail. For an MPC agent running 50 simulations per step, this pixel-level rendering is prohibitively expensive and prone to "hallucinating" physics that look real but act wrong.
 
-# The Solution: Joint Embedding Prediction
+## The Solution: Joint Embedding Prediction
 
 JEPA creates a **World Model** that functions like human intuition. It ignores the texture of the floor and focuses on the state of the glass (intact vs. broken).
 
-## The Architecture
+### The Architecture
 
 JEPA differs from Autoencoders and GANs in one critical way: **It does not decode.**
 
@@ -51,11 +50,11 @@ $$\text{Loss} = D( \text{Predictor}(s_x, z), \text{SG}(s_y) )$$
 
 *Where $D$ is a distance metric (like $L_2$) and $SG$ stands for Stop Gradient.*
 
-### The Collapse Problem
+#### The Collapse Problem
 The danger in representation learning is **mode collapse**. If the encoders output a constant vector (e.g., all zeros), the prediction error is zero, but the model has learned nothing.
 JEPA solves this not via contrastive loss (negative pairs are inefficient) but through **regularization** or asymmetric architectural updates (e.g., making the Target Encoder an Exponential Moving Average of the Context Encoder).
 
-# Visualizing the Flow
+## Visualizing the Flow
 
 The shift from Generative to Joint Embedding is a shift from reconstruction to understanding.
 
@@ -82,6 +81,7 @@ flowchart LR
         style S_y_pred stroke:#f00,stroke-width:2px
         style S_y stroke:#0f0,stroke-width:2px
     end
+```
 
 ## Related
 

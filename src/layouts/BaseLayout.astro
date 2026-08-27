@@ -4,15 +4,41 @@ import SEO from '../components/SEO.astro';
 import GameOfLife from '../components/react/GameOfLife';
 import '../styles/global.css';
 
+interface Crumb {
+  name: string;
+  url: string;
+}
+
 interface Props {
   title: string;
   description: string;
   image?: string;
   type?: 'website' | 'article';
   date?: Date;
+  dateModified?: Date;
+  keywords?: string[];
+  citation?: string[];
+  section?: string;
+  breadcrumbs?: Crumb[];
+  schema?: Record<string, unknown>[];
+  /** KaTeX styles are ~24KB of render-blocking CSS; only pages with math pay for them */
+  math?: boolean;
 }
 
-const { title, description, image, type, date } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  type,
+  date,
+  dateModified,
+  keywords,
+  citation,
+  section,
+  breadcrumbs,
+  schema,
+  math = false,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -22,30 +48,36 @@ const { title, description, image, type, date } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0d0f13" />
     <meta name="color-scheme" content="dark" />
-    <SEO {title} {description} {image} {type} {date} />
+    <SEO
+      {title}
+      {description}
+      {image}
+      {type}
+      {date}
+      {dateModified}
+      {keywords}
+      {citation}
+      {section}
+      {breadcrumbs}
+      {schema}
+    />
     <ViewTransitions />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
 
-    <!-- Performance: DNS Prefetch -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-
-    <!-- One typeface: Geist Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- One typeface: Geist Mono, served from this origin (see src/styles/global.css) -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- KaTeX for math -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
-      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV"
+      rel="preload"
+      href="/fonts/geist-mono-latin.woff2"
+      as="font"
+      type="font/woff2"
       crossorigin="anonymous"
     />
+
+    {/* KaTeX, vendored by scripts/prebuild.ts so the stylesheet matches the version
+        rehype-katex renders with, and so no CDN sits on the critical path */}
+    {math && <link rel="stylesheet" href="/katex/katex.min.css" />}
+
     <slot name="head" />
   </head>
   <body class="min-h-screen antialiased">
@@ -58,7 +90,21 @@ const { title, description, image, type, date } = Astro.props;
 
     <script>
       import '../scripts/tui.ts';
-      import '../lib/mermaid-init.ts';
+
+      // Mermaid is ~450KB of JavaScript. Most pages have no diagram at all, so
+      // it is fetched only once one is actually on the page.
+      const loadMermaid = () => {
+        if (document.querySelector('.mermaid-diagram:not(.mermaid-rendered)')) {
+          import('../lib/mermaid-init.ts');
+        }
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadMermaid);
+      } else {
+        loadMermaid();
+      }
+      document.addEventListener('astro:page-load', loadMermaid);
     </script>
   </body>
 </html>

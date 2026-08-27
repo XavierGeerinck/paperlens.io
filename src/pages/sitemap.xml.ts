@@ -1,22 +1,23 @@
 import type { APIRoute } from "astro";
-import fs from "node:fs";
-import path from "node:path";
 
-export const GET: APIRoute = async () => {
-	// Read the auto-generated sitemap-index.xml from dist
-	const sitemapIndexPath = path.join(process.cwd(), "dist", "sitemap-index.xml");
-	
-	let sitemap: string;
-	try {
-		sitemap = fs.readFileSync(sitemapIndexPath, "utf-8");
-	} catch {
-		// Fallback if file doesn't exist yet
-		sitemap = `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><sitemap><loc>https://paperlens.io/sitemap-0.xml</loc></sitemap></sitemapindex>`;
-	}
+/**
+ * /sitemap.xml — an alias for the index @astrojs/sitemap writes.
+ *
+ * robots.txt points at /sitemap-index.xml, but /sitemap.xml is where crawlers
+ * and humans look first, and Search Console may already have it on file. This
+ * used to read dist/sitemap-index.xml off disk while the build was still
+ * writing it; the index is two lines, so it is simply emitted here.
+ */
+export const GET: APIRoute = ({ site }) => {
+	const base = (site?.href ?? "https://paperlens.io/").replace(/\/$/, "");
 
-	return new Response(sitemap, {
-		headers: {
-			"Content-Type": "application/xml; charset=utf-8",
-		},
+	const body = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap><loc>${base}/sitemap-0.xml</loc></sitemap>
+</sitemapindex>
+`;
+
+	return new Response(body, {
+		headers: { "Content-Type": "application/xml; charset=utf-8" },
 	});
 };

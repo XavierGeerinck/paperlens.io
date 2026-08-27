@@ -30,10 +30,19 @@ test("flags a truncated reply even when the text looks complete", () => {
 
 test("passes a well-formed entry", () => {
   const good =
-    "# Executive Summary\n\n" + "word ".repeat(650) + "end.\n\n" +
+    "## Executive Summary\n\n" + "word ".repeat(650) + "end.\n\n" +
     "## Why it matters\n\ntext.\n\n## The mechanism\n\n```mermaid\ngraph TD\nA-->B\n```\n\n" +
     "## Cost\n\n```python\nx = 1\n```\n\n## Open questions\n\nMore text here.";
   expect(planProblems({ ...base, body: good }, false)).toEqual([]);
+});
+
+test("rejects a body that opens its own h1, but not a '#' comment in code", () => {
+  const body =
+    "# Executive Summary\n\n" + "word ".repeat(650) + "end.\n\n" +
+    "## Why it matters\n\ntext.\n\n## The mechanism\n\n```mermaid\ngraph TD\nA-->B\n```\n\n" +
+    "## Cost\n\n```python\n# a comment, not a heading\nx = 1\n```\n\n## Open questions\n\nMore text.";
+  const found = planProblems({ ...base, body }, false);
+  expect(found).toEqual(["1 '# ' heading(s) in the body — sections start at '##'"]);
 });
 
 test("catches the broken mulberry32 the model invented", () => {

@@ -6,6 +6,7 @@ import Footer from '../components/Footer.astro';
 import HelpOverlay from '../components/HelpOverlay.astro';
 import PaperBrowser from '../components/react/PaperBrowser';
 import EntryThumb from '../components/react/EntryThumb';
+import { groupByTag, tagSlug } from '../lib/tags';
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -37,17 +38,31 @@ const simCount = entries.filter((e) => e.hasSim).length;
 const pdfCount = entries.filter((e) => e.pdfUrl).length;
 const lastPush = entries[0]?.date;
 
-const tagCounts = new Map<string, number>();
-for (const entry of entries) {
-  for (const tag of entry.tags) {
-    const key = tag.toLowerCase().replace(/\s+/g, '-');
-    tagCounts.set(key, (tagCounts.get(key) ?? 0) + 1);
-  }
-}
-const topTags = [...tagCounts.entries()]
-  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-  .slice(0, 8);
-const maxTag = topTags[0]?.[1] ?? 1;
+const tagGroups = groupByTag(sorted);
+const topTags = tagGroups.slice(0, 8);
+const maxTag = topTags[0]?.entries.length ?? 1;
+const hubCount = tagGroups.filter((g) => g.entries.length > 1).length;
+
+/**
+ * The listing itself, for the crawlers: the home page is the index of the
+ * archive, so it says so in schema rather than leaving it to be inferred from
+ * thirty anchors.
+ */
+const listSchema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'PaperLens entries',
+    numberOfItems: entries.length,
+    itemListOrder: 'https://schema.org/ItemListOrderDescending',
+    itemListElement: entries.map((entry, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(`/idea/${entry.slug}/`, Astro.site).href,
+      name: entry.title,
+    })),
+  },
+];
 
 const helpKeys = [
   { key: 'j / k', what: 'move down / up the list' },
@@ -58,7 +73,8 @@ const helpKeys = [
 
 <BaseLayout
   title="PaperLens — Papers and research for AI engineers, visualized"
-  description="Every entry rebuilds a paper's core mechanism as an interactive simulation, next to the math and the code. Test-Time Training, JEPA, DeepSeek, quantization, lithography and more."
+  description="Every entry rebuilds a paper's core mechanism as an interactive simulation, beside the math and the code: JEPA, DeepSeek, quantization, lithography and more."
+  schema={listSchema}
 >
   <Header current="home" count={entries.length} />
 
@@ -77,7 +93,7 @@ const helpKeys = [
  | |_) | (_| | |_) |  __/ |  | |  __/ | | \__ \
  | .__/ \__,_| .__/ \___|_|  |_|\___|_| |_|___/
  |_|         |_|                               </pre>
-        <p class="tagline line cmt">papers and research for AI engineers, visualized.</p>
+        <h1 class="tagline line cmt"><span class="sr-only">PaperLens: </span>papers and research for AI engineers, visualized.</h1>
         <p class="tagline line cmt">
           every entry ships with a simulation, the math, and the code — drag a slider instead of trusting a figure.
         </p>
@@ -171,14 +187,20 @@ const helpKeys = [
           tags | sort | uniq -c | sort -rn | head -8
         </p>
         <ol class="uniq">
-          {topTags.map(([tag, count]) => (
+          {topTags.map((group) => (
             <li>
-              <span class="n">{count}</span>
-              <a href="#papers" data-tag={tag}>{tag}</a>
-              <span class="bar" aria-hidden="true">{'█'.repeat(Math.max(1, Math.round((count / maxTag) * 8)))}</span>
+              <span class="n">{group.entries.length}</span>
+              <a href={`/tags/${group.slug}/`}>{group.slug}</a>
+              <span class="bar" aria-hidden="true">
+                {'█'.repeat(Math.max(1, Math.round((group.entries.length / maxTag) * 8)))}
+              </span>
             </li>
           ))}
         </ol>
+
+        <p class="dim" style="margin:.7rem 0 0;font-size:var(--fs-sm)">
+          All <a href="/tags/">{tagGroups.length} tags</a>, {hubCount} of them shared by more than one entry.
+        </p>
       </section>
     </div>
 
@@ -197,15 +219,3 @@ const helpKeys = [
   />
   <HelpOverlay extra={helpKeys} />
 </BaseLayout>
-
-<script>
-  // tag histogram → browser filter
-  document.addEventListener('click', (e) => {
-    const link = (e.target as HTMLElement).closest<HTMLElement>('[data-tag]');
-    if (!link) return;
-    e.preventDefault();
-    document.dispatchEvent(
-      new CustomEvent('pl:filter', { detail: (link.dataset.tag || '').replace(/-/g, ' ') })
-    );
-  });
-</script>

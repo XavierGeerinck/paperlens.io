@@ -12,37 +12,36 @@ tags:
   - AGI
   - System 2
   - JEPA
-coverImage: https://picsum.photos/seed/mpc/800/600?grayscale
 simulation: ControlTheoretic
 featured: true
 ---
 
-# The Control-Theoretic Imperative
-## Shifting from Amortized Reflexes to Online Optimization
+## The Control-Theoretic Imperative
+### Shifting from Amortized Reflexes to Online Optimization
 
-### Executive Summary
+#### Executive Summary
 
 The contemporary landscape of Artificial Intelligence stands at a paradoxical inflection point. While autoregressive Large Language Models (LLMs) and model-free Deep Reinforcement Learning (DRL) have achieved remarkable feats, they are asymptotically approaching a "competence wall." This report advances a structural thesis: to achieve Artificial General Intelligence (AGI), we must shift from **learning a policy** (amortized reflexes) to **learning a model for planning**. This defines the **Control-Theoretic Imperative**, advocating for Model Predictive Control (MPC) as the cognitive engine of AGI.
 
-### The Problem: The Stagnation of Reflexive Intelligence
+#### The Problem: The Stagnation of Reflexive Intelligence
 
 Current architectures—both autoregressive LLMs and model-free RL policies—are fundamentally **"System 1" technologies**. They rely on "amortized intelligence," where computational heavy lifting is performed during training, compressing the solution space into static weights.
 
 *   **Reflexive Execution**: At inference time, these models function reflexively, executing a forward pass that maps states to tokens based on historical correlations.
 *   **The Competence Wall**: They cannot reason over long horizons or adapt to novel physics without retraining. They do not "think"; they retrieve.
 
-### The Solution: Model Predictive Control (MPC)
+#### The Solution: Model Predictive Control (MPC)
 
 MPC is not merely an algorithm but a cognitive framework predicated on **online, receding-horizon optimization**. Unlike RL, which memorizes optimal actions, MPC solves a fresh optimization problem at every time step.
 
-#### The MPC Loop (System 2)
+##### The MPC Loop (System 2)
 1.  **Observe**: Measure the current state $x_k$.
 2.  **Imagine**: Use an internal World Model $f(x, u)$ to stimulate future trajectories.
 3.  **Evaluate**: Score trajectories against a cost function $J$.
 4.  **Act**: Execute the first optimal action $u^*_{k|k}$.
 5.  **Repeat**: At $k+1$, re-measure and re-plan.
 
-### Visualizing the Architecture
+#### Visualizing the Architecture
 
 The difference between Amortized RL and MPC is the difference between a cached lookup table and an active reasoning engine.
 
@@ -65,7 +64,7 @@ graph TD
     end
 ```
 
-### Theoretical Foundations: The Divergence
+#### Theoretical Foundations: The Divergence
 
 To rigorously evaluate the suitability of MPC versus RL for AGI, we deconstruct their mathematical formulations. Both solve the Optimal Control Problem, but diverge in handling time.
 
@@ -78,7 +77,7 @@ At time $k$, solve:
 $$\min_{\mathbf{u}} J_N(x_k, \mathbf{u}) = \sum_{i=0}^{N-1} \ell(x_{k+i|k}, u_{k+i|k}) + V_f(x_{k+N|k})$$
 Subject to dynamics $x_{k+i+1|k} = f(x_{k+i|k}, u_{k+i|k})$ and constraints. This loop implies the agent is never "done" thinking. It constantly re-derives the optimal policy locally.
 
-### Comparative Analysis
+#### Comparative Analysis
 
 | Feature | Reinforcement Learning (Model-Free) | Large Language Models (Autoregressive) | Model Predictive Control (Hybrid/AGI) |
 | :--- | :--- | :--- | :--- |
@@ -88,7 +87,7 @@ Subject to dynamics $x_{k+i+1|k} = f(x_{k+i|k}, u_{k+i|k})$ and constraints. Thi
 | **Sample Efficiency** | Very Low (Billions of steps) | Medium (Trillions of tokens) | High (World Model learns from observation) |
 | **Cognitive Analogy** | System 1 (Intuition/Habit) | System 1 (Association/Speech) | System 2 (Reasoning/Planning) |
 
-### Implementation: The Differentiable MPC Loop
+#### Implementation: The Differentiable MPC Loop
 
 In modern AGI research (e.g., DiffTORI), the planning process itself is differentiable. Here is a conceptual PyTorch implementation of a simplified MPC planner using a learned World Model.
 
@@ -132,7 +131,7 @@ class DifferentiableMPC(nn.Module):
         return u_seq[0].detach()
 ```
 
-### The Autoregressive Trap & Inference-Time Compute
+#### The Autoregressive Trap & Inference-Time Compute
 
 Recent investigations into scaling laws suggest that parameter scaling is hitting diminishing returns. The breakthrough, exemplified by models like OpenAI's o1 or DeepMind's MuZero, is to introduce **"thinking time"**—effectively performing search/optimization at inference.
 
@@ -142,13 +141,13 @@ Standard LLMs lack **Lookahead** and **Backtracking**. They pick a token and com
 
 This reinforces the need for a **Learned World Model** separate from the policy.
 
-### The Convergence: Latent World Models
+#### The Convergence: Latent World Models
 
 The future of AGI is in **Latent World Models** (like **DreamerV3** and **JEPA**).
 *   **DreamerV3**: Performs MPC in a latent space ($z_t$). It imagines trajectories of latent states and optimizes a policy within this "dream."
 *   **JEPA (Yann LeCun)**: Rejects pixel prediction. Predicts abstract **representation**. A house cat has a better world model than GPT-4 because it understands physics, not just texture.
 
-### Conclusion: The "System 2" Era
+#### Conclusion: The "System 2" Era
 
 The era of "Pure RL" and "Pure Autoregression" is ending. The future AGI architecture will be a Hierarchical Model Predictive Control System:
 1.  **Perception**: Compressing the world into abstract states (JEPA).
@@ -158,6 +157,6 @@ The era of "Pure RL" and "Pure Autoregression" is ending. The future AGI archite
 
 In this paradigm, intelligence is defined not by static knowledge, but by the dynamic capacity to simulate, evaluate, and choose.
 
-## Related
+### Related
 
 [EchoWM: Enterable Omnimodal World Models with Unified Camera Intent](/idea/echowm-omnimodal-world-model/) covers a closely related mechanism.

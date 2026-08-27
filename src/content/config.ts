@@ -11,7 +11,8 @@ const ideasCollection = defineCollection({
     impact: z.string(),
     readTime: z.string(),
     tags: z.array(z.string()),
-    coverImage: z.string(),
+    /** optional override; entries fall back to the card scripts/og.ts draws */
+    coverImage: z.string().optional(),
     simulation: z.string().optional(),
     pdfUrl: z.string().optional(),
     githubUrl: z.string().optional(),

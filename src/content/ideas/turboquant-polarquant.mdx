@@ -13,19 +13,18 @@ tags:
   - TurboQuant
   - PolarQuant
   - Google Research
-coverImage: https://picsum.photos/seed/turboquant/800/600?grayscale
 simulation: TurboQuant
 pdfUrl: https://arxiv.org/pdf/2502.02617
 featured: true
 ---
 
-# Executive Summary
+## Executive Summary
 
 KV caches are the memory bottleneck of long-context LLMs. At 128K tokens, a Llama-3 70B model spends more VRAM on cached keys and values than on its own weights. Naive INT4 quantization of those caches is brittle — a handful of outlier channels blow up the reconstruction error, and the per-block scale/zero-point metadata eats back a meaningful fraction of the savings.
 
 Two 2025 papers out of Google Research propose a unified cure, and the insight is geometric: *rotate the vectors first, then the quantization problem becomes easy*. **TurboQuant** (arXiv:2502.02617) is the general-purpose method — a data-oblivious vector quantizer that lands within roughly 2.7× of the Shannon distortion–rate lower bound, at every bit-width. **PolarQuant** (arXiv:2504.19874) specializes the idea to KV caches by working in polar coordinates: after a random preconditioning, the angles have a closed-form distribution, so the quantizer needs *no* per-block metadata at all. The result is 4.2× compression on KV caches with quality neutral on long-context benchmarks.
 
-# The Quadratic Tax on Memory
+## The Quadratic Tax on Memory
 
 Every extra token in the context adds one key vector and one value vector to the KV cache — per layer, per attention head. For a 70B model at 128K tokens in FP16, that is tens of gigabytes of memory that must be held, read, and written on every decode step. Inference throughput today is bandwidth-bound on precisely this traffic.
 
@@ -36,7 +35,7 @@ Quantization is the obvious lever, but it has two classical problems:
 
 Both problems have the same root cause: the distribution of coordinate values in real embedding vectors is *nasty* — heavy-tailed, anisotropic, correlated.
 
-# TurboQuant — The Rotation Trick
+## TurboQuant — The Rotation Trick
 
 TurboQuant's central observation is old but underused: a random orthogonal rotation $R$ preserves norms and inner products, but it *aggressively* homogenises the coordinate distribution. If $x \in \mathbb{R}^d$ is any vector, then $Rx$ has coordinates that are approximately independent, and each coordinate follows (after suitable scaling) a Beta-like distribution whose form depends only on $d$, *not* on $x$.
 
@@ -53,7 +52,7 @@ $$
 
 The constant $c$ is what makes the result striking: TurboQuant sits within a *small* multiplicative factor of the information-theoretic lower bound, across all bit-widths and all dimensions. The paper reports quality-neutral KV cache quantization at 3.5 bits/channel, with only marginal degradation at 2.5 bits.
 
-# PolarQuant — From Cartesian to Polar
+## PolarQuant — From Cartesian to Polar
 
 PolarQuant asks: what if the rotation isn't just a preprocessing step, but a change of *coordinates*? Specifically, a polar change of coordinates.
 
@@ -69,7 +68,7 @@ The radii still need compression, but there are far fewer of them ($d/2$ instead
 
 The net result is 4.2× KV-cache compression with state-of-the-art quality on long-context evaluations. The metadata savings are what push it past TurboQuant on this specific workload — not a different insight about the geometry, but a different book-keeping strategy on top of the same geometric trick.
 
-# Pipeline
+## Pipeline
 
 ```mermaid
 graph TD
@@ -84,7 +83,7 @@ graph TD
     RQ --> OUT2[Quantized Code - 4.2x smaller]
 ```
 
-# Reference Implementation
+## Reference Implementation
 
 A minimal sketch of the rotation + per-coordinate quantizer in PyTorch-style pseudocode:
 
@@ -122,7 +121,7 @@ def turboquant_decode(codes, sigma, bits, R):
 
 The PolarQuant extension operates on pairs of coordinates of `y`, converts each pair to `(r, theta)`, and quantizes `theta` against the analytically-derived angle distribution — eliminating the need to store `sigma` per block.
 
-# Feasibility & Hardware Targets
+## Feasibility & Hardware Targets
 
 The rotation is the only non-trivial addition to a standard quantization kernel, and it maps cleanly onto existing hardware:
 
@@ -130,7 +129,7 @@ The rotation is the only non-trivial addition to a standard quantization kernel,
 - **Memory bandwidth.** 4.2× KV cache compression translates almost directly to higher decode throughput on a memory-bound system. On an H100, a 70B model at 128K context moves from memory-limited to compute-limited regime.
 - **Flash-attention compatibility.** The quantized format plugs into the existing per-block KV layout; the dequantize step happens in registers before the attention dot-products, identical to existing INT8/INT4 paths.
 
-# The Bigger Picture
+## The Bigger Picture
 
 TurboQuant and PolarQuant sit inside a broader 2024–2025 trend: *geometry-first quantization*. The template is "apply a structured transform that makes the distribution nice, then quantize naively." **QuaRot** and **SpinQuant** apply the same idea to weight quantization, using Hadamard rotations to suppress outliers before INT4 weight quantization. PolarQuant is the most refined instance yet: it doesn't just suppress outliers, it makes the post-transform distribution *so* well-characterised that the codec's parameters become data-independent.
 

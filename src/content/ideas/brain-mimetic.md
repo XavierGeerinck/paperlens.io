@@ -11,15 +11,14 @@ tags:
   - Titans
   - PyTorch
   - Neuroscience
-coverImage: https://picsum.photos/seed/titan/800/600?grayscale
 simulation: BrainMimetic
 featured: false
 ---
 
-# The BrainMimetic Intelligence Report
-## Engineering Test-Time Plasticity with Titans Architecture
+## The BrainMimetic Intelligence Report
+### Engineering Test-Time Plasticity with Titans Architecture
 
-### Executive Summary
+#### Executive Summary
 
 The pursuit of Artificial General Intelligence (AGI) has long been bifurcated into two distinct computational paradigms: the static, massive-scale pattern matching of **Transformers**, and the dynamic, state-dependent processing of **Recurrent Neural Networks (RNNs)**. While Transformers have dominated the last decade of progress, they suffer from a fundamental flaw analogous to anterograde amnesia—once trained, they cannot learn from their immediate experiences beyond the fleeting capacity of their context window.
 
@@ -29,21 +28,21 @@ The core innovation explored herein is the transition from **passive context ret
 
 ---
 
-## Part I: The Stagnation of Static Intelligence
+### Part I: The Stagnation of Static Intelligence
 
-### 1.1 The Context-Compute Trade-off
+#### 1.1 The Context-Compute Trade-off
 
 To understand the necessity of the BrainMimetic architecture, one must first dissect the limitations of the incumbent Transformer paradigm. The Transformer's attention mechanism, specifically Self-Attention, calculates the pairwise importance of every token in a sequence relative to every other token. While this allows for unparalleled modeling of short-term dependencies, it imposes a quadratic computational cost ($O(N^2)$) with respect to sequence length $N$.
 
 As sequence lengths grow to accommodate entire books, codebases, or genomic sequences, the Key-Value (KV) cache required to store past states expands linearly in memory but the compute required to attend to them explodes. Techniques like sliding windows, sparse attention, and linear attention have attempted to mitigate this, but they invariably introduce a "lossy" compression of the past.
 
-### 1.2 The Biological Imperative: Plasticity and Surprise
+#### 1.2 The Biological Imperative: Plasticity and Surprise
 
 The human brain operates on fundamentally different principles. It does not maintain a perfect, lossless buffer of the last hour of audio or visual input. Instead, it continuously updates its internal model of the world based on **prediction error**.
 
 The BrainMimetic LLM seeks to operationalize this biological mechanism. By defining "Surprise" as the gradient of a loss function with respect to the input, we can create a model that only "remembers" (updates its weights) when it encounters something efficiently novel. This allows the system to compress vast amounts of routine data while preserving high-fidelity representations of significant anomalies.
 
-### 1.3 Test-Time Training (TTT): The New Paradigm
+#### 1.3 Test-Time Training (TTT): The New Paradigm
 
 The mechanism enabling this behavior is termed **Test-Time Training (TTT)**. In traditional machine learning, training and inference are distinct phases. In the TTT framework, the distinction blurs. The "hidden state" of the sequence model is no longer a vector of numbers, but the **parameters of a neural network itself**.
 
@@ -84,15 +83,15 @@ The "update rule" is literally one step of Gradient Descent.
 
 ---
 
-## Part II: The Titans Architecture Analysis
+### Part II: The Titans Architecture Analysis
 
-### 2.1 The Core Components
+#### 2.1 The Core Components
 
 The Titans architecture rests on two pillars:
 1.  **The Core Branch**: Uses standard attention to process the current "chunk" of data. Acts as the **Short-Term Memory**.
 2.  **The Neural Memory**: Consumes the data stream token-by-token and updates its internal weights. Acts as the **Long-Term Memory**.
 
-### 2.2 Selection: Memory as Context (MAC)
+#### 2.2 Selection: Memory as Context (MAC)
 
 For our BrainMimetic implementation, we select **Memory as Context (MAC)**.
 *   **Mechanism**: `Input_Attn = [Memory(History); Input_Current]`
@@ -100,11 +99,11 @@ For our BrainMimetic implementation, we select **Memory as Context (MAC)**.
 
 ---
 
-## Part III: The Surprise Metric
+### Part III: The Surprise Metric
 
 The "Surprise" metric is the engine of plasticity in the Titans architecture. It is defined as the gradient of the loss function.
 
-### The Mathematics of Surprise
+#### The Mathematics of Surprise
 
 If the memory $M$ can already perfectly predict the value $v_t$ from key $k_t$, the loss is zero, the gradient is zero, and the "Surprise" is zero.
 
@@ -112,7 +111,7 @@ $$
 Surprise = \nabla Loss(M, x_t)
 $$
 
-### The Synaptic Loop
+#### The Synaptic Loop
 
 This diagram illustrates the cycle of prediction, error, and physical rewiring that occurs for every token processed by the Neural Memory.
 
@@ -137,7 +136,7 @@ sequenceDiagram
     Note over M: New State: M(t)
 ```
 
-### Momentum and Smoothing
+#### Momentum and Smoothing
 
 Biological systems do not rewire themselves based on a single instantaneous error. Titans implements **Momentum** to smooth this process. We define a "Surprise State" $S_t$ which accumulates the gradients.
 
@@ -145,11 +144,11 @@ This formulation effectively creates a **"Memory of Surprise."** The model remem
 
 ---
 
-## Part IV: Engineering the BrainMimetic LLM
+### Part IV: Engineering the BrainMimetic LLM
 
 In this section, we translate the theory into a concrete PyTorch implementation.
 
-### 4.1 The Neural Memory Module (The Brain)
+#### 4.1 The Neural Memory Module (The Brain)
 
 This module implements the gradient descent logic inside the forward pass.
 
@@ -211,7 +210,7 @@ class NeuralMemory(nn.Module):
         return torch.stack(outputs, dim=1), (M, S)
 ```
 
-### 4.2 The BrainMimetic Model
+#### 4.2 The BrainMimetic Model
 
 The top level model stacks these blocks.
 
@@ -233,28 +232,28 @@ class BrainMimeticModel(nn.Module):
 
 ---
 
-## Part V: Feasibility Analysis
+### Part V: Feasibility Analysis
 
-### 5.1 The Compute Bottleneck
+#### 5.1 The Compute Bottleneck
 
 The primary implementation challenge is the sequential dependency in the memory update loop. This loop cannot be trivially parallelized like the Attention mechanism.
 
 **Solution: Chunkwise Parallelism.** For production, the sequence is divided into chunks. Inside the chunk, we use a parallelized version of the update (Dual Form).
 
-### 5.2 Hardware Targets
+#### 5.2 Hardware Targets
 
-#### NVIDIA RTX 3090
+##### NVIDIA RTX 3090
 *   **Strength**: Raw Compute (Tensor Cores).
 *   **Optimization**: Requires fusing the Python loop into a single CUDA kernel using **Triton**.
 *   **Result**: 20x speedup over CPU training.
 
-#### Apple Silicon (M2 Max)
+##### Apple Silicon (M2 Max)
 *   **Strength**: Unified Memory (128GB RAM allows massive models).
 *   **Strategy**: Use larger batch sizes to amortize MPS dispatch overhead.
 
 ---
 
-## Conclusion
+### Conclusion
 
 The BrainMimetic LLM, powered by the Titans architecture, represents a pivotal step toward AGI. By acknowledging that intelligence is not static retrieval but **dynamic adaptation**, we move from the library metaphor of AI (looking up books) to the biological metaphor (rewiring synapses).
 

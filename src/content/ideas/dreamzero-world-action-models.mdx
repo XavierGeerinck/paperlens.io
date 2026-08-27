@@ -12,7 +12,6 @@ tags:
   - World Models
   - Video
   - Control
-coverImage: https://picsum.photos/seed/dreamzero/800/600?grayscale
 simulation: DreamZero
 pdfUrl: https://dreamzero0.github.io/DreamZero.pdf
 webUrl: https://dreamzero0.github.io
@@ -23,15 +22,15 @@ featured: false
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# DreamZero: World Action Models are Zero-shot Policies
+## DreamZero: World Action Models are Zero-shot Policies
 
-## Executive Summary
+### Executive Summary
 DreamZero introduces **World Action Models (WAMs)** that jointly predict future video and actions from language and observations. The key idea is that *high-quality world prediction becomes a policy*: by aligning action outputs with video futures, the model learns physical dynamics directly from dense visual supervision. The paper reports a **14B autoregressive video diffusion policy**, **2×+ generalization gains** over state-of-the-art VLAs on unseen tasks/environments, and **real-time control at ~7Hz** via a 38× inference speedup. It also demonstrates **cross-embodiment transfer** using only video data and **few-shot embodiment adaptation** in 30 minutes.
 
-## The Problem
+### The Problem
 Vision-Language-Action (VLA) models generalize well over semantics (what to do) but struggle with **physical motion generalization** (how to do it). They typically require repeated demonstrations per task and degrade quickly in unseen environments. This makes rare or open-world skills (e.g., “untie a shoelace”) difficult to acquire without costly robot data.
 
-## The Solution / Concept
+### The Solution / Concept
 DreamZero reframes policy learning as **joint world-and-action prediction**:
 - Use a pretrained **image-to-video diffusion backbone** to inherit spatiotemporal priors.
 - Train a single model to **denoise video and action latents together**, improving modality alignment.
@@ -39,7 +38,7 @@ DreamZero reframes policy learning as **joint world-and-action prediction**:
 
 This approach makes video generation quality the main lever for policy performance and enables generalization with heterogeneous, non-repetitive data.
 
-### Core Objective (Flow Matching)
+#### Core Objective (Flow Matching)
 DreamZero uses flow-matching with teacher forcing on chunked sequences. The diffusion time $t$ interpolates between clean latents and noise for both video and action:
 
 <ExpandableMath
@@ -58,7 +57,7 @@ DreamZero uses flow-matching with teacher forcing on chunked sequences. The diff
   ]}
 />
 
-## Visuals
+### Visuals
 ```mermaid
 flowchart TD
     Obs[Video Observations o0:l] --> VAE[Video VAE Encoder]
@@ -81,7 +80,7 @@ flowchart TD
 ```
 *Caption: DreamZero conditions on video, language, and proprioception to jointly denoise future video and action, then feeds back real observations to keep the autoregressive rollout aligned.*
 
-## Algorithm: Joint Video–Action Denoising
+### Algorithm: Joint Video–Action Denoising
 The following interactive block illustrates DreamZero’s joint denoising loop for a single chunk. Video and action latents share a denoising velocity to keep their futures aligned.
 
 <AlgorithmBlock
@@ -104,7 +103,7 @@ The following interactive block illustrates DreamZero’s joint denoising loop f
   }}
 />
 
-## Implementation (Simplified)
+### Implementation (Simplified)
 Below is a minimal sketch of chunk-wise inference with KV-cache replacement.
 
 ```python
@@ -134,12 +133,12 @@ def closed_loop_control(model, env, horizon=4):
         model.cache.update_video(obs.frames)
 ```
 
-## Feasibility / Analysis
+### Feasibility / Analysis
 - **Data efficiency:** The paper reports strong gains using heterogeneous, non-repetitive robot data, suggesting that diversity outweighs repetition for generalization.
 - **Real-time control:** A 38× speedup (algorithmic + system optimizations) allows a 14B model to control at ~7Hz.
 - **Cross-embodiment transfer:** Video-only demonstrations from other robots or humans improve unseen-task performance by **42%+**, and **30 minutes** of play data enables adaptation to a new embodiment without losing zero-shot generalization.
 
-## What to Try in the Simulation [Robotic Precognition Unit]
+### What to Try in the Simulation [Robotic Precognition Unit]
 
 1.  **Factory Mode (Clean)**: Start in the **FACTORY (CLEAN)** environment. Drag the rotation slider left and right. 
     -   Observe how the robotic arm moves freely.
@@ -155,6 +154,6 @@ def closed_loop_control(model, env, horizon=4):
 
 4.  **Why This Matters**: Standard policies need to be retrained for every new obstacle. DreamZero uses its internal physics engine (trained on massive video data) to generalize zero-shot: it knows "solid things stop movement" even if it's never seen *this specific red box* before.
 
-## Related
+### Related
 
 [EchoWM: Enterable Omnimodal World Models with Unified Camera Intent](/idea/echowm-omnimodal-world-model/) covers a closely related mechanism.

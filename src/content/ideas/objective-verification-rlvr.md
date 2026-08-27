@@ -12,19 +12,18 @@ tags:
   - DeepSeek-R1
   - Formal Verification
   - Lean4
-coverImage: https://picsum.photos/seed/verification/800/600?grayscale
 simulation: ObjectiveVerifier
 pdfUrl: https://arxiv.org/pdf/2501.12948 # DeepSeek-R1 Paper
 featured: true
 ---
 
-# Executive Summary
+## Executive Summary
 
 The "vibes-based" era of AI alignment is ending. For years, Reinforcement Learning from Human Feedback (RLHF) has been the gold standard, but it suffers from a fatal flaw: humans are inconsistent, expensive, and easily "hacked" by pleasing-but-wrong answers. 
 
 The industry is pivoting toward **Reinforcement Learning from Verifiable Rewards (RLVR)**. In this paradigm, models are trained in environments that provide absolute truth. If a model writes code, it is executed; if it solves math, it is checked by a formal verifier like **Lean** or **Coq**. Coupled with **Synthetic Data Curriculums**, where reasoning models generate error-free "textbooks," we are building a recursive loop of intelligence that no longer depends on the limited supply of high-quality human text.
 
-# The Problem: The Human Feedback Bottleneck
+## The Problem: The Human Feedback Bottleneck
 
 Traditional LLM training relies on two primary data sources:
 1. **The Public Web**: We have largely "exhausted" the high-quality human text available.
@@ -32,22 +31,22 @@ Traditional LLM training relies on two primary data sources:
 
 When models are trained on human preferences, they often learn **sycophancy**—telling the user what they want to hear rather than what is factually correct. To reach "System 2" thinking (deliberative reasoning), models need a hard "No" when they are wrong.
 
-# The Solution: Objective Verification & RLVR
+## The Solution: Objective Verification & RLVR
 
-### 1. The RLVR Paradigm
+#### 1. The RLVR Paradigm
 RLVR (Reinforcement Learning from Verifiable Rewards) replaces the neural Reward Model (which predicts what a human would like) with a **Programmatic Verifier**. 
 
 - **Code Execution**: The model writes Python/SQL; the trainer runs the code against unit tests. Success = Reward (1), Failure = Penalty (0).
 - **Formal Math**: The model writes proofs in Lean 4. The Lean compiler checks the logic. If the proof is "Closed," the model is reinforced.
 - **Rule-Based Formatting**: Models like DeepSeek-R1 are rewarded for correctly using `<think>` tags, ensuring the reasoning process remains transparent.
 
-### 2. Synthetic Data Curriculums
+#### 2. Synthetic Data Curriculums
 Microsoft’s **Phi-4** and **DeepSeek-Prover** represent the new frontier: using "Teacher" models to create "Synthetic Textbooks."
 - **Recursive Decomposition**: A large model breaks a complex problem into 100 small, verifiable steps.
 - **Error-Free Synthesis**: Only paths that pass the Verifier are kept, creating a "perfect" dataset of reasoning trajectories.
 - **Curriculum Learning**: Training starts with "Grade 1" synthetic problems and scales in complexity as the model converges.
 
-### 3. The "Aha Moment" and Self-Correction
+#### 3. The "Aha Moment" and Self-Correction
 One of the most fascinating emergent behaviors observed in DeepSeek-R1 is **self-correction**. Because the model is only rewarded for the *final* correct answer, it learns to treat its own output as a scratchpad.
 
 During training, the model might output:
@@ -55,7 +54,7 @@ During training, the model might output:
 
 This "Aha moment" isn't explicitly programmed. It emerges naturally because the RL policy discovers that catching and fixing errors leads to higher rewards than blindly guessing. This mimics human "System 2" thinking—slow, deliberative, and self-critical.
 
-# Visualizing the Verifier Loop
+## Visualizing the Verifier Loop
 
 ```mermaid
 graph TD
@@ -70,7 +69,7 @@ graph TD
     H[Synthetic Textbook Generator] -->|Curriculum Seeds| A
 ```
 
-## Implementation: A Simple RLVR Trainer (Pseudocode)
+### Implementation: A Simple RLVR Trainer (Pseudocode)
 Below is a conceptual implementation of a Group Relative Policy Optimization (GRPO) loop using a Code Execution Verifier.
 
 ```python
@@ -119,7 +118,7 @@ def grpo_step(model, prompts):
     optimizer.step()
 ```
 
-## Feasibility & Analysis
+### Feasibility & Analysis
 
 | Method | Verification Difficulty | Target Hardwares | Scaling Potential |
 | :--- | :--- | :--- | :--- |

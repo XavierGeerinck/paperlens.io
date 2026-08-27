@@ -6,15 +6,21 @@ import Footer from '../../components/Footer.astro';
 import HelpOverlay from '../../components/HelpOverlay.astro';
 import DemoView from '../../components/react/DemoView';
 import EntryThumb from '../../components/react/EntryThumb';
+import { groupByTag, tagSlug } from '../../lib/tags';
+import simHeights from '../../data/sim-heights.json';
 
 export async function getStaticPaths() {
   const ideas = await getCollection('ideas');
   const sorted = ideas.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
+  // only tags shared by more than one entry get a page — see src/pages/tags/[tag].astro
+  const hubs = new Set(groupByTag(sorted).filter((g) => g.entries.length > 1).map((g) => g.slug));
+
   return sorted.map((idea, i) => ({
     params: { slug: idea.slug },
     props: {
       idea,
+      hubs: [...hubs],
       newer: sorted[i - 1] ?? null,
       older: sorted[i + 1] ?? null,
       siblings: sorted
@@ -31,12 +37,14 @@ export async function getStaticPaths() {
 
 interface Props {
   idea: CollectionEntry<'ideas'>;
+  hubs: string[];
   newer: CollectionEntry<'ideas'> | null;
   older: CollectionEntry<'ideas'> | null;
   siblings: { slug: string; title: string; date: Date; tags: string[] }[];
 }
 
-const { idea, newer, older, siblings } = Astro.props;
+const { idea, hubs, newer, older, siblings } = Astro.props;
+const hubTags = new Set(hubs);
 const { title, subtitle, status, date, tags, simulation, coverImage, webUrl, githubUrl, category, impact, readTime } =
   idea.data;
 
@@ -77,12 +85,49 @@ const related = siblings
   .sort((a, b) => b.shared - a.shared || b.date.valueOf() - a.date.valueOf())
   .slice(0, 4);
 
-const toc = headings.filter((h) => h.depth >= 1 && h.depth <= 3);
+// entry bodies start at h2 — h1 is the entry title, once, in the page header
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+
+// --- what the crawlers get -------------------------------------------------
+const ogImage = coverImage ?? `/og/${idea.slug}.png`;
+
+const breadcrumbs = [
+  { name: 'PaperLens', url: '/' },
+  { name: 'Papers', url: '/#papers' },
+  { name: title, url: `/idea/${idea.slug}/` },
+];
+
+/**
+ * KaTeX ships ~24KB of render-blocking CSS. remark-math only fires on `$…$` or
+ * `$$…$$`, so the stylesheet is loaded for the entries that actually have math.
+ */
+const hasMath = /\$\$[\s\S]+?\$\$|(?<![\\$])\$[^$\n]+\$/.test(idea.body);
+
+/**
+ * The simulation is a `client:only` island: it exists only after hydration, and
+ * it lands at the top of the article. Reserving its measured height keeps the
+ * document below it from jumping. `bun scripts/sim-metrics.ts` refreshes these.
+ */
+const measured = (simHeights.heights as Record<string, { lg: number; sm: number }>)[idea.slug];
+const simReserve = measured
+  ? `--sim-h: ${measured.lg}px; --sim-h-sm: ${measured.sm}px;`
+  : undefined;
 
 const helpKeys = views.length > 1 ? [{ key: 'gt / gT', what: 'next / previous view' }] : [];
 ---
 
-<BaseLayout {title} description={subtitle} image={coverImage} type="article" {date}>
+<BaseLayout
+  {title}
+  description={subtitle}
+  image={ogImage}
+  type="article"
+  {date}
+  keywords={tags}
+  citation={pdfUrls}
+  section={category}
+  {breadcrumbs}
+  math={hasMath}
+>
   <Header current="papers" />
 
   <div class="term">
@@ -106,7 +151,13 @@ const helpKeys = views.length > 1 ? [{ key: 'gt / gT', what: 'next / previous vi
           <h1>{title}</h1>
           <p class="sub">{subtitle}</p>
           <p class="tags">
-            {tags.map((tag) => <span class="tag">{tag.toLowerCase().replace(/\s+/g, '-')}</span>)}
+            {tags.map((tag) =>
+              hubTags.has(tagSlug(tag)) ? (
+                <a class="tag" href={`/tags/${tagSlug(tag)}/`}>{tagSlug(tag)}</a>
+              ) : (
+                <span class="tag">{tagSlug(tag)}</span>
+              )
+            )}
           </p>
         </header>
 
@@ -117,7 +168,7 @@ const helpKeys = views.length > 1 ? [{ key: 'gt / gT', what: 'next / previous vi
               <span class="hl">simulation</span><span class="extra">{simulation}</span>
             </h2>
             <div class="pane-title-r"><span class="c-aqua">● running</span></div>
-            <div class="sim-host">
+            <div class="sim-host" style={simReserve}>
               {/* client:only — the simulations are interactive by nature, and several
                   seed themselves randomly, which server rendering cannot match */}
               <DemoView client:only="react" simulationName={simulation} />

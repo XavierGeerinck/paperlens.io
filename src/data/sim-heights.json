@@ -1,0 +1,125 @@
+{
+  "breakpoint": 720,
+  "heights": {
+    "adam-epsilon-optimization": {
+      "lg": 525,
+      "sm": 817
+    },
+    "alphagenome": {
+      "lg": 744,
+      "sm": 725
+    },
+    "asahi-m1n1": {
+      "lg": 771,
+      "sm": 1477
+    },
+    "asml-tin-droplets": {
+      "lg": 818,
+      "sm": 1453
+    },
+    "brain-mimetic": {
+      "lg": 619,
+      "sm": 1116
+    },
+    "control-theoretic-imperative": {
+      "lg": 705,
+      "sm": 1277
+    },
+    "deepmind-deep-delta": {
+      "lg": 930,
+      "sm": 1420
+    },
+    "deepseek-engram-conditional-memory": {
+      "lg": 669,
+      "sm": 1488
+    },
+    "deepseek-mhc": {
+      "lg": 689,
+      "sm": 1225
+    },
+    "deepseek-model1": {
+      "lg": 662,
+      "sm": 1398
+    },
+    "deepseek-moe": {
+      "lg": 656,
+      "sm": 1145
+    },
+    "digital-red-queen": {
+      "lg": 866,
+      "sm": 1035
+    },
+    "dreamzero-world-action-models": {
+      "lg": 546,
+      "sm": 732
+    },
+    "echowm-omnimodal-world-model": {
+      "lg": 1214,
+      "sm": 2031
+    },
+    "jepa-world-models": {
+      "lg": 515,
+      "sm": 980
+    },
+    "kona-1": {
+      "lg": 827,
+      "sm": 1806
+    },
+    "lace-lithography": {
+      "lg": 1060,
+      "sm": 1454
+    },
+    "leworldmodel-stable-jepa": {
+      "lg": 922,
+      "sm": 2045
+    },
+    "mapping-the-mind": {
+      "lg": 661,
+      "sm": 1201
+    },
+    "multi-head-latent-attention": {
+      "lg": 884,
+      "sm": 1670
+    },
+    "objective-verification-rlvr": {
+      "lg": 862,
+      "sm": 1339
+    },
+    "privacy-preserving-llm-inference": {
+      "lg": 544,
+      "sm": 560
+    },
+    "recirculation-inference-time-recurrence": {
+      "lg": 1423,
+      "sm": 2215
+    },
+    "rubin-architecture": {
+      "lg": 887,
+      "sm": 1508
+    },
+    "seal-self-adapting-lms": {
+      "lg": 836,
+      "sm": 1437
+    },
+    "sub-quadratic-scaling": {
+      "lg": 709,
+      "sm": 1227
+    },
+    "test-time-training-long-context": {
+      "lg": 508,
+      "sm": 733
+    },
+    "towards-autonomous-mathematics-research": {
+      "lg": 630,
+      "sm": 660
+    },
+    "turboquant-polarquant": {
+      "lg": 686,
+      "sm": 722
+    },
+    "verifiable-rewards": {
+      "lg": 862,
+      "sm": 1339
+    }
+  }
+}

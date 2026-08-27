@@ -11,7 +11,6 @@ tags:
   - DeepSeek
   - FlashMLA
   - Engram
-coverImage: https://picsum.photos/seed/deepseekm1/800/600?grayscale
 simulation: DeepSeekModel1
 pdfUrl: https://arxiv.org/abs/2412.19437 # Linking V3 paper as placeholder/context
 webUrl: https://github.com/deepseek-ai/FlashMLA
@@ -22,7 +21,7 @@ featured: true
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# The MODEL1 Revelation
+## The MODEL1 Revelation
 
 On January 21, 2026—exactly one year after the release of DeepSeek-R1—observers noticed a massive update to the **FlashMLA** codebase. Buried within 114 modified files was a new identifier: `MODEL1`.
 
@@ -30,7 +29,7 @@ Analysis of the code reveals a significant architectural departure from the V3 s
 
 This post dissects the two primary innovations discovered in the repository: **Value Vector Position Awareness (VVPA)** and the **Engram Memory System**.
 
-## The Problem: The "Fact vs. Reasoning" Tax
+### The Problem: The "Fact vs. Reasoning" Tax
 
 In a standard Transformer (like DeepSeek V3 or GPT-4), retrieving the capital of France requires roughly the same computational path as solving a novel logic puzzle. The model must:
 1.  Embed the tokens.
@@ -39,16 +38,16 @@ In a standard Transformer (like DeepSeek V3 or GPT-4), retrieving the capital of
 
 For reasoning, this depth is necessary. For static knowledge, it is an immense waste of energy and FLOPs. Furthermore, as context windows scale past 1M tokens, the Key-Value (KV) cache becomes unmanageably large, even with Multi-Head Latent Attention (MLA).
 
-## The Solution: Engram & VVPA
+### The Solution: Engram & VVPA
 
 MODEL1 introduces a hybrid architecture that treats "memory" and "computation" as distinct physical pathways.
 
-### 1. Value Vector Position Awareness (VVPA)
+#### 1. Value Vector Position Awareness (VVPA)
 Standard Rotary Positional Embeddings (RoPE) are applied only to Queries ($Q$) and Keys ($K$) to calculate attention scores based on relative distance. The Values ($V$) are typically position-agnostic.
 
 VVPA injects positional semantics directly into the Value vectors. This allows the model to retain "source awareness" post-attention. If the model retrieves a fact from token #500, the output vector carries a compressed signature of "position 500". This enables the **Engram** system to verify temporal consistency without re-scanning the cache.
 
-### 2. The Engram Memory System
+#### 2. The Engram Memory System
 The code references an "Engram" module—likely an implementation of recent research into Neural Episodic Control. Instead of calculating every token via the deep MoE stack, MODEL1 seems to use a lightweight "router" that can bypass the heavy compute layers for facts it has "memorized" in a compressed lookup table.
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
@@ -80,7 +79,7 @@ The code references an "Engram" module—likely an implementation of recent rese
   </div>
 </div>
 
-## Algorithm: VVPA Injection
+### Algorithm: VVPA Injection
 
 The following algorithm visualizes how Position Awareness is injected into the Value stream. Unlike standard attention where $V$ is purely semantic, here $V$ is modulated by a positional frequency.
 
@@ -103,7 +102,7 @@ The following algorithm visualizes how Position Awareness is injected into the V
   }}
 />
 
-### Mathematical Formulation
+#### Mathematical Formulation
 
 The core change in the attention mechanism can be described as:
 
@@ -122,15 +121,15 @@ The core change in the attention mechanism can be described as:
   ]}
 />
 
-## Feasibility & Hardware
+### Feasibility & Hardware
 
 The FlashMLA code specifically optimizes this for **Nvidia Blackwell (SM100)** architectures, utilizing FP8 (8-bit floating point) for the Engram lookup tables. This suggests that the "Memory" part of the model is designed to sit in the high-bandwidth memory (HBM) as a massive, low-precision hash map, while the "Compute" cores focus on the reasoning tokens.
 
-### Key Metrics from Code Comments
+#### Key Metrics from Code Comments
 * **Unified Dimension**: 512 (Standardized across heads).
 * **Cache Reduction**: ~30% smaller KV footprint due to VVPA eliminating the need to store separate positional keys for some layers.
 * **Latency**: Up to 40% faster for "knowledge-heavy" queries.
 
-## Future Implications
+### Future Implications
 
 If MODEL1 works as implied, it separates **intelligence** (processing) from **knowledge** (storage). This is the holy grail of efficient AI—we don't need a supercomputer to remember your name, only to solve your problems.

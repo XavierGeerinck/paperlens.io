@@ -3,9 +3,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
+    "dev": "bun scripts/prebuild.ts && astro dev",
+    "build": "bun scripts/prebuild.ts && astro build",
+    "preview": "astro preview",
+    "sim:measure": "bun scripts/sim-metrics.ts"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",

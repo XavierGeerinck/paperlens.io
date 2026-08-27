@@ -15,13 +15,12 @@ tags:
   - Gemma 3
   - Recurrence
   - Test-Time Scaling
-coverImage: https://picsum.photos/seed/recirculation/800/600?grayscale
 simulation: Recirculation
 pdfUrl: https://arxiv.org/pdf/2608.17981
 featured: true
 ---
 
-# Executive Summary
+## Executive Summary
 
 A feedforward transformer gets exactly one pass through its layers to decide what a token means. If the evidence that settles an ambiguity only arrives in the deep layers, the shallow layers have already done their work on a guess — and everything above them is built on that guess.
 
@@ -29,7 +28,7 @@ A feedforward transformer gets exactly one pass through its layers to decide wha
 
 The numbers are unusually good for something this cheap. On Gemma 3 the adaptive variant delivers a **23.0% reduction in perplexity** (against 8.5% for the basic version) and a **20.9% error reduction on GSM8k at pass@128**. Generation latency is unchanged. The model weights are frozen throughout.
 
-# The Problem: Depth Is a Budget for Changing Your Mind
+## The Problem: Depth Is a Budget for Changing Your Mind
 
 The paper's framing is the part worth internalising: **state updates in a feedforward transformer are bounded by model depth.**
 
@@ -44,7 +43,7 @@ The result is what the authors call *"a race in which the model's response gener
 
 Chain-of-thought is the usual escape hatch: spend output tokens to give the model more serial computation. Recirculation asks a sharper question — why should more serial computation require more *tokens*?
 
-# The Mechanism
+## The Mechanism
 
 After the ordinary forward pass, the activation at a deep **source** layer $s$ is mixed into a shallow **destination** layer $d$:
 
@@ -75,7 +74,7 @@ graph TD
     MIX -. "rerun span" .-> MID
 ```
 
-## Which Layers Talk to Each Other
+### Which Layers Talk to Each Other
 
 The source/destination pair is the one thing that has to be chosen per model. The pairs the paper reports:
 
@@ -87,13 +86,13 @@ The source/destination pair is the one thing that has to be chosen per model. Th
 
 The pattern is consistent: the source sits around two-thirds of the way up — deep enough to have integrated context, not so deep that it has already collapsed into output logits — and the destination sits near the first quarter, while step sizes are still large enough for the injection to matter.
 
-## Adaptive Recirculation
+### Adaptive Recirculation
 
 The fixed-$\alpha$ version leaves value on the table, because not every token needs the same amount of reconsideration. The adaptive variant trains a small MLP that maps token-specific source and destination embeddings to **vector-valued** $\alpha$ and $\beta$ — per-dimension, per-token mixing coefficients. The base model stays frozen; only this MLP is trained.
 
 The gap is large: **23.0% perplexity reduction versus 8.5%** for basic recirculation on the 1B model. Learning *when* to recirculate matters more than recirculating.
 
-# What It Costs
+## What It Costs
 
 This is where the proposal gets interesting, and where the honest caveat lives.
 
@@ -103,7 +102,7 @@ This is where the proposal gets interesting, and where the honest caveat lives.
 
 So the trade is: **buy better state tracking on long inputs by making the front of the pipeline serial.** Whether that is worth it depends entirely on your prefill-to-decode ratio.
 
-# Results
+## Results
 
 | Setting | Result |
 |---|---|
@@ -118,13 +117,13 @@ The method was validated beyond Gemma: **Ministral 3, Pythia, Qwen 3 and Phi-2**
 
 Note the shape of the GSM8k result. The gain more than doubles from pass@1 to pass@128, which is what you would expect if recirculation is improving the *quality of the distribution* rather than nudging a single greedy path.
 
-## Which Tokens Actually Benefit
+### Which Tokens Actually Benefit
 
 A nice piece of analysis: the effect concentrates on **adverbs, adjectives and verbs**, and is smallest on **numerals, determiners and pronouns**.
 
 That is exactly the signature the theory predicts. Open-class words carry meaning that depends on context and can be revised; a determiner is a determiner no matter what follows it. If the mechanism were doing something generic — smoothing, regularisation, extra compute for its own sake — the benefit would not sort itself along the open/closed-class boundary like this.
 
-# Implementation Sketch
+## Implementation Sketch
 
 ```python
 def recirculated_forward(model, hidden, s: int, d: int, alpha: float = 0.15):
@@ -162,7 +161,7 @@ def recirculated_forward(model, hidden, s: int, d: int, alpha: float = 0.15):
 
 The adaptive variant replaces the scalar `alpha` with `alpha, beta = mlp(embed(s), embed(d), token)`, producing a vector per token. That MLP is the only thing that is ever trained.
 
-# Where This Sits
+## Where This Sits
 
 Recirculation belongs to a family of ideas that all attack the same limit — a single forward pass is not enough serial computation — but each buys the extra computation somewhere different:
 
@@ -176,7 +175,7 @@ That last point is what makes it worth paying attention to. Every other approach
 
 The obvious neighbour is [Steering Recurrent Reasoners with Readout Feedback](https://arxiv.org/abs/2608.24136), published a week later, which injects intermediate predictions back into latent dynamics as coupling forces — the same instinct, applied to models that are already recurrent.
 
-# What Is Still Open
+## What Is Still Open
 
 - **Choosing $(s, d)$ without a sweep.** The three reported pairs are suggestive but were found empirically. There is no principled selection rule yet.
 - **More than one iteration.** Everything reported uses a single extra pass. The appendix shows two-iteration variants exist; nothing establishes where the returns stop.

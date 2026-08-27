@@ -1,0 +1,69 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import HelpOverlay from '../../components/HelpOverlay.astro';
+import { groupByTag } from '../../lib/tags';
+
+const all = await getCollection('ideas');
+const sorted = all.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const groups = groupByTag(sorted);
+/** a tag earns a page once it connects two entries; below that it is a label, not a topic */
+const hubs = groups.filter((g) => g.entries.length > 1);
+const singles = groups.filter((g) => g.entries.length === 1);
+const max = hubs[0]?.entries.length ?? 1;
+---
+
+<BaseLayout
+  title="Topics — every tag across the PaperLens archive"
+  description={`The ${groups.length} tags used across ${sorted.length} entries, from world models and DeepSeek to lithography and quantization. Tags shared by two or more entries open a topic page.`}
+  breadcrumbs={[
+    { name: 'PaperLens', url: '/' },
+    { name: 'Topics', url: '/tags/' },
+  ]}
+>
+  <Header current="papers" count={sorted.length} />
+
+  <div class="term">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="/">~</a> / <span class="cur">tags</span>
+    </nav>
+
+    <section class="pane" aria-labelledby="topics-title">
+      <h2 class="pane-title" id="topics-title"><span class="hl">tags</span><span class="extra">{groups.length} distinct</span></h2>
+      <div class="pane-title-r">sorted by count ↓</div>
+
+      <h1 style="font-size:var(--fs-lg);margin:.6rem 0 .3rem">Topics</h1>
+      <p class="dim" style="margin:0 0 1rem;max-width:70ch">
+        Every tag in the archive. The {hubs.length} that connect more than one entry have their own page;
+        the rest are listed for completeness.
+      </p>
+
+      <ol class="uniq">
+        {hubs.map((group) => (
+          <li>
+            <span class="n">{group.entries.length}</span>
+            <a href={`/tags/${group.slug}/`}>{group.slug}</a>
+            <span class="bar" aria-hidden="true">
+              {'█'.repeat(Math.max(1, Math.round((group.entries.length / max) * 8)))}
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      <hr class="hr" style="margin:1.1rem 0 .9rem" />
+
+      <p class="prompt" style="margin:0 0 .5rem;font-size:var(--fs-sm);color:var(--fg1)">
+        tags | uniq -u &nbsp;<span class="dim">— used once</span>
+      </p>
+      <p class="tags">
+        {singles.map((group) => <span class="tag">{group.slug}</span>)}
+      </p>
+    </section>
+  </div>
+
+  <Footer path="~/tags" meta={`${groups.length} tags · ${hubs.length} topics`} />
+  <HelpOverlay />
+</BaseLayout>

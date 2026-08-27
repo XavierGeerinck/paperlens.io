@@ -94,6 +94,13 @@ export function planProblems(p: EntryPlan, truncated: boolean): string[] {
 	const headings = (body.match(/^##\s+\S/gm) ?? []).length;
 	if (headings < MIN_HEADINGS) bad.push(`only ${headings} '##' headings, needs at least ${MIN_HEADINGS}`);
 
+	// The page already renders the entry title as its h1. A '# ' in the body puts
+	// a second one on the page and flattens the outline a crawler reads.
+	// Shell and Python comments start with '#' too, so fenced code is dropped first.
+	const prose = body.replace(/^(```|~~~)[\s\S]*?^\1[^\n]*$/gm, "");
+	const h1s = (prose.match(/^# \S/gm) ?? []).length;
+	if (h1s) bad.push(`${h1s} '# ' heading(s) in the body — sections start at '##'`);
+
 	// A heading run into its own paragraph means the model lost its newlines.
 	if (/^#{1,3}\s+\S[^\n]{120,}/m.test(body)) bad.push("a heading runs into body text on the same line");
 
@@ -198,7 +205,6 @@ function frontmatter(p: EntryPlan, pdfUrl: string, date: string): string {
 		`readTime: ${esc(p.readTime)}`,
 		"tags:",
 		...p.tags.map((t) => `  - ${t}`),
-		`coverImage: https://picsum.photos/seed/${p.slug}/800/600?grayscale`,
 		`simulation: ${p.simulationName}`,
 		`pdfUrl: ${pdfUrl}`,
 		"featured: true",

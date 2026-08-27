@@ -11,13 +11,12 @@ tags:
   - Long Context
   - Meta-Learning
   - Transformers
-coverImage: https://picsum.photos/seed/ttt-memory/800/600?grayscale
 simulation: TTTSimulation
 pdfUrl: https://arxiv.org/pdf/2512.23675
 featured: true
 ---
 
-# Reimagining LLM Memory: Test-Time Training (TTT-E2E)
+## Reimagining LLM Memory: Test-Time Training (TTT-E2E)
 
 We keep seeing LLMs with larger context windows in the news, yet they still repeat the same mistakes. We still have to copy and paste earlier context back into the chat for LLMs to "get it." A smart co-worker would pick up on these patterns, adapt, and carry the lessons forward. Why can’t LLMs?
 
@@ -25,7 +24,7 @@ The critical difference lies in memory. Humans improve with "context" (life expe
 
 **Test-Time Training with an end-to-end formulation (TTT-E2E)** changes this by compressing context into weights via next-token prediction *during inference*.
 
-## The Problem: The Loss vs. Latency Trade-off
+### The Problem: The Loss vs. Latency Trade-off
 
 The fundamental problem in long-context research is scaling with context length.
 
@@ -41,13 +40,13 @@ The fundamental problem in long-context research is scaling with context length.
 
 We need a method that scales well in **both**.
 
-## The Solution: Compressing Context into Weights
+### The Solution: Compressing Context into Weights
 
 **Test-Time Training (TTT)** proposes that instead of storing context in a cache (like Transformers) or a fixed hidden state (like RNNs), we should update the model's **weights** on the fly.
 
 For language models, training *is* compression. Next-token prediction compresses data into weights. TTT-E2E simply continues this training at test time.
 
-### The Mechanism
+#### The Mechanism
 
 1.  **Inner Loop (Test Time)**: As the model reads context $x_1, \dots, x_t$, it performs gradient descent steps on the weights $W$ to minimize the prediction error on this context.
 
@@ -96,14 +95,14 @@ import AlgorithmBlock from '../../components/react/AlgorithmBlock';
   }}
 />
 
-### Architecture Comparison
+#### Architecture Comparison
 
 | Feature | Transformer | RNN / Mamba | TTT-E2E |
 | :--- | :--- | :--- | :--- |
 | **Memory** | Cache (Huge, Linear) | State (Tiny, Constant) | Weights (Fixed, Constant) |
 | **Latency** | Linear (Gets slower) | Constant (Fast) | Constant (Fast) |
 
-## Implementation
+### Implementation
 
 The core idea can be visualized as a custom layer where the "hidden state" is actually a learnable weight matrix $W$.
 
@@ -147,7 +146,7 @@ class TTTLayer(nn.Module):
         return torch.stack(outputs)
 ```
 
-## Performance & Feasibility
+### Performance & Feasibility
 
 **Scaling**: TTT-E2E matches the low loss of Transformers but maintains the constant latency of RNNs.
 - **128K Context**: 2.7x faster than Full Attention (H100).
@@ -158,10 +157,10 @@ Training is expensive. The meta-learning phase requires "gradients of gradients"
 
 However, the inference benefits are massive. TTT-E2E effectively solves the "Memory Wall" for LLMs, allowing us to treat context as a stream of training data that permanently improves the model's understanding for that session, rather than just filling a temporary buffer.
 
-## Related: Buying Serial Compute Without Touching Weights
+### Related: Buying Serial Compute Without Touching Weights
 
 TTT buys extra computation by letting the weights move at inference. [Recirculation](/idea/recirculation-inference-time-recurrence/) buys it a different way — leaking a deep layer's activations back into a shallow one and rerunning that span, with the model entirely frozen. Same diagnosis (one forward pass is not enough serial computation), opposite prescription.
 
-## Conclusion
+### Conclusion
 
 By rewriting the definition of "memory" from "storage" to "learning," TTT-E2E offers a path to models that truly learn from long context without the computational explosion of attention mechanisms. It mimics biological learning: we don't remember every pixel of every frame we've ever seen, but our neural weights update to understand the world better with every second.

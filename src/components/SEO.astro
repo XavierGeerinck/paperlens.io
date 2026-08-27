@@ -1,80 +1,177 @@
 ---
+interface Crumb {
+  name: string;
+  url: string;
+}
+
 interface Props {
   title: string;
   description: string;
   image?: string;
   type?: 'website' | 'article';
   date?: Date;
+  dateModified?: Date;
   canonical?: string;
+  /** entry tags — they become schema.org keywords */
+  keywords?: string[];
+  /** source papers the entry is about */
+  citation?: string[];
+  /** entry category, as articleSection */
+  section?: string;
+  /** rendered as BreadcrumbList; the visible trail lives in the page */
+  breadcrumbs?: Crumb[];
+  /** extra JSON-LD nodes a page wants to add (the home page adds its ItemList) */
+  schema?: Record<string, unknown>[];
 }
 
 const {
   title,
   description,
-  image = 'https://paperlens.io/og-default.png',
+  image = '/og-default.png',
   type = 'website',
   date,
+  dateModified,
   canonical = Astro.url.href,
+  keywords = [],
+  citation = [],
+  section,
+  breadcrumbs = [],
+  schema = [],
 } = Astro.props;
 
 const siteName = 'PaperLens';
-const fullTitle = `${title} | ${siteName}`;
+const site = Astro.site?.href.replace(/\/$/, '') ?? 'https://paperlens.io';
+
+/**
+ * "<title> | PaperLens" on its own doubles the brand on the home page and
+ * pushes long paper titles past what a result page will show, so the suffix is
+ * only added when the title neither carries the brand already nor fills the
+ * ~60 characters a SERP renders.
+ */
+const fullTitle =
+  title.includes(siteName) || title.length > 52 ? title : `${title} | ${siteName}`;
+
+const absolute = (url: string) => new URL(url, `${site}/`).href;
+const ogImage = absolute(image);
+
+const author = {
+  '@type': 'Person',
+  name: 'Xavier Geerinck',
+  url: 'https://xaviergeerinck.com',
+};
+
+const publisher = {
+  '@type': 'Organization',
+  name: siteName,
+  url: site,
+  logo: {
+    '@type': 'ImageObject',
+    url: absolute('/favicon.png'),
+  },
+};
+
+const isHome = new URL(canonical).pathname === '/';
+
+const primary =
+  type === 'article'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: title,
+        description,
+        image: ogImage,
+        url: canonical,
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        datePublished: date?.toISOString(),
+        dateModified: (dateModified ?? date)?.toISOString(),
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        author,
+        publisher,
+        ...(section ? { articleSection: section } : {}),
+        ...(keywords.length ? { keywords: keywords.join(', ') } : {}),
+        ...(citation.length ? { citation } : {}),
+      }
+    : isHome
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: siteName,
+          alternateName: 'PaperLens — papers and research for AI engineers, visualized',
+          url: site,
+          description,
+          inLanguage: 'en',
+          author,
+          publisher,
+        }
+      : {
+          // WebSite belongs to the site root; everything else is a page on it
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: title,
+          description,
+          url: canonical,
+          inLanguage: 'en',
+          isPartOf: { '@type': 'WebSite', name: siteName, url: site },
+          publisher,
+        };
+
+const breadcrumbSchema = breadcrumbs.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((crumb, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: crumb.name,
+        item: absolute(crumb.url),
+      })),
+    }
+  : null;
+
+const nodes = [primary, breadcrumbSchema, ...schema].filter(Boolean);
 ---
 
 <!-- Primary Meta Tags -->
 <title>{fullTitle}</title>
-<meta name="title" content={fullTitle} />
 <meta name="description" content={description} />
 <meta name="author" content="Xavier Geerinck" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href={canonical} />
+{keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content={type} />
 <meta property="og:url" content={canonical} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={image} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title} />
 <meta property="og:site_name" content={siteName} />
+<meta property="og:locale" content="en_US" />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@XavierGeerinck" />
+<meta name="twitter:creator" content="@XavierGeerinck" />
 <meta name="twitter:url" content={canonical} />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
-<meta name="twitter:image" content={image} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={title} />
 
 {type === 'article' && date && (
-  <meta property="article:published_time" content={date.toISOString()} />
+  <>
+    <meta property="article:published_time" content={date.toISOString()} />
+    <meta property="article:author" content="Xavier Geerinck" />
+    {section && <meta property="article:section" content={section} />}
+    {keywords.map((tag) => <meta property="article:tag" content={tag} />)}
+  </>
 )}
 
+<link rel="alternate" type="application/rss+xml" title={`${siteName} — new entries`} href={`${site}/rss.xml`} />
+
 <!-- JSON-LD Structured Data -->
-<script
-  type="application/ld+json"
-  set:html={JSON.stringify(
-    type === 'article'
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: title,
-          description: description,
-          image: image,
-          datePublished: date?.toISOString(),
-          author: {
-            '@type': 'Person',
-            name: 'Xavier Geerinck',
-          },
-          publisher: {
-            '@type': 'Organization',
-            name: siteName,
-            url: 'https://paperlens.io',
-          },
-        }
-      : {
-          '@context': 'https://schema.org',
-          '@type': 'WebSite',
-          name: siteName,
-          url: 'https://paperlens.io',
-        }
-  )}
-/>
+{nodes.map((node) => <script type="application/ld+json" set:html={JSON.stringify(node)} />)}

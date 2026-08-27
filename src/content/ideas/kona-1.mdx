@@ -11,7 +11,6 @@ tags:
   - EBM
   - Logical Intelligence
   - Implicit CoT
-coverImage: https://picsum.photos/seed/kona1/800/600?grayscale
 simulation: Kona1Suite
 pdfUrl: https://arxiv.org/pdf/2511.07124,https://arxiv.org/abs/2510.20607
 webUrl: https://logicalintelligence.com/kona-ebms-energy-based-models
@@ -21,13 +20,13 @@ featured: true
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# The End of "Probable"
+## The End of "Probable"
 
 The era of "guessing" is over. Yesterday, **Logical Intelligence** released **Kona 1.0**, the first commercial Energy-Based Model (EBM) for reasoning, alongside a stunning leadership shakeup: Turing Award winner **Yann LeCun** has joined as Founding Chair of the Technical Research Board, and former Binance executive **Patrick Hillmann** has been appointed Chief Strategy Officer.
 
 While GPT-5 and DeepSeek V3 continue to push the boundaries of *explicit* text generation, Kona aims for something different: **implicit, provable correctness**.
 
-## The Core Thesis: Implicit Chain-of-Thought
+### The Core Thesis: Implicit Chain-of-Thought
 
 Kona 1 is the first commercial implementation of the framework proposed in *"Think Consistently, Reason Efficiently: Energy-Based Calibration for Implicit Chain-of-Thought"* (Chen et al., Nov 2025).
 
@@ -36,7 +35,7 @@ Traditional LLMs "think out loud"—generating tokens step-by-step ($x_1, x_2, .
 - **Explicit CoT**: Discrete, brittle, prone to error cascading.
 - **Implicit EBM-CoT**: Continuous, fluid, self-correcting via energy minimization.
 
-## Architecture: The Latent Manifold
+### Architecture: The Latent Manifold
 
 Kona separates **Intelligence** (Optimization) from **Language** (Generation).
 
@@ -63,7 +62,7 @@ Kona separates **Intelligence** (Optimization) from **Language** (Generation).
   ```
 </div>
 
-## Algorithm: Langevin Calibration
+### Algorithm: Langevin Calibration
 
 The breakthrough in Kona 1 is **Langevin Calibration**. Instead of sampling the next token, we sample the *meaning* of the solution and refine it against hard logical constraints.
 
@@ -85,10 +84,10 @@ The breakthrough in Kona 1 is **Langevin Calibration**. Instead of sampling the 
   }}
 />
 
-### Why This Solves the "Sudoku Problem"
+#### Why This Solves the "Sudoku Problem"
 In discrete solvers (like standard code), you are either "Right" or "Wrong". In Kona's continuous space, a cell can be "80% a 3, 20% a 4". This fluidity allows the gradients to push the system out of local minima that trap discrete solvers.
 
-## The Math of Certainty
+### The Math of Certainty
 
 The probability of a thought $z$ being correct is given by the Gibbs-Boltzmann distribution:
 
@@ -107,10 +106,10 @@ The probability of a thought $z$ being correct is given by the Gibbs-Boltzmann d
   ]}
 />
 
-## Related: Iterating Without an Energy Function
+### Related: Iterating Without an Energy Function
 
 Kona reaches its answer by minimising an energy in latent space. [Recirculation](/idea/recirculation-inference-time-recurrence/) reaches for the same extra serial computation with no energy function and no new parameters at all: it feeds a deep layer's activation back into a shallow one and reruns the span on a frozen off-the-shelf model.
 
-## Performance
+### Performance
 
 In the demos released on `logicalintelligence.com`, Kona solves "Evil" grade Sudoku puzzles in **14ms** on a single H100 GPU. This is achieved not by being smarter, but by being **differentiable**. It doesn't "search" the tree of possibilities; it "flows" to the answer.

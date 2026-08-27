@@ -135,6 +135,13 @@ const danger = {
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+  // Category and status classes are only ever built at runtime
+  // (`cat-${category}`), so the scanner never sees them and used to drop the
+  // rules that colour them out of the bundle entirely.
+  safelist: [
+    { pattern: /^cat-(paper|deep-dive|idea|concept|tutorial)$/ },
+    { pattern: /^status-(RESEARCH|CONCEPT|PROTOTYPE|ALPHA|ARCHIVED)$/ },
+  ],
   darkMode: 'class',
   theme: {
     extend: {

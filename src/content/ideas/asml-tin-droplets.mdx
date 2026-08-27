@@ -11,7 +11,6 @@ tags:
   - Fluid Dynamics
   - Control Systems
   - Acoustics
-coverImage: https://picsum.photos/seed/tin-droplets/800/600?grayscale
 simulation: ASMLTinDroplets
 pdfUrl: https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10143/101430W/Droplet-generator-development-for-LPP-EUV-sources/10.1117/12.2258237.full # Example SPIE paper ref
 featured: true
@@ -20,7 +19,7 @@ featured: true
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# Executive Summary
+## Executive Summary
 
 At the heart of modern semiconductor manufacturing lies an incredibly violent yet precise process: Extreme Ultraviolet (EUV) lithography. To generate the specific wavelength of light needed to print features just nanometers wide, high-power lasers blast microscopic droplets of molten tin into plasma.
 
@@ -30,7 +29,7 @@ This article explores the engineering marvel behind this requirement: the high-f
 
 ---
 
-# The Problem: Taming Fluid Chaos
+## The Problem: Taming Fluid Chaos
 
 If you open a kitchen faucet slightly, you'll see a smooth cylinder of water exit the nozzle, but inches down, it breaks up into irregular drips. This is nature at work.
 
@@ -45,7 +44,7 @@ For EUV lithography, this natural chaos is unacceptable. If a laser pulses and h
 
 ---
 
-# The Solution: Active Acoustic Breakup
+## The Solution: Active Acoustic Breakup
 
  To create uniform droplets, the breakup process cannot be left to chance. Natural instability must be overpowered with engineered precision.
  
@@ -75,7 +74,7 @@ If the frequency is chosen correctly based on the jet's diameter and velocity, t
   ]}
 />
 
-## The Hardware Architecture
+### The Hardware Architecture
 
 Generating droplets of molten tin at 300°C requires robust hardware designed for extreme environments.
 
@@ -101,7 +100,7 @@ graph TD
 
 ```
 
-### Key Components:
+#### Key Components:
 
 1. **High-Pressure Gas System**: Inert Argon gas provides a highly stable backing pressure (often >100 bar) to push the molten tin through the nozzle at high velocities (up to 100 m/s).
 2. **Thermal Management**: The entire tin path must be kept heated above 232°C (tin's melting point), usually around 300°C. Even slight temperature changes alter viscosity, affecting droplet size.
@@ -109,7 +108,7 @@ graph TD
 
 ---
 
-# Deep Dive: The Algorithm of Perfect Uniformity
+## Deep Dive: The Algorithm of Perfect Uniformity
 
 Simply vibrating the nozzle with a sine wave isn't enough. Natural non-linearities in fluid dynamics still tend to create tiny satellite droplets between the main drops.
 
@@ -143,7 +142,7 @@ By continuously adjusting the *shape* of the vibration wave, not just its freque
 
 ---
 
-# Implementation Concept
+## Implementation Concept
 
 In a real-world scenario, this control logic runs on high-speed FPGAs or real-time operating systems. Below is a simplified Python simulation of how a controller might adjust the waveform generator based on sensor feedback.
 
@@ -218,7 +217,7 @@ new_signal = controller.generate_waveform(t)
 
 ---
 
-# Feasibility and Engineering Challenges
+## Feasibility and Engineering Challenges
 
 While the physics is sound, implementing this in an industrial EUV source is incredibly difficult.
 

@@ -11,27 +11,26 @@ tags:
   - Adam
   - PyTorch
   - Training
-coverImage: https://picsum.photos/seed/adam-epsilon/800/600?grayscale
 webUrl: https://sifal.social/posts/The-Epsilon-Trap-When-Adam-Stops-Being-Adam/
 simulation: AdamEpsilonSimulation
 featured: true
 ---
 
-# Adam's Hidden Parameter: The Epsilon Breakthrough
+## Adam's Hidden Parameter: The Epsilon Breakthrough
 
-## Executive Summary
+### Executive Summary
 
 When Andrej Karpathy switched from PyTorch's default `eps=1e-8` to `eps=1e-10` in his Adam optimizer, he didn't just tweak a numerical stability constant—he unlocked Adam's ability to navigate **flat loss landscapes**. This seemingly tiny change prevents Adam from creating an artificial floor on learning when gradients become extremely small, allowing the optimizer to continue making progress where the default configuration would stall.
 
 ---
 
-## The Problem: The Epsilon Floor
+### The Problem: The Epsilon Floor
 
 Most practitioners treat Adam's epsilon parameter as a "don't touch" numerical stability constant. PyTorch defaults to `eps=1e-8`, and for years, this seemed reasonable. But there's a hidden problem that emerges in modern deep learning:
 
 **When gradients drop below ~1e-8 in magnitude, epsilon dominates the denominator and Adam loses its adaptive properties.**
 
-### The Mathematics of the Trap
+#### The Mathematics of the Trap
 
 Adam's update rule for parameter $\theta$ is:
 
@@ -68,7 +67,7 @@ graph TD
 
 ---
 
-## The Solution: Lower Epsilon
+### The Solution: Lower Epsilon
 
 By setting `eps=1e-10` instead of `1e-8`, we extend Adam's adaptive range by **two orders of magnitude**. This allows Adam to:
 
@@ -76,7 +75,7 @@ By setting `eps=1e-10` instead of `1e-8`, we extend Adam's adaptive range by **t
 2. **Correctly normalize curvature** instead of applying a fixed step size
 3. **Skate effortlessly** through plateaus that would trap the default configuration
 
-### Visualizing the Difference: Micro-Canyon Scenario
+#### Visualizing the Difference: Micro-Canyon Scenario
 
 Imagine a loss landscape with:
 - One dimension with steep curvature (gradients ≈ 1e-3)
@@ -105,9 +104,9 @@ graph LR
 
 ---
 
-## Implementation
+### Implementation
 
-### PyTorch Code Comparison
+#### PyTorch Code Comparison
 
 **Default PyTorch (Suboptimal for flat landscapes):**
 ```python
@@ -129,7 +128,7 @@ optimizer = optim.Adam(
 )
 ```
 
-### Real-World Impact
+#### Real-World Impact
 
 In Karpathy's `nano-chat` and similar projects, this change enables:
 - **Continued learning in late-stage training** when gradients become tiny
@@ -138,7 +137,7 @@ In Karpathy's `nano-chat` and similar projects, this change enables:
 
 ---
 
-## Why 1e-8 Was Chosen (And Why We Can Do Better Now)
+### Why 1e-8 Was Chosen (And Why We Can Do Better Now)
 
 The default `eps=1e-8` was chosen for **Float16 stability**:
 - Float16 has limited precision; numbers below ~1e-8 can underflow
@@ -151,11 +150,11 @@ The default `eps=1e-8` was chosen for **Float16 stability**:
 
 ---
 
-## Scaling Laws & Efficiency
+### Scaling Laws & Efficiency
 
 This isn't just about numerical stability—it changes **optimization dynamics**:
 
-### Flat Loss Landscapes are Everywhere
+#### Flat Loss Landscapes are Everywhere
 
 Modern architectures exhibit flat regions due to:
 - **Overparameterization**: Wide networks with many equivalent solutions
@@ -163,7 +162,7 @@ Modern architectures exhibit flat regions due to:
 - **Late-stage training**: Gradients naturally shrink as we approach minima
 - **Attention mechanisms**: Can create extremely flat eigenspaces
 
-### Performance Comparison
+#### Performance Comparison
 
 | Configuration | Behavior in Flat Region (gradient ≈ 1e-9) |
 |---------------|-------------------------------------------|
@@ -175,9 +174,9 @@ Modern architectures exhibit flat regions due to:
 
 ---
 
-## Feasibility & Practical Considerations
+### Feasibility & Practical Considerations
 
-### When to Use eps=1e-10
+#### When to Use eps=1e-10
 
 ✅ **Use eps=1e-10 when:**
 - Training with BF16 or mixed precision (FP32 optimizer states)
@@ -190,13 +189,13 @@ Modern architectures exhibit flat regions due to:
 - Working on hardware without BF16 support
 - Gradients consistently stay > 1e-8
 
-### Performance Overhead
+#### Performance Overhead
 
 **None.** Changing epsilon is a constant in the denominator—no computational cost difference.
 
 ---
 
-## Key Takeaways
+### Key Takeaways
 
 1. **Epsilon is not just numerical stability**: It directly affects Adam's adaptive behavior when gradients are small.
 
@@ -210,7 +209,7 @@ Modern architectures exhibit flat regions due to:
 
 ---
 
-## Further Reading
+### Further Reading
 
 - [Karpathy's nano-chat implementation](https://github.com/karpathy) (uses eps=1e-10)
 - [Adam Optimizer Original Paper](https://arxiv.org/abs/1412.6980)

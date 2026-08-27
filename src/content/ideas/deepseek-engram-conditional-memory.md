@@ -13,16 +13,15 @@ tags:
   - Hashing
   - Systems
   - Long Context
-coverImage: https://picsum.photos/seed/engram/800/600?grayscale
 simulation: DeepSeekEngram
 pdfUrl: https://arxiv.org/pdf/2601.07372v1
 featured: false
 ---
 
-# Engram: Conditional Memory via Scalable Lookup
-## A new axis of sparsity for large language models
+## Engram: Conditional Memory via Scalable Lookup
+### A new axis of sparsity for large language models
 
-## Executive Summary
+### Executive Summary
 
 Mixture-of-Experts (MoE) makes model capacity cheap by using **conditional computation**: activate only a small subset of experts per token.
 
@@ -39,7 +38,7 @@ Two results from the paper capture why this matters:
 
 Engram is also **systems-friendly**: because IDs are deterministic from the token sequence, the system can prefetch memory from host DRAM and overlap transfers with GPU compute; a 100B-parameter table offloaded to CPU memory is reported to incur a peak throughput penalty of **~2.8%** in their benchmark.
 
-## The Problem
+### The Problem
 
 Transformers don’t have a native “lookup” instruction.
 
@@ -57,11 +56,11 @@ In a standard Transformer, these patterns are repeatedly re-derived through mult
 
 MoE helps by making MLP capacity sparse, but it still doesn’t add a **first-class retrieval primitive**.
 
-## The Solution / Concept
+### The Solution / Concept
 
 Engram adds a retrieval-and-fusion block at selected layers.
 
-### 1) Sparse retrieval via hashed suffix $N$-grams
+#### 1) Sparse retrieval via hashed suffix $N$-grams
 
 At token position $t$, form compressed token IDs $x'_t$ and suffix $N$-grams:
 
@@ -77,7 +76,7 @@ $$e_t \triangleq \Vert_{n=2}^{N} \Vert_{k=1}^{K} e_{t,n,k}$$
 
 **Tokenizer compression matters.** The paper normalizes token text (NFKC, lowercasing, etc.) and projects raw IDs to canonical IDs, reporting ~**23%** effective vocabulary reduction for a 128k tokenizer.
 
-### 2) Context-aware gating to suppress noise
+#### 2) Context-aware gating to suppress noise
 
 Because lookups are static, they can be wrong due to hash collisions or context mismatch. Engram uses the hidden state $h_t$ (the “Query”) to gate the retrieved memory:
 
@@ -95,7 +94,7 @@ $$Y = \text{SiLU}(\text{Conv1D}(\text{RMSNorm}(\tilde{V}))) + \tilde{V}$$
 
 and is added residually to the backbone.
 
-### 3) Systems: deterministic addressing enables prefetch
+#### 3) Systems: deterministic addressing enables prefetch
 
 MoE routing depends on runtime hidden states; Engram’s lookup IDs depend only on the token sequence.
 
@@ -107,7 +106,7 @@ That enables:
 
 The paper reports negligible overhead even when offloading a 100B-parameter Engram table to host DRAM (peak throughput penalty ~2.8% in their setup).
 
-### 4) Scaling law: Sparsity Allocation is U-shaped
+#### 4) Scaling law: Sparsity Allocation is U-shaped
 
 Define:
 
@@ -121,9 +120,9 @@ $$P^{\text{sparse}}_{\text{MoE}} = \rho\,P_{\text{sparse}}, \quad P_{\text{Engra
 
 Empirically, validation loss vs. $\rho$ forms a U-shape, with best performance around $\rho\approx 0.75\text{–}0.80$.
 
-## Visuals
+### Visuals
 
-### Architecture flow
+#### Architecture flow
 
 ```mermaid
 flowchart TD
@@ -140,7 +139,7 @@ flowchart TD
   R --> B[Attention + MoE continues]
 ```
 
-### Prefetch-and-overlap intuition
+#### Prefetch-and-overlap intuition
 
 ```mermaid
 sequenceDiagram
@@ -154,11 +153,11 @@ sequenceDiagram
   GPU->>GPU: Execute Engram fusion when ready
 ```
 
-## Implementation
+### Implementation
 
 Below is minimal, implementation-oriented pseudocode showing the core mechanics (hash lookup + gating). The real system needs fused kernels and a distributed/sharded table, but the math is the same.
 
-### Pseudocode: multi-head hashing + lookup
+#### Pseudocode: multi-head hashing + lookup
 
 ```python
 from dataclasses import dataclass
@@ -246,7 +245,7 @@ class ToyEngram(nn.Module):
         return h + alpha * v_t
 ```
 
-## Feasibility / Analysis
+### Feasibility / Analysis
 
 - **Where it helps:** frequent local patterns (entities/idioms), and long-context setups where freeing attention bandwidth for global context matters.
 - **Main trade-off:** memory placement (early layers help “offload” early composition, but later layers have more contextual signal for gating).

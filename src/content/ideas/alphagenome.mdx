@@ -12,7 +12,6 @@ tags:
   - Variant Effect
   - Multimodal
   - DeepMind
-coverImage: https://picsum.photos/seed/alphagenome/800/600?grayscale
 simulation: AlphaGenome
 pdfUrl: https://storage.googleapis.com/deepmind-media/papers/alphagenome.pdf
 webUrl: https://deepmind.google/blog/alphagenome-ai-for-better-understanding-the-genome/
@@ -23,15 +22,15 @@ featured: false
 import AlgorithmBlock from "../../components/react/AlgorithmBlock";
 import ExpandableMath from "../../components/react/ExpandableMath";
 
-# AlphaGenome: AI for better understanding the genome
+## AlphaGenome: AI for better understanding the genome
 
-## Executive Summary
+### Executive Summary
 AlphaGenome is a DNA sequence model that ingests up to one million base pairs and predicts thousands of regulatory properties at base-level resolution. It unifies long-range context, multimodal outputs, and fast variant scoring, enabling a single model call to estimate how a mutation affects expression, splicing, accessibility, and 3D chromatin contacts across diverse tissues. The system builds on Enformer and complements AlphaMissense, and was trained using large public consortia datasets (ENCODE, GTEx, 4D Nucleome, FANTOM5). It is released for non-commercial research via an API, with strong performance across benchmark suites.
 
-## The Problem
+### The Problem
 Most genome models struggle to see both far and fine. Long-range regulatory elements can lie hundreds of thousands of bases away from a gene, while regulatory signals (motifs, splice junctions) require base-level precision. Previous models typically traded off sequence length for resolution, limiting either context or detail and forcing researchers to stitch together multiple task-specific models.
 
-## The Solution / Concept
+### The Solution / Concept
 AlphaGenome combines three key ideas:
 
 1. **Long-context input**: up to $10^6$ DNA bases, capturing distal regulation.
@@ -40,7 +39,7 @@ AlphaGenome combines three key ideas:
 
 The model uses convolutional layers to detect short motifs, transformers to propagate information across the full sequence, and modality-specific heads to emit predictions. Variant scoring is computed by contrasting predictions between the reference and mutated sequences, and aggregating the deltas.
 
-### Complexity intuition
+#### Complexity intuition
 <ExpandableMath
   client:only="react"
   equation="\text{tokens} = \frac{L}{r}, \quad \text{attention cost} \propto \left(\frac{L}{r}\right)^2"
@@ -56,7 +55,7 @@ The model uses convolutional layers to detect short motifs, transformers to prop
   ]}
 />
 
-## Visuals
+### Visuals
 ```mermaid
 flowchart TD
   A[DNA sequence up to 1,000,000 bp] --> B[Conv motif extractor]
@@ -77,7 +76,7 @@ flowchart TD
   G --> H[Variant impact score]
 ```
 
-## Algorithm: Variant Scoring in a Unified Model
+### Algorithm: Variant Scoring in a Unified Model
 <AlgorithmBlock
   client:only="react"
   title="Algorithm: AlphaGenome Variant Scoring"
@@ -95,7 +94,7 @@ flowchart TD
   }}
 />
 
-## Implementation (Minimal Python Sketch)
+### Implementation (Minimal Python Sketch)
 ```python
 from typing import Dict, List
 import numpy as np
@@ -130,18 +129,18 @@ def score_variant(ref_seq: str, mut_seq: str) -> Dict[str, float]:
     return {"delta_by_modality": deltas, "aggregate_score": score}
 ```
 
-## Feasibility / Analysis
+### Feasibility / Analysis
 - **Accuracy**: AlphaGenome matches or exceeds specialist baselines on most benchmark evaluations, while predicting all modalities in a single model.
 - **Efficiency**: Despite the large context, the system reports lower training compute than Enformer due to architectural optimizations and multi-TPU training.
 - **Limitations**: Very long-range regulatory effects (>$10^5$ bases), cell-type specificity, and clinical-grade personal genome prediction remain open challenges.
 - **Access**: The model is available for non-commercial research through the AlphaGenome API. Predictions are not validated for clinical use.
 
-## What to try in the simulation
+### What to try in the simulation
 1. Increase sequence length to observe the quadratic attention cost growth.
 2. Set resolution to 1 bp to maximize detail and compare compute impact.
 3. Increase the variant impact scale to see the delta score rise across modalities.
 
-## Sources
+### Sources
 - DeepMind blog: https://deepmind.google/blog/alphagenome-ai-for-better-understanding-the-genome/
 - AlphaGenome preprint PDF: https://storage.googleapis.com/deepmind-media/papers/alphagenome.pdf
 - AlphaGenome API: https://github.com/google-deepmind/alphagenome

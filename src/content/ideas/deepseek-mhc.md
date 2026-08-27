@@ -10,16 +10,15 @@ tags:
   - DeepSeek
   - Math
   - Scaling Laws
-coverImage: https://picsum.photos/seed/deepseek/800/600?grayscale
 simulation: DeepSeekMHC
 featured: true
 pdfUrl: https://arxiv.org/pdf/2512.24880
 ---
 
-# DeepSeek mHC: The Signal Survival Protocol
-## Manifold Constrained Hyper-Connections
+## DeepSeek mHC: The Signal Survival Protocol
+### Manifold Constrained Hyper-Connections
 
-### Abstract
+#### Abstract
 
 As we build deeper neural networks (100+ layers), a fundamental physics problem emerges: **Signal Survival**. In standard architectures, information acts like a game of "Telephone"—it gets distorted, amplified to infinity (exploding gradients), or silenced to zero (vanishing gradients) as it passes through the layers.
 
@@ -27,13 +26,13 @@ DeepSeek's recent Multi-Head Latent Attention (MLA) and Manifold Constrained Hyp
 
 ---
 
-## 1. The "Thinking Highway" Problem
+### 1. The "Thinking Highway" Problem
 
 Imagine a neural network as a 100-story skyscraper. Data enters the ground floor and must take an elevator to the roof.
 *   **The Wild Mode (Standard):** The elevator cables are made of rubber. Sometimes they stretch (amplify), sometimes they slack (vanish). By floor 50, the passenger is either crushed by G-force or floating in zero-G.
 *   **The mHC Mode (DeepSeek):** The elevator uses a rigid track. The speed is mathematically constrained to be constant.
 
-### Visualizing Signal Decay
+#### Visualizing Signal Decay
 
 ```mermaid
 graph LR
@@ -55,7 +54,7 @@ graph LR
     end
 ```
 
-### The Mathematics of Stability
+#### The Mathematics of Stability
 
 In a standard Dense layer, the output $y$ is:
 $$ y = Wx $$
@@ -69,7 +68,7 @@ This ensures that the total "energy" of the signal is conserved. It is neither c
 
 ---
 
-## 2. The Algorithm: Sinkhorn-Knopp
+### 2. The Algorithm: Sinkhorn-Knopp
 
 How do we force a random matrix of weights to obey these strict rules? We use an iterative normalization process called the **Sinkhorn-Knopp Algorithm**.
 
@@ -100,7 +99,7 @@ This simple traffic control rule allows DeepSeek to train networks that are sign
 
 ---
 
-## 3. Scaling Laws & Efficiency
+### 3. Scaling Laws & Efficiency
 
 This constraint doesn't just help stability; it changes the scaling laws. Because the signal doesn't degrade, smaller models using mHC can punch above their weight class, reasoning with the depth of a much larger model.
 

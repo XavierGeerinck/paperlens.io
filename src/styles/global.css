@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------
+   Geist Mono, self-hosted.
+   One variable file per subset: the same bytes Google serves,
+   without putting fonts.googleapis.com and fonts.gstatic.com on
+   the critical path of every page.
+   ------------------------------------------------------------ */
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/geist-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/geist-mono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* ============================================================
    PaperLens — "TUI" design system
    Dark only. Near-black ground, cool greys, mint primary,
@@ -931,7 +955,10 @@
   }
   .doc-head h1::before { content: '# '; color: var(--gray); font-weight: 400; }
   .doc-head .sub { margin: 0; font-size: var(--fs-md); color: var(--fg2); max-width: 66ch; }
-  .doc-head .tags { margin: 0.9rem 0 0; font-size: var(--fs-xs); line-height: 1.9; display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
+  /* a tag list wraps wherever it appears — the entry header, a topic page, /tags */
+  .tags { font-size: var(--fs-xs); line-height: 1.9; display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
+  .doc-head .tags { margin: 0.9rem 0 0; }
+  a.tag:hover { color: var(--green); }
 
   .viewstrip {
     display: flex;
@@ -959,12 +986,19 @@
   .viewpanel[hidden] { display: none; }
 
   .sim-pane { margin-top: 1.25rem; }
-  .sim-pane .sim-host { min-height: 120px; }
+  /* the island mounts at a height only the browser knows, so the measured one is
+     held open ahead of it — see scripts/sim-metrics.ts */
+  .sim-pane .sim-host { min-height: var(--sim-h, 420px); }
+  @media (max-width: 720px) {
+    .sim-pane .sim-host,
+    .sim-host astro-island:empty { min-height: var(--sim-h-sm, var(--sim-h, 620px)); }
+  }
   /* the island is empty until it hydrates — say so instead of leaving a hole */
   .sim-host astro-island:empty {
     display: grid;
     place-items: center;
-    min-height: 260px;
+    /* fills the space its simulation is about to take, so the box does not resize */
+    min-height: var(--sim-h, 260px);
     border: 1px dashed var(--bg2);
     border-radius: var(--r);
   }

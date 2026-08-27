@@ -1,0 +1,145 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import HelpOverlay from '../../components/HelpOverlay.astro';
+import { groupByTag } from '../../lib/tags';
+
+export async function getStaticPaths() {
+  const all = await getCollection('ideas');
+  const sorted = all.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+  // A tag with a single entry would only ever be a copy of that entry's own
+  // page, so the archive keeps those as labels and mints no URL for them.
+  return groupByTag(sorted)
+    .filter((group) => group.entries.length > 1)
+    .map((group) => ({
+      params: { tag: group.slug },
+      props: { label: group.label, entries: group.entries },
+    }));
+}
+
+interface Props {
+  label: string;
+  entries: CollectionEntry<'ideas'>[];
+}
+
+const { tag } = Astro.params;
+const { label, entries } = Astro.props;
+
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+const sims = entries.filter((e) => e.data.simulation).length;
+
+// the tags these entries share beyond this one — the neighbouring topics
+const neighbours = groupByTag(entries)
+  .filter((group) => group.slug !== tag && group.entries.length > 1)
+  .slice(0, 8);
+
+/** a snippet is cut around 155 characters, so the titles fill what is left of it */
+const lead = `${entries.length} PaperLens entries tagged ${label}${
+  sims ? `, ${sims} with a simulation` : ''
+}: `;
+const titles: string[] = [];
+for (const entry of entries) {
+  const next = [...titles, entry.data.title].join(' · ');
+  if (lead.length + next.length > 152) break;
+  titles.push(entry.data.title);
+}
+const description = `${lead}${titles.join(' · ')}${titles.length < entries.length ? ' …' : '.'}`;
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${label} — PaperLens`,
+    description,
+    url: new URL(`/tags/${tag}/`, Astro.site).href,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: entries.length,
+      itemListElement: entries.map((entry, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: new URL(`/idea/${entry.slug}/`, Astro.site).href,
+        name: entry.data.title,
+      })),
+    },
+  },
+];
+---
+
+<BaseLayout
+  title={`${label} — papers, deep-dives and simulations`}
+  {description}
+  breadcrumbs={[
+    { name: 'PaperLens', url: '/' },
+    { name: 'Topics', url: '/tags/' },
+    { name: label, url: `/tags/${tag}/` },
+  ]}
+  {schema}
+>
+  <Header current="papers" />
+
+  <div class="term">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="/">~</a> / <a href="/tags/">tags</a> / <span class="cur">{tag}</span>
+    </nav>
+
+    <section class="pane" aria-labelledby="tag-title">
+      <h2 class="pane-title"><span class="hl">grep -l "{tag}" ~/papers/*</span><span class="extra">{entries.length} matches</span></h2>
+      <div class="pane-title-r">newest first</div>
+
+      <h1 id="tag-title" style="font-size:var(--fs-lg);margin:.6rem 0 .3rem">{label}</h1>
+      <p class="dim" style="margin:0 0 1rem;max-width:70ch">
+        {entries.length} entries tagged <span class="tag">{tag}</span>{sims > 0 && <> · {sims} with a runnable simulation</>}.
+      </p>
+
+      <ol class="hits">
+        {entries.map((entry) => (
+          <li>
+            <p class="hit-head">
+              <span class="when">{iso(entry.data.date)}</span>
+              <span class={`cat cat-${entry.data.category}`}>{entry.data.category}</span>
+              <a href={`/idea/${entry.slug}/`}>{entry.data.title}</a>
+            </p>
+            <p class="hit-sub">
+              {entry.data.subtitle}
+              <span class="hit-meta">
+                {entry.data.readTime} read{entry.data.simulation && <> · <span class="c-green">sim</span></>}
+              </span>
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      {neighbours.length > 0 && (
+        <>
+          <hr class="hr" style="margin:1.1rem 0 .9rem" />
+          <p class="prompt" style="margin:0 0 .4rem;font-size:var(--fs-sm);color:var(--fg1)">
+            also tagged
+          </p>
+          <p class="tags">
+            {neighbours.map((group) => (
+              <a class="tag" href={`/tags/${group.slug}/`}>{group.slug}</a>
+            ))}
+          </p>
+        </>
+      )}
+    </section>
+  </div>
+
+  <Footer path={`~/tags/${tag}`} meta={`${entries.length} entries`} />
+  <HelpOverlay />
+</BaseLayout>
+
+<style>
+  .hits { list-style: none; margin: 0; padding: 0; }
+  .hits li { padding: 0.7rem 0; border-bottom: 1px dotted var(--bg2); }
+  .hits li:last-child { border-bottom: 0; }
+  .hit-head { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.6rem; }
+  .hit-head .when { color: var(--fg4); font-size: var(--fs-sm); }
+  .hit-sub { margin: 0.15rem 0 0; color: var(--fg2); font-size: var(--fs-sm); max-width: 80ch; }
+  .hit-meta { color: var(--fg4); white-space: nowrap; }
+  .hit-meta::before { content: ' — '; }
+</style>

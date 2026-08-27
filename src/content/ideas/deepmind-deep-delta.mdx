@@ -11,7 +11,6 @@ tags:
   - Residual Networks
   - Householder Transformation
   - Geometric Linear Algebra
-coverImage: https://picsum.photos/seed/delta/800/600?grayscale
 simulation: DeepmindDeepDelta
 pdfUrl: https://arxiv.org/pdf/2601.00417
 ---
@@ -19,19 +18,19 @@ pdfUrl: https://arxiv.org/pdf/2601.00417
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# Executive Summary
+## Executive Summary
 
 Standard Deep Residual Networks rely on the **identity shortcut connection** to stabilize training. However, this "strictly additive" bias limits a network's ability to model complex, non-monotonic dynamics. **Deep Delta Learning (DDL)** introduces a **Delta Operator**—a learnable, rank-1 geometric transformation that generalizes the shortcut. By modulating a single learned gate $\beta$, the network can dynamically choose to behave as an **identity map**, an **orthogonal projection**, or a **geometric reflection**.
 
-# The Problem: The Rigidity of Addition
+## The Problem: The Rigidity of Addition
 
 In a standard ResNet, the update is $x_{l+1} = x_l + f(x_l)$. While effective for signal propagation, this architecture has a fixed Jacobian equal to the identity operator. This creates a "translation bias" that struggles to represent states requiring oscillations or oppositional behavior—essentially, it can only "add" to what is already there, rather than reorienting or selectively erasing it.
 
-# The Solution: The Delta Residual Block
+## The Solution: The Delta Residual Block
 
 The Deep Delta Residual Block replaces the static identity shortcut with a **Delta Operator**, $\Delta_{\beta} = I - \beta k k^\top$. This operator is a rank-1 perturbation of the identity matrix, inspired by the Householder reflection.
 
-### The Core Equation
+#### The Core Equation
 
 The block computes the next state $X_{l+1}$ by simultaneously transforming the old state and injecting new values:
 
@@ -47,7 +46,7 @@ terms={[
 defaultExpanded={true}
 />
 
-### One Gate, Three Geometries
+#### One Gate, Three Geometries
 
 The power of DDL lies in the spectrum of the operator $\Delta_{\beta}$. By varying the gate $\beta$ between **0 and 2**, the network unlocks different behaviors:
 
@@ -61,7 +60,7 @@ The power of DDL lies in the spectrum of the operator $\Delta_{\beta}$. By varyi
 
 ---
 
-# Implementation: The Delta Update
+## Implementation: The Delta Update
 
 The following algorithm demonstrates how a single DDL layer processes a matrix-valued hidden state.
 
@@ -84,7 +83,7 @@ v: [0.5, 0.5]
 }}
 />
 
-# Relationship to the Delta Rule
+## Relationship to the Delta Rule
 
 The paper reveals a "structural homology" between this depth-wise update and the **Delta Rule** used in fast associative memories (like DeltaNet). In DDL, the hidden state activations $X_l$ act like a "memory" that is updated as information flows deeper into the network.
 

@@ -12,7 +12,6 @@ tags:
   - FHE
   - TEE
   - MPC
-coverImage: https://images.unsplash.com/photo-1558494949-ef526b01201b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80
 simulation: PrivacyPreservingInference
 pdfUrl: https://eprint.iacr.org/2026/105.pdf
 ---
@@ -20,7 +19,7 @@ pdfUrl: https://eprint.iacr.org/2026/105.pdf
 import AlgorithmBlock from '../../components/react/AlgorithmBlock';
 import ExpandableMath from '../../components/react/ExpandableMath';
 
-# The Confidentiality Crisis
+## The Confidentiality Crisis
 
 As Large Language Models (LLMs) become integral to enterprise and personal workflows, a critical bottleneck remains: **privacy**. Sending sensitive financial data, medical records, or proprietary code to a third-party cloud provider requires a level of trust effectively equivalent to "full exposure."
 
@@ -28,29 +27,29 @@ The "Operational Notion of Privacy" defines a gold standard: **only the client c
 
 A recent survey from IACR (2026/105) outlines a "trust-minimizing trajectory" for achieving this, spanning from today's hardware-based solutions to a future of purely mathematical guarantees.
 
-## The Deployment Trajectory
+### The Deployment Trajectory
 
 The landscape of privacy-preserving inference (PPI) is not monolithic. It represents a trade-off space between performance, cost, and trust assumptions.
 
-### 1. Trusted Execution Environments (TEEs)
+#### 1. Trusted Execution Environments (TEEs)
 Currently the most practical solution for high-performance confidential computing. TEEs like **Intel TDX** or **NVIDIA H100 Confidential Computing** create a secure "enclave" within the processor.
 - **Mechanism**: Data is encrypted in RAM and only decrypted inside the CPU package.
 - **Trust**: You must trust the hardware manufacturer (e.g., Intel, Nvidia) and the cloud provider's physical security (to some extent).
 - **Performance**: Near-native speed (~10-20% overhead).
 
-### 2. Multi-Party Computation (MPC)
+#### 2. Multi-Party Computation (MPC)
 MPC splits the trust across multiple non-colluding servers.
 - **Mechanism**: The model weights and user inputs are split into "secret shares." Server A and Server B compute on their shares without ever seeking the full data.
 - **Trust**: Assumes the servers do not collude to reconstruct the data.
 - **Performance**: High communication overhead; significant slowdown compared to plain inference.
 
-### 3. Fully Homomorphic Encryption (FHE)
+#### 3. Fully Homomorphic Encryption (FHE)
 The holy grail of cryptography.
 - **Mechanism**: Computations are performed directly on encrypted data. The server receives ciphertexts, processes them, and returns a ciphertext result. The server *never* sees the keys.
 - **Trust**: Purely mathematical (Lattice-based cryptography).
 - **Performance**: Currently orders of magnitude slower (1,000x - 1,000,000x), though hardware acceleration is improving this rapidly.
 
-## Core Concept: Additive Secret Sharing
+### Core Concept: Additive Secret Sharing
 
 To understand how MPC reduces trust, we can look at its simplest primitive: **Additive Secret Sharing**. This allows two servers to compute $y = Ax$ (matrix multiplication, the core of LLMs) without either server knowing $x$.
 
@@ -89,7 +88,7 @@ At the heart of modern PPI is the realization that we can trade computational co
   ]}
 />
 
-## The Path Forward
+### The Path Forward
 
 The researchers propose a phased adoption:
 1.  **Immediate**: TEEs for general-purpose, low-latency confidential LLMs.

@@ -11,30 +11,29 @@ tags:
   - Jamba
   - State Space Models
   - Efficient AI
-coverImage: https://picsum.photos/seed/mamba/800/600?grayscale
 simulation: SubQuadratic
 pdfUrl: https://arxiv.org/pdf/2312.00752
 featured: true
 ---
 
-# Executive Summary
+## Executive Summary
 For years, the Transformer’s self-attention mechanism was the gold standard, but it carried a hidden tax: computational and memory costs that grow quadratically ($O(N^2)$) with text length. In 2026, we are witnessing a paradigm shift. Sub-quadratic architectures—led by State Space Models (SSMs) and Hybrid designs—are delivering linear scaling ($O(N)$), enabling 256K+ token contexts on consumer hardware without the massive KV-cache overhead.
 
-# The Problem: The Quadratic Tax
+## The Problem: The Quadratic Tax
 In a standard Transformer, every token must attend to every other token. This creates an $N \times N$ attention matrix.
 - **Computation**: Doubling the sequence length quadruples the operations.
 - **Memory**: The Key-Value (KV) cache grows linearly, eventually swallowing all available VRAM, leading to the "context ceiling."
 
-# The Solution: Selective State Space Models (SSMs)
+## The Solution: Selective State Space Models (SSMs)
 The breakthrough came with **Mamba** and its evolution, **Mamba-2**. Unlike traditional RNNs that lose information over time, Mamba uses a **Selective Scan** mechanism. It allows the model to "choose" what to remember and what to forget based on the input, effectively mimicking the reasoning of attention but through a recurrent linear state.
 
-### The Hybrid Era: Jamba
+#### The Hybrid Era: Jamba
 The current "production" favorite isn't pure SSM, but the **Jamba-style hybrid**. 
 - **Transformer Layers**: Retained for high-quality associative recall and complex reasoning (e.g., 1 out of every 8 layers).
 - **SSM Layers (Mamba)**: Used for the bulk of processing to keep memory usage flat.
 - **MoE (Mixture of Experts)**: Layers are further expanded via MoE to increase capacity without increasing active parameter counts.
 
-# Visualizing the Architecture
+## Visualizing the Architecture
 Below is the data flow for a Jamba-style hybrid block, alternating between dense attention and selective state transitions.
 
 ```mermaid
@@ -53,7 +52,7 @@ graph TD
     end
 ```
 
-## Implementation: Selective State Logic
+### Implementation: Selective State Logic
 The core of sub-quadratic scaling lies in the discretization of the continuous state space. In PyTorch-like logic:
 
 ```python
@@ -81,7 +80,7 @@ class SelectiveSSM(nn.Module):
         return self.parallel_scan(x, dt, self.A, B, C)
 ```
 
-## Feasibility & 2026 Hardware Targets
+### Feasibility & 2026 Hardware Targets
 *   **Inference**: SSMs achieve 5x higher throughput than Transformers for long sequences.
 *   **VRAM**: A Jamba-style model can handle a 256K context with 10x less KV-cache memory compared to a Llama-3 variant.
 *   **Target**: NVIDIA RTX 50-series and specialized edge NPU architectures are now optimized for the "Scan" primitive, making these models faster than Transformers even at short sequence lengths.

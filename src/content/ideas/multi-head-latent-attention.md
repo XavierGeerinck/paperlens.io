@@ -11,46 +11,45 @@ tags:
   - MLA
   - Transformer
   - Efficiency
-coverImage: https://picsum.photos/seed/mla/800/600?grayscale
 simulation: MLASimulation
 pdfUrl: https://arxiv.org/pdf/2502.07864v1
 featured: true
 ---
 
-# Executive Summary
+## Executive Summary
 
 As Large Language Models (LLMs) scale to hundreds of billions of parameters and 100k+ context windows, the **Key-Value (KV) cache** has become the primary bottleneck for inference. Traditional Multi-Head Attention (MHA) and even Grouped-Query Attention (GQA) struggle with memory bandwidth limits. 
 
 **Multi-Head Latent Attention (MLA)**, introduced in the DeepSeek-V2 paper, solves this by compressing KV pairs into a low-rank latent vector. Unlike previous compression methods that trade quality for speed, MLA maintains MHA-level performance while reducing the KV cache footprint to roughly **1/57th** of standard MHA.
 
-# The Problem: The KV Cache Wall
+## The Problem: The KV Cache Wall
 
 In autoregressive generation, we store the Keys and Values of all previous tokens to avoid recomputing them. 
 - **Memory Consumption**: For a model like Llama-3-70B, the KV cache can consume dozens of gigabytes for long sequences.
 - **Bandwidth Bottleneck**: Modern GPUs are so fast that they spend most of their time waiting to fetch KV vectors from VRAM to the processor.
 
-# The Solution: Latent Compression & Weight Absorption
+## The Solution: Latent Compression & Weight Absorption
 
 MLA introduces three key innovations:
 
-### 1. Low-Rank KV Compression
+#### 1. Low-Rank KV Compression
 Instead of storing full-dimensional $K$ and $V$ matrices, MLA projects them into a compressed latent vector $c_{KV}$.
 $$c_{KV} = W_{DKV} x_t$$
 where $W_{DKV}$ is a down-projection matrix. This $c_{KV}$ is all that is stored in the cache.
 
-### 2. Weight Absorption
+#### 2. Weight Absorption
 During inference, the up-projection matrices used to reconstruct $K$ and $V$ from the latent space can be **mathematically "absorbed"** into the Query projection ($W_Q$) and Output projection ($W_O$). 
 
 This is the "magic trick" of MLA:
 $$ Attention(Q, K, V) = Softmax(\frac{Q(W_{UK}c_{KV})^T}{\sqrt{d}}) (W_{UV}c_{KV}) $$
 Because matrix multiplication is associative, we can pre-multiply $W_Q$ with $W_{UK}$ (the up-projection for Keys). This means the model **never actually needs to expand the compressed KV cache back to full size in memory**. It computes attention directly against the compressed latent.
 
-### 3. Decoupled RoPE
+#### 3. Decoupled RoPE
 Rotary Positional Embeddings (RoPE) are sensitive to linear transformations. To allow weight absorption, MLA splits the attention into:
 - **Content Pathway**: Compressed via low-rank latent.
 - **Position Pathway**: A small, separate vector that handles RoPE, ensuring positional information isn't lost during compression.
 
-# Visualizing the MLA Architecture
+## Visualizing the MLA Architecture
 
 ```mermaid
 graph TD
@@ -72,7 +71,7 @@ graph TD
     Attn_Score --> Output[Final Context Vector]
 ```
 
-# Implementation (PyTorch)
+## Implementation (PyTorch)
 
 Here is a simplified version of the MLA logic focusing on the latent compression and weight absorption mechanism.
 
@@ -120,6 +119,6 @@ class MultiHeadLatentAttention(nn.Module):
         return out
 ```
 
-# Feasibility Analysis
+## Feasibility Analysis
 
 MLA is currently the gold standard for high-throughput, long-context models. DeepSeek-V3 utilizes it to handle 128k context windows on standard H100 hardware where MHA-based models would OOM (Out of Memory) at 32k. The main constraint is the complexity of implementation; traditional kernels (like FlashAttention) require specific modifications to support the "weight absorption" trick efficiently.
