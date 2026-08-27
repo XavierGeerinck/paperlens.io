@@ -71,7 +71,7 @@ const SCHEMA = {
 						overturns: { type: "integer", minimum: 0, maximum: 3 },
 						fillsGap: { type: "integer", minimum: 0, maximum: 3 },
 						total: { type: "integer", minimum: 0, maximum: 18 },
-						reason: { type: "string" },
+						reason: { type: "string", description: "the single biggest reason this did not beat the pick" },
 						targetQuery: { type: "string" },
 					},
 				},
@@ -185,6 +185,9 @@ async function main() {
 			"Score search demand on the evidence you can see: a named artefact, upvote count,",
 			"a lab people follow. Be honest when a candidate is a system report.",
 			"",
+			'"reason" is the single biggest reason that paper did NOT beat your pick —',
+			"a weakness, not a summary. For the pick itself, say why it won instead.",
+			"",
 			"Keep every \"reason\" to one sentence under 140 characters, and \"why\" under 400.",
 			"Cap \"duplicates\" at 6 entries. Brevity matters: the reply must be complete,",
 			"valid JSON, and a truncated reply is worse than a terse one.",
@@ -192,6 +195,17 @@ async function main() {
 		schema: SCHEMA,
 		maxTokens: 14000,
 	});
+
+	// The model is asked for an entry slug in `coveredBy`, but it sometimes returns
+	// a candidate's arXiv ID instead — which would claim an unpublished paper covers
+	// another. Only keep duplicate claims that point at a real entry.
+	const slugs = new Set(entries.map((e) => e.slug));
+	const unverified = verdict.duplicates.filter((d) => !slugs.has(d.coveredBy));
+	verdict.duplicates = verdict.duplicates.filter((d) => slugs.has(d.coveredBy));
+	if (unverified.length) {
+		console.error(`  ! dropped ${unverified.length} duplicate claim(s) naming something that is not an entry:`);
+		for (const d of unverified) console.error(`      ${d.id} -> "${d.coveredBy}"`);
+	}
 
 	const picked = verdict.shortlist.find((s) => s.id === verdict.pick.id) ?? verdict.shortlist[0];
 	const iso = new Date().toISOString().slice(0, 10);
@@ -227,6 +241,17 @@ async function main() {
 			"### Already covered",
 			"",
 			...verdict.duplicates.map((d) => `- \`${d.id}\` ${d.title} — covered by \`${d.coveredBy}\`: ${d.why}`),
+			"",
+		);
+	}
+
+	if (unverified.length) {
+		lines.push(
+			"### Flagged, not verified",
+			"",
+			"These were called duplicates of something that is not an entry in the catalogue, so the claim was dropped:",
+			"",
+			...unverified.map((d) => `- \`${d.id}\` ${d.title} — claimed covered by \`${d.coveredBy}\``),
 			"",
 		);
 	}
