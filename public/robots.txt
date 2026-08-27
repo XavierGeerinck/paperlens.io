@@ -1,6 +1,79 @@
-# Allow all crawlers
+# PaperLens — https://paperlens.io
+#
+# The policy in one line: read this site to answer someone's question, don't
+# bulk-harvest it to train on. Engineers increasingly find papers by asking an
+# assistant, and an entry that cannot be retrieved cannot be cited.
+#
+# NOTE: Cloudflare can prepend its own managed block ahead of this file, which
+# disallows the assistant crawlers below. If `curl https://paperlens.io/robots.txt`
+# shows a "BEGIN Cloudflare Managed content" section, that block is winning and
+# this file's intent is not in effect.
+
+# Content signals (https://contentsignals.org)
+#   search   — index it and link to it
+#   ai-input — ground an answer in it, with attribution
+#   ai-train — train or fine-tune a model on it
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 
-# Sitemap location
+# ---------------------------------------------------------------------------
+# Assistant retrieval — allowed. These fetch a page to answer a live question
+# or to keep an index that answers cite from.
+# ---------------------------------------------------------------------------
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Applebot serves Siri and Spotlight. Applebot-Extended, further down, is the
+# training crawler and is a separate opt-in.
+User-agent: Applebot
+Allow: /
+
+# Google-Extended gates both Gemini training and AI Overviews grounding, with no
+# way to separate them. Allowed, because being absent from AI Overviews costs
+# more than the training does. Flip to Disallow to trade that back.
+User-agent: Google-Extended
+Allow: /
+
+# ---------------------------------------------------------------------------
+# Bulk collection for training — not allowed. Nothing here reaches a reader.
+# ---------------------------------------------------------------------------
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
 Sitemap: https://paperlens.io/sitemap-index.xml
