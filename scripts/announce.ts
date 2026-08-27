@@ -2,8 +2,9 @@
 /**
  * Announce a published entry on Threads.
  *
- *   bun scripts/announce.ts recirculation-inference-time-recurrence   # dry run
- *   bun scripts/announce.ts <slug> --post                             # actually publish
+ *   bun scripts/announce.ts <slug>                 # dry run, prints only
+ *   bun scripts/announce.ts <slug> --post          # actually publish
+ *   bun scripts/announce.ts --delete <media-id>    # remove a published post
  *
  * Publishing is opt-in: without --post this only composes and prints, so the
  * text can be reviewed before anything leaves the machine.
@@ -73,6 +74,40 @@ async function resolveUserId(token: string): Promise<string> {
 }
 
 /**
+ * Signs that the model is thinking out loud rather than writing the post.
+ *
+ * A reasoning model can spend its whole token budget on preamble; if that text
+ * is published it reads as a leaked prompt. This has happened once, so the
+ * check is deliberately broad — a false positive costs a fallback template, a
+ * false negative costs a public post of the instructions.
+ */
+const REASONING_SIGNS = [
+	/^(we|i|let'?s|okay|ok|first,|the user)\b/i,
+	/\b\d{2,4}\s*characters?\b/i,
+	/\bannouncement text\b/i,
+	/\bnew post:/i,
+	/\bmust (open|mention|not)\b/i,
+	/\bno (hashtags?|url)\b/i,
+	/\b(the )?(prompt|instruction|rule)s?\b/i,
+	/\bprovide the\b/i,
+];
+
+export function looksLikeReasoning(text: string): string | null {
+	for (const re of REASONING_SIGNS) {
+		if (re.test(text)) return re.source;
+	}
+	return null;
+}
+
+/** Drop explicit reasoning blocks some models wrap around their answer. */
+export function stripReasoning(text: string): string {
+	return text
+		.replace(/<(think|thinking|reasoning)>[\s\S]*?<\/\1>/gi, "")
+		.replace(/^\s*(?:<\/?(?:think|thinking|reasoning)>)\s*/gi, "")
+		.trim();
+}
+
+/**
  * Compose the post. The model writes the hook when it is reachable; the
  * deterministic fallback keeps this working when it is not, because a failed
  * announcement should never be the reason a release is held up.
@@ -100,16 +135,28 @@ async function compose(entry: { title: string; subtitle: string; tags: string[] 
 				"- Do NOT include a URL; the link is attached separately.",
 				"- Return the post text only, no quotes around it, no commentary.",
 			].join("\n"),
-			maxTokens: 600,
+			// Generous, because a reasoning model that runs out mid-thought returns
+			// its preamble as the answer. The length limit is enforced below, not
+			// by starving the model.
+			maxTokens: 4000,
 			temperature: 0.6,
 			retries: 1,
 		});
 
-		const text = written.trim().replace(/^["']|["']$/g, "");
-		if (text && bytes(text) <= LIMIT) return text;
-		if (text) {
-			console.error(`  ! composed ${bytes(text)} bytes, over the ${LIMIT} limit — trimming`);
-			return clampBytes(text, LIMIT);
+		const text = stripReasoning(written).replace(/^["']|["']$/g, "").trim();
+
+		if (!text) {
+			console.error("  ! nothing left after stripping reasoning; using the fallback");
+		} else if (looksLikeReasoning(text)) {
+			console.error(`  ! the reply reads as reasoning, not a post (matched /${looksLikeReasoning(text)}/)`);
+			console.error(`    "${text.slice(0, 120)}…"`);
+			console.error("    using the fallback rather than publishing it");
+		} else if (bytes(text) > LIMIT) {
+			// Never publish clamped output: truncation is exactly how a half-finished
+			// thought reaches the timeline.
+			console.error(`  ! composed ${bytes(text)} bytes, over the ${LIMIT} limit — using the fallback`);
+		} else {
+			return text;
 		}
 	} catch (err) {
 		console.error(`  ! could not compose with the model (${(err as Error).message}); using the fallback`);
@@ -119,6 +166,32 @@ async function compose(entry: { title: string; subtitle: string; tags: string[] 
 }
 
 async function main() {
+	// Deleting needs the threads_delete scope, which a publish-only token lacks.
+	const deleteAt = Bun.argv.indexOf("--delete");
+	if (deleteAt !== -1) {
+		const id = Bun.argv[deleteAt + 1];
+		const token = process.env.THREADS_ACCESS_TOKEN?.trim();
+		if (!id || !token) {
+			console.error("usage: bun scripts/announce.ts --delete <media-id>   (needs THREADS_ACCESS_TOKEN)");
+			process.exit(2);
+		}
+		const res = await fetch(`${GRAPH}/${id}?access_token=${encodeURIComponent(token)}`, { method: "DELETE" });
+		const body = (await res.json().catch(() => ({}))) as any;
+		if (!res.ok) {
+			console.error(`Delete failed (${res.status}): ${body?.error?.message ?? JSON.stringify(body)}`);
+			if (/permission|scope/i.test(body?.error?.message ?? "")) {
+				console.error(
+					"\nThe token needs the threads_delete scope. Re-authorize with\n" +
+						"  scope=threads_basic,threads_content_publish,threads_delete\n" +
+						"or delete the post in the Threads app, which is faster for a one-off.",
+				);
+			}
+			process.exit(1);
+		}
+		console.log(`deleted ${id}`);
+		return;
+	}
+
 	const slug = Bun.argv[2];
 	const post = Bun.argv.includes("--post");
 
@@ -143,6 +216,14 @@ async function main() {
 	}
 
 	const text = await compose(entry);
+
+	// Last line of defence before anything leaves the machine.
+	const suspicious = looksLikeReasoning(text);
+	if (suspicious) {
+		console.error(`Refusing to publish: the composed text still reads as reasoning (/${suspicious}/).`);
+		console.error(text);
+		process.exit(1);
+	}
 
 	console.error(`\n--- post (${bytes(text)}/${LIMIT} bytes) ---`);
 	console.log(text);
@@ -183,7 +264,9 @@ async function main() {
 	console.log(JSON.stringify({ ok: true, slug, url, threadsId: published?.id }));
 }
 
-main().catch((err) => {
-	console.error(err instanceof Error ? err.message : String(err));
-	process.exit(1);
-});
+if (import.meta.main) {
+	main().catch((err) => {
+		console.error(err instanceof Error ? err.message : String(err));
+		process.exit(1);
+	});
+}
