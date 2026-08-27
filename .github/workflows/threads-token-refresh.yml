@@ -33,14 +33,15 @@ jobs:
         id: rotate
         env:
           # Needs a PAT: the built-in GITHUB_TOKEN cannot write secrets.
-          GH_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT_CI_THREADS_REFRESHER }}
           GH_REPO: ${{ github.repository }}
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
         run: |
           set -euo pipefail
           if [ -z "${GH_TOKEN:-}" ]; then
-            echo "GH_SECRETS_TOKEN is not set — cannot write the refreshed token back." >&2
-            echo "Add a fine-grained PAT with the repository Secrets permission set to read and write." >&2
+            echo "GH_PAT_CI_THREADS_REFRESHER is not set — cannot write the refreshed token back." >&2
+            echo "It must be a fine-grained PAT scoped to this repository with the" >&2
+            echo "Secrets permission set to read and write; GITHUB_TOKEN cannot write secrets." >&2
             exit 1
           fi
           bun scripts/threads-token.ts rotate
