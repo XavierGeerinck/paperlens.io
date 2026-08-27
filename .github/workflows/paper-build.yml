@@ -55,7 +55,15 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Install chromium
-        run: bunx playwright install --with-deps chromium
+        # Plain install first: it only downloads the browser, while --with-deps
+        # runs apt-get update, which fails whenever any third-party repo on the
+        # runner image is unhappy (a 403 from packages.microsoft.com broke a run).
+        # The ubuntu runner already ships the shared libraries chromium needs.
+        run: |
+          bunx playwright install chromium || {
+            echo "plain install failed; retrying with system dependencies"
+            bunx playwright install --with-deps chromium
+          }
 
       - name: Write the entry
         id: gen
