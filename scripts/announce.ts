@@ -94,7 +94,7 @@ async function compose(entry: { title: string; subtitle: string; tags: string[] 
 				`Topics: ${entry.tags.join(", ")}`,
 				"",
 				"Rules:",
-				"- Under 400 characters.",
+				"- Under 320 characters. Going over risks being cut mid-sentence.",
 				"- Open with the concrete surprising thing, not 'New post:'.",
 				"- Mention that the page has an interactive simulation you can play with.",
 				"- Do NOT include a URL; the link is attached separately.",
@@ -107,7 +107,10 @@ async function compose(entry: { title: string; subtitle: string; tags: string[] 
 
 		const text = written.trim().replace(/^["']|["']$/g, "");
 		if (text && bytes(text) <= LIMIT) return text;
-		if (text) return clampBytes(text, LIMIT);
+		if (text) {
+			console.error(`  ! composed ${bytes(text)} bytes, over the ${LIMIT} limit — trimming`);
+			return clampBytes(text, LIMIT);
+		}
 	} catch (err) {
 		console.error(`  ! could not compose with the model (${(err as Error).message}); using the fallback`);
 	}

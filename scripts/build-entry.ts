@@ -110,6 +110,43 @@ export function planProblems(p: EntryPlan, truncated: boolean): string[] {
 	return bad;
 }
 
+/**
+ * Numbers in the prose that the abstract does not contain.
+ *
+ * This is the check that matters for unattended publishing: structure and a
+ * clean build say nothing about whether a benchmark figure was invented. Code
+ * blocks and mermaid are stripped first, since illustrative constants there are
+ * not claims about the paper.
+ */
+export function unsupportedNumbers(body: string, abstract: string): string[] {
+	const prose = body
+		.replace(/```[\s\S]*?```/g, " ") // fenced code and diagrams
+		.replace(/`[^`]*`/g, " ") // inline code
+		.replace(/\$\$[\s\S]*?\$\$/g, " ") // display math
+		.replace(/\$[^$\n]*\$/g, " "); // inline math
+
+	const haystack = abstract.replace(/[,\s]/g, "");
+	const found = new Set<string>();
+
+	for (const m of prose.matchAll(/\d[\d,]*\.?\d*\s*(?:%|×|x\b|B\b|M\b|K\b|p\b|-DoF\b)?/g)) {
+		const raw = m[0].trim();
+		const digits = raw.replace(/[^\d.]/g, "").replace(/\.$/, "");
+		if (!digits) continue;
+
+		// Years, small ordinals and the paper's own identifier are not claims.
+		if (digits.length < 2) continue;
+		if (/^(19|20|21)\d{2}$/.test(digits)) continue;
+		// arXiv identifiers are references, not claims.
+		if (/^\d{4}\.\d{4,5}$/.test(digits)) continue;
+		if (abstract.includes(digits)) continue;
+		if (haystack.includes(digits.replace(/[,\s]/g, ""))) continue;
+
+		found.add(raw.replace(/\s+/g, ""));
+	}
+
+	return [...found];
+}
+
 /** Structural checks on the generated component, before the build ever runs. */
 export function simProblems(src: string): string[] {
 	const bad: string[] = [];
@@ -245,6 +282,17 @@ async function main() {
 		process.exit(4);
 	}
 
+	// Numeric claims the abstract does not support. Not fatal — the entry may
+	// legitimately cite a related work — but it decides whether this is safe to
+	// merge without a human reading it.
+	const claims = unsupportedNumbers(plan.body, paper.abstract);
+	if (claims.length) {
+		console.error(`\n  ! ${claims.length} number(s) not found in the abstract: ${claims.join(", ")}`);
+		console.error("    a human should check these before this is published");
+	} else {
+		console.error("\n  · every number in the body appears in the abstract");
+	}
+
 	const ext = "md";
 	const entryPath = `${CONTENT_DIR}/${plan.slug}.${ext}`;
 	const simPath = `${SIM_DIR}/${plan.simulationName}Simulation.tsx`;
@@ -333,7 +381,19 @@ async function main() {
 		const result = await $`bun run build`.nothrow().quiet();
 		if (result.exitCode === 0) {
 			console.error("  build clean");
-			console.log(JSON.stringify({ ok: true, slug: plan.slug, entryPath, simPath, title: plan.title, arxiv: paper.id, simulation: plan.simulationName, relatedSlugs: plan.relatedSlugs }));
+			console.log(
+				JSON.stringify({
+					ok: true,
+					slug: plan.slug,
+					entryPath,
+					simPath,
+					title: plan.title,
+					arxiv: paper.id,
+					simulation: plan.simulationName,
+					relatedSlugs: plan.relatedSlugs,
+					unsupportedNumbers: claims,
+				}),
+			);
 			return;
 		}
 

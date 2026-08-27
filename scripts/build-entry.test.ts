@@ -52,3 +52,31 @@ test("accepts a real seeded simulation", () => {
     "export default function S(){return null;}";
   expect(simProblems(ok)).toEqual([]);
 });
+
+import { unsupportedNumbers } from "./build-entry";
+
+const ABSTRACT =
+  "We present EchoWM, an omnimodal world model for enterable generative media that responds to " +
+  "continuous navigation while jointly generating 720p video, environmental sound, music and speech. " +
+  "Discrete commands and continuous poses are mapped to a shared metric-scale relative 6-DoF trajectory.";
+
+test("accepts numbers that appear in the abstract", () => {
+  const body = "It generates 720p video and maps commands to a 6-DoF trajectory.";
+  expect(unsupportedNumbers(body, ABSTRACT)).toEqual([]);
+});
+
+test("flags an invented benchmark figure", () => {
+  const body = "EchoWM reaches 81.7 on WBench and improves quality by 23%.";
+  const found = unsupportedNumbers(body, ABSTRACT);
+  expect(found.some((n) => n.includes("81.7"))).toBe(true);
+  expect(found.some((n) => n.includes("23"))).toBe(true);
+});
+
+test("ignores numbers inside code and math", () => {
+  const body = "Text.\n\n```python\nlr = 0.0003\nsteps = 50000\n```\n\nAnd $\\alpha = 0.15$ inline.";
+  expect(unsupportedNumbers(body, ABSTRACT)).toEqual([]);
+});
+
+test("ignores years", () => {
+  expect(unsupportedNumbers("Published in 2026, following 2024 work.", ABSTRACT)).toEqual([]);
+});

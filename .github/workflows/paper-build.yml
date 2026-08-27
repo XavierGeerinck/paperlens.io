@@ -78,6 +78,7 @@ jobs:
           echo "title=$(jq -r .title result.json)" >> "$GITHUB_OUTPUT"
           echo "entry=$(jq -r .entryPath result.json)" >> "$GITHUB_OUTPUT"
           echo "sim=$(jq -r .simPath result.json)" >> "$GITHUB_OUTPUT"
+          echo "claims=$(jq -r '.unsupportedNumbers | join(", ")' result.json)" >> "$GITHUB_OUTPUT"
 
       - name: Verify it renders
         run: bun scripts/verify-page.ts "/idea/${{ steps.gen.outputs.slug }}/"
@@ -112,13 +113,44 @@ jobs:
             --base main --head "$BRANCH")
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
+      - name: Merge automatically
+        id: automerge
+        if: vars.PAPER_AUTO_MERGE == 'true' && steps.gen.outputs.claims == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Safe to merge unread only because the build, the browser check and
+          # the claims audit all passed before the PR existed. Any number the
+          # abstract does not support leaves the PR open for a human instead.
+          gh pr merge "${{ steps.pr.outputs.url }}" --squash --delete-branch
+          echo "merged=true" >> "$GITHUB_OUTPUT"
+          echo "Merged automatically; the deploy and the Threads post follow."
+
+      - name: Explain why it was left open
+        if: vars.PAPER_AUTO_MERGE == 'true' && steps.gen.outputs.claims != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "${{ steps.pr.outputs.url }}" --body "Not merged automatically.
+
+          These numbers appear in the entry but not in the paper's abstract, which is all the generator was given: \`${{ steps.gen.outputs.claims }}\`
+
+          They may be perfectly correct — an entry can legitimately cite related work — but nothing in this pipeline verified them. Check them against the paper, then merge."
+
       - name: Report back
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            MSG="Opened ${{ steps.pr.outputs.url }}"
+            if [ "${{ steps.automerge.outputs.merged }}" = "true" ]; then
+              MSG="Merged ${{ steps.pr.outputs.url }} — every number in the entry appears in the abstract. Deploy and Threads post follow automatically."
+            elif [ -n "${{ steps.gen.outputs.claims }}" ]; then
+              MSG="Opened ${{ steps.pr.outputs.url }} — left for review because these numbers are not in the abstract: \`${{ steps.gen.outputs.claims }}\`"
+            else
+              MSG="Opened ${{ steps.pr.outputs.url }}"
+            fi
           else
             MSG="Build of \`${{ steps.req.outputs.arxiv }}\` failed — [run log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."
           fi
