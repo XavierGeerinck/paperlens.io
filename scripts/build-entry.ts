@@ -16,7 +16,7 @@
 
 import { catalogue } from "./catalogue";
 import { fetchPaper } from "./lib/sources";
-import { ask, askJson, assertModelAvailable, model } from "./lib/llm";
+import { ask, askJsonChecked, assertModelAvailable, model } from "./lib/llm";
 import { $ } from "bun";
 
 const CONTENT_DIR = "src/content/ideas";
@@ -71,6 +71,57 @@ const PLAN_SCHEMA = {
 		},
 	},
 };
+
+const MIN_WORDS = 600;
+const MIN_HEADINGS = 4;
+const MIN_SIM_LINES = 150;
+
+/**
+ * Reject output that is structurally hollow.
+ *
+ * The build and the browser check both pass on a truncated stub — they verify
+ * that nothing crashes, not that anything was said. These are the cheap
+ * structural facts that separate a real entry from a placeholder.
+ */
+export function planProblems(p: EntryPlan, truncated: boolean): string[] {
+	const bad: string[] = [];
+	const body = p.body ?? "";
+	const words = body.trim().split(/\s+/).filter(Boolean).length;
+
+	if (truncated) bad.push("the reply hit the token cap, so the entry is cut off mid-generation");
+	if (words < MIN_WORDS) bad.push(`body is ${words} words, needs at least ${MIN_WORDS}`);
+
+	const headings = (body.match(/^##\s+\S/gm) ?? []).length;
+	if (headings < MIN_HEADINGS) bad.push(`only ${headings} '##' headings, needs at least ${MIN_HEADINGS}`);
+
+	// A heading run into its own paragraph means the model lost its newlines.
+	if (/^#{1,3}\s+\S[^\n]{120,}/m.test(body)) bad.push("a heading runs into body text on the same line");
+
+	if (!/```mermaid/.test(body)) bad.push("no mermaid diagram");
+	if (!/```(python|ts|tsx|javascript)/.test(body)) bad.push("no code block");
+
+	// Truncation usually shows up as a final line with no terminal punctuation.
+	const tail = body.trimEnd().slice(-1);
+	if (tail && !".!?`)]|\"".includes(tail)) bad.push(`body ends mid-sentence ("…${body.trimEnd().slice(-40)}")`);
+
+	if (!p.simulationName || !/^[A-Z][A-Za-z0-9]*$/.test(p.simulationName))
+		bad.push(`simulationName "${p.simulationName}" is not PascalCase`);
+
+	return bad;
+}
+
+/** Structural checks on the generated component, before the build ever runs. */
+export function simProblems(src: string): string[] {
+	const bad: string[] = [];
+	const lines = src.split("\n").length;
+	if (lines < MIN_SIM_LINES) bad.push(`simulation is ${lines} lines, needs at least ${MIN_SIM_LINES}`);
+	if (!/export default/.test(src)) bad.push("no default export");
+	// The canonical mulberry32 mixes with 0x6d2b79f5; other constants signal a
+	// hallucinated generator that will not produce a usable distribution.
+	if (/mulberry32|rng\s*\(/.test(src) && !/0x6d2b79f5/.test(src))
+		bad.push("the seeded RNG is not mulberry32 — check the constants");
+	return bad;
+}
 
 function arg(name: string, fallback?: string): string | undefined {
 	const i = Bun.argv.indexOf(`--${name}`);
@@ -132,7 +183,7 @@ async function main() {
 
 	// --- 2. the written entry ---------------------------------------------------
 	console.error("\ngenerating entry…");
-	const plan = await askJson<EntryPlan>({
+	const { value: plan, truncated } = await askJsonChecked<EntryPlan>({
 		system:
 			"You write for PaperLens: technical explainers of AI research for working engineers. " +
 			"Objective third person, no first-person pronouns. You never state a number or claim " +
@@ -181,6 +232,18 @@ async function main() {
 		schema: PLAN_SCHEMA,
 		maxTokens: 16000,
 	});
+
+	const problems = planProblems(plan, truncated);
+	if (problems.length) {
+		console.error("\nThe generated entry is not publishable:");
+		for (const p of problems) console.error(`  - ${p}`);
+		console.error(
+			"\nThis is a model-capability problem, not a build error, so no repair loop will fix it.\n" +
+				`Try a stronger PAPERLENS_MODEL (currently ${model()}).`,
+		);
+		console.log(JSON.stringify({ ok: false, reason: "entry failed the quality gate", problems, arxiv: paper.id }));
+		process.exit(4);
+	}
 
 	const ext = "md";
 	const entryPath = `${CONTENT_DIR}/${plan.slug}.${ext}`;
@@ -238,7 +301,17 @@ async function main() {
 	});
 
 	const strip = (s: string) => s.replace(/^\s*```(?:tsx?|typescript)?\s*\n/, "").replace(/\n```\s*$/, "").trim();
-	await Bun.write(simPath, strip(sim) + "\n");
+	const simSource = strip(sim);
+	const simIssues = simProblems(simSource);
+	if (simIssues.length) {
+		console.error("\nThe generated simulation is not publishable:");
+		for (const p of simIssues) console.error(`  - ${p}`);
+		console.error(`\nTry a stronger PAPERLENS_MODEL (currently ${model()}).`);
+		console.log(JSON.stringify({ ok: false, reason: "simulation failed the quality gate", problems: simIssues, arxiv: paper.id }));
+		process.exit(4);
+	}
+
+	await Bun.write(simPath, simSource + "\n");
 	console.error(`  wrote ${simPath}`);
 
 	// --- 4. reverse links -------------------------------------------------------
@@ -315,7 +388,9 @@ async function main() {
 	process.exit(1);
 }
 
-main().catch((err) => {
-	console.error(err instanceof Error ? err.message : String(err));
-	process.exit(1);
-});
+if (import.meta.main) {
+	main().catch((err) => {
+		console.error(err instanceof Error ? err.message : String(err));
+		process.exit(1);
+	});
+}

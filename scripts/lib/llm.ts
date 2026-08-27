@@ -162,12 +162,23 @@ export async function ask(opts: AskOptions): Promise<string> {
 	return text;
 }
 
+/** Like `ask`, but tells you whether the reply ran into the token cap. */
+export async function askChecked(opts: AskOptions): Promise<{ text: string; truncated: boolean }> {
+	return askRaw(opts);
+}
+
 export async function askJson<T = unknown>(opts: AskOptions): Promise<T> {
 	const { text } = await askRaw(opts);
 	return extractJson(text) as T;
 }
 
-async function askRaw(opts: AskOptions): Promise<{ text: string }> {
+/** Parsed result plus whether the reply was cut off mid-generation. */
+export async function askJsonChecked<T = unknown>(opts: AskOptions): Promise<{ value: T; truncated: boolean }> {
+	const { text, truncated } = await askRaw(opts);
+	return { value: extractJson(text) as T, truncated };
+}
+
+async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: boolean }> {
 	const { system, user, schema, maxTokens = 16000, temperature = 0.3, retries = 2 } = opts;
 	const api = client();
 	const slug = model();
@@ -211,7 +222,7 @@ async function askRaw(opts: AskOptions): Promise<{ text: string }> {
 				);
 			}
 			if (schema) extractJson(text); // validate parseability before returning
-			return { text };
+			return { text, truncated: choice?.finish_reason === "length" };
 		} catch (err) {
 			lastError = err;
 			const message = err instanceof Error ? err.message : String(err);
