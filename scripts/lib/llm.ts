@@ -239,6 +239,10 @@ async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: bool
 		} catch (err) {
 			lastError = err;
 			const message = err instanceof Error ? err.message : String(err);
+			// Report every attempt as it fails. Keeping only the last one meant a
+			// rate limit on retry masked whatever actually went wrong first.
+			const status = (err as { status?: number })?.status;
+			console.error(`  ! attempt ${attempt + 1}/${retries + 1} failed: ${message.slice(0, 200)}`);
 
 			if (useResponseFormat && /response_format|json_schema|not support/i.test(message)) {
 				useResponseFormat = false;
@@ -249,13 +253,23 @@ async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: bool
 			// Only transient failures are worth repeating. A 402 for credits, a 401
 			// for a bad key or a 404 for a bad slug will fail identically every time,
 			// and retrying only obscures the real message.
-			const status = (err as { status?: number })?.status;
 			const transient = status === undefined || status === 408 || status === 429 || status >= 500;
 			if (!transient) {
 				throw new Error(`Model call failed (${slug}, HTTP ${status}): ${message}`);
 			}
 			if (attempt < retries) {
-				await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+				// A rate limit needs a real pause; two seconds just burns an attempt.
+				// Honour Retry-After when the provider sends one.
+				const retryAfter = Number(
+					(err as { headers?: Record<string, string> })?.headers?.["retry-after"] ?? NaN,
+				);
+				const wait = Number.isFinite(retryAfter)
+					? retryAfter * 1000
+					: status === 429
+						? 30_000 * (attempt + 1)
+						: 2000 * (attempt + 1);
+				console.error(`    waiting ${Math.round(wait / 1000)}s before retrying`);
+				await new Promise((r) => setTimeout(r, wait));
 				continue;
 			}
 		}
