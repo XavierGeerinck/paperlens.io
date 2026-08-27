@@ -261,8 +261,36 @@ async function main() {
 		access_token: token,
 	});
 
-	console.error(`published: ${published?.id ?? "(no id returned)"}`);
-	console.log(JSON.stringify({ ok: true, slug, url, threadsId: published?.id }));
+	const id = published?.id;
+	console.error(`published: ${id ?? "(no id returned)"}`);
+
+	// Read the post back. A publish call returning an id is not evidence that the
+	// right words are live — trusting that is how a post of the model's reasoning
+	// went unnoticed. Verify against what was actually composed.
+	let live: { text?: string; permalink?: string } = {};
+	if (id) {
+		const res = await fetch(
+			`${GRAPH}/${id}?fields=id,text,permalink&access_token=${encodeURIComponent(token)}`,
+		);
+		live = ((await res.json().catch(() => ({}))) as any) ?? {};
+		if (res.ok && typeof live.text === "string") {
+			const rule = "═".repeat(56);
+			console.error(`\nlive on Threads:\n${rule}\n${live.text}\n${rule}`);
+			if (live.text.trim() !== text.trim()) {
+				console.error("  ! what is live differs from what was composed");
+			}
+			if (looksLikeReasoning(live.text)) {
+				console.error("  !! the live post reads as reasoning — delete it:");
+				console.error(`     bun scripts/announce.ts --delete ${id}`);
+				process.exit(1);
+			}
+			if (live.permalink) console.error(`  ${live.permalink}`);
+		} else {
+			console.error(`  ! could not read the post back: ${(live as any)?.error?.message ?? res.status}`);
+		}
+	}
+
+	console.log(JSON.stringify({ ok: true, slug, url, threadsId: id, permalink: live.permalink, text }));
 }
 
 if (import.meta.main) {
