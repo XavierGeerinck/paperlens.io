@@ -157,6 +157,26 @@ export function simProblems(src: string): string[] {
 	// hallucinated generator that will not produce a usable distribution.
 	if (/mulberry32|rng\s*\(/.test(src) && !/0x6d2b79f5/.test(src))
 		bad.push("the seeded RNG is not mulberry32 — check the constants");
+
+	// Canvas silently ignores an unresolvable colour, leaving whatever was set
+	// before. This drew three grey lines where three coloured ones were intended.
+	// Only the literal form is detectable with certainty: passing the token
+	// through a resolver, as `resolve("var(--purple)")`, is the correct pattern.
+	if (/(?:strokeStyle|fillStyle)\s*=\s*["'`]\s*var\(--/.test(src))
+		bad.push("a canvas colour is assigned a literal var(--token); canvas cannot resolve CSS variables");
+
+	if (/getContext\(["']2d["']\)/.test(src)) {
+		// A canvas that uses tokens anywhere but never calls getPropertyValue has
+		// no way to have resolved them. This catches the indirect form, where the
+		// token is held in a data structure and assigned later.
+		if (/var\(--/.test(src) && !/getPropertyValue/.test(src))
+			bad.push("canvas uses var(--token) colours but never resolves them via getPropertyValue");
+		if (!/devicePixelRatio/.test(src))
+			bad.push("canvas does not scale for devicePixelRatio, so it will render blurry");
+		if (!/ResizeObserver|clientWidth|offsetWidth/.test(src))
+			bad.push("canvas is not sized from its container, so it will not fit or be responsive");
+	}
+
 	return bad;
 }
 
@@ -307,23 +327,66 @@ async function main() {
 		"# Shared components you must build on (src/components/react/SketchElements.tsx)",
 		sketch,
 		"",
-		"# House rules",
+		"# What makes one of these good",
+		"The reader should come away understanding the mechanism better than the prose",
+		"alone would leave them. That means a control they move must change an outcome",
+		"they can read as a number, and the change must be the paper's claim.",
+		"",
+		"Before writing, decide: what is the single quantity this paper improves, and",
+		"what would it look like with the mechanism off? Build the toy around that",
+		"contrast. A side-by-side of with/without, or a curve that visibly fails to",
+		"converge, teaches; a panel of sliders wired to a decorative drawing does not.",
+		"",
+		"Be honest about size. If the paper's real effect is modest, show a modest",
+		"effect and say so. Never invent a dramatic result or a penalty the paper does",
+		"not report.",
+		"",
+		"# Hard requirements",
 		"- Default-export a single React functional component. TypeScript, React 19.",
 		"- Import from '../SketchElements' — SchematicCard, SchematicButton, DataReadout, TechBadge.",
 		"- Icons from 'lucide-react'.",
-		"- Colour comes from CSS custom properties: var(--green) primary, var(--orange),",
-		"  var(--aqua), var(--purple), var(--red), var(--fg), var(--fg2), var(--fg4),",
-		"  var(--bg0), var(--bg1), var(--bg2), var(--bg3). Tailwind semantic classes are",
-		"  available too: bg-bg0, text-ink, text-ink1, text-ink2, text-ink4, text-mute,",
-		"  border-bg2, text-mint-400, text-amber-400. No raw hex, no light theme.",
-		"- Any randomness must be seeded with a mulberry32 rng(seed) helper defined in-file,",
-		"  so the figure is identical on every load.",
+		"- At least three controls, and EVERY piece of state must be read by something",
+		"  that renders. No state or effect dependency that nothing consumes.",
+		"- At least one numeric readout that visibly changes when a control changes.",
+		"  State the units.",
+		"- No decorative parameters. If a control only rescales the drawing without",
+		"  changing what is being claimed, it is a zoom, not a demonstration — cut it.",
+		"- Never fabricate structure the paper contradicts. If the paper says things",
+		"  happen simultaneously, do not render them round-robin.",
+		"",
+		"# Colour",
+		"- Use the CSS tokens: var(--green) primary, var(--orange), var(--aqua),",
+		"  var(--purple), var(--red), var(--fg), var(--fg2), var(--fg4), var(--bg0),",
+		"  var(--bg1), var(--bg2), var(--bg3). Tailwind semantic classes are available",
+		"  too: bg-bg0, text-ink, text-ink1, text-ink2, text-ink4, text-mute, border-bg2,",
+		"  text-mint-400, text-amber-400. No raw hex, no light theme.",
+		"- CRITICAL: a canvas cannot resolve CSS variables. `ctx.strokeStyle =",
+		"  'var(--purple)'` is invalid and silently keeps the previous colour. Resolve",
+		"  tokens first with getComputedStyle(document.documentElement).getPropertyValue,",
+		"  and pass the resolved string to the canvas.",
+		"",
+		"# If you draw on a canvas",
+		"- Size it to its container with a ResizeObserver on a wrapper div, and set",
+		"  canvas.width = cssWidth * devicePixelRatio with a matching setTransform,",
+		"  or it will be blurry and a fixed width will overflow on mobile.",
+		"- Fill the space. A mostly-empty canvas with a handful of points reads as",
+		"  broken. Fit the drawing to the extent of the data with padding.",
+		"- Label it: axis labels or a scale bar, and a legend naming every series with",
+		"  its colour. A line with no units is decoration.",
+		"",
+		"# Correctness",
+		"- Any randomness must be seeded with a mulberry32 rng(seed) helper defined",
+		"  in-file, mixing with 0x6d2b79f5, so the figure is identical on every load.",
 		"- Never touch window or document during render; guard effects with a typeof check.",
 		"- Respect prefers-reduced-motion: no autoplaying animation when it is set.",
 		"- Must not scroll horizontally at 390px wide. No fixed pixel widths on containers.",
-		"- Include a short 'What to try' block and a note stating plainly that this is a toy",
+		"- Every labelled section must contain something. Never render a heading over",
+		"  an empty region.",
+		"- Include a short 'What to try' block naming 3-4 specific things to change and",
+		"  what each reveals, and a closing note stating plainly that this is a toy",
 		"  abstraction, with the paper's real measured numbers left to the entry.",
 		"- No external libraries beyond react and lucide-react. No network calls.",
+		"- Aim for 250-450 lines. Below that it will not demonstrate enough.",
 	].join("\n");
 
 	let sim = await ask({

@@ -80,3 +80,32 @@ test("ignores numbers inside code and math", () => {
 test("ignores years", () => {
   expect(unsupportedNumbers("Published in 2026, following 2024 work.", ABSTRACT)).toEqual([]);
 });
+
+test("catches a canvas colour set to an unresolved CSS variable", () => {
+  const src = "const x=1;\n".repeat(200) +
+    "const c = el.getContext('2d');\nc.strokeStyle = 'var(--purple)';\n" +
+    "const dpr = window.devicePixelRatio; const w = el.clientWidth;\n" +
+    "export default function S(){return null;}";
+  expect(simProblems(src).some((p) => p.includes("cannot resolve CSS variables"))).toBe(true);
+});
+
+test("catches a canvas that ignores DPR and container width", () => {
+  const src = "const x=1;\n".repeat(200) +
+    "const c = el.getContext('2d');\nc.strokeStyle = resolved;\n" +
+    "export default function S(){return null;}";
+  const found = simProblems(src);
+  expect(found.some((p) => p.includes("devicePixelRatio"))).toBe(true);
+  expect(found.some((p) => p.includes("sized from its container"))).toBe(true);
+});
+
+test("accepts a correctly written canvas simulation", () => {
+  const src = "const x=1;\n".repeat(200) +
+    "function rng(seed){let s=seed>>>0;return()=>{s=(s+0x6d2b79f5)>>>0;return s/2**32;};}\n" +
+    "const c = el.getContext('2d');\nconst dpr = window.devicePixelRatio;\n" +
+    "const w = wrap.clientWidth; new ResizeObserver(m).observe(wrap);\n" +
+    "const css = getComputedStyle(document.documentElement);\n" +
+    "const resolve = (t) => css.getPropertyValue(t.slice(6, -1));\n" +
+    "c.strokeStyle = resolve('var(--purple)');\n" +
+    "export default function S(){return null;}";
+  expect(simProblems(src)).toEqual([]);
+});
