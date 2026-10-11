@@ -118,3 +118,11 @@ test("accepts a correctly written canvas simulation", () => {
     "export default function S(){return null;}";
   expect(simProblems(src)).toEqual([]);
 });
+
+test("rejects a slug that is not safe as a path, a branch and a URL", () => {
+  const body = "## A\n\ntext.";
+  for (const slug of ["../../.github/workflows/x", "Has Spaces", "a$(id)", "trailing-", ""]) {
+    expect(planProblems({ ...base, slug, body }, false).some((p) => p.includes("kebab-case"))).toBe(true);
+  }
+  expect(planProblems({ ...base, slug: "echowm-omnimodal-world-model", body }, false).some((p) => p.includes("kebab-case"))).toBe(false);
+});

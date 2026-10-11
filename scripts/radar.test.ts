@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import { isoWeek, clampTitle } from "./radar";
+import { isoWeek, clampTitle, total } from "./radar";
 
 test("isoWeek matches the ISO-8601 week the HuggingFace pages use", () => {
   expect(isoWeek(new Date("2026-08-27T00:00:00Z"))).toBe("2026-W35");
@@ -25,4 +25,10 @@ test("clampTitle truncates a headline that cannot fit", () => {
   const t = clampTitle("Radar 2026-W35 · " + "y".repeat(200), " · 6 of 204");
   expect(t.length).toBeLessThanOrEqual(90);
   expect(t.endsWith("…")).toBe(true);
+});
+
+test("total follows the rubric, whatever the model added up", () => {
+  // The row a live radar reported as 9.
+  expect(total({ searchDemand: 2, simulatable: 2, oneMechanism: 2, overturns: 2, fillsGap: 1 })).toBe(11);
+  expect(total({ searchDemand: 3, simulatable: 3, oneMechanism: 3, overturns: 3, fillsGap: 3 })).toBe(18);
 });

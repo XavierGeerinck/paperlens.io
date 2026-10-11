@@ -1,11 +1,17 @@
 name: Paper radar
 
-# Ranks the week's research against the catalogue and posts the shortlist.
-# Writes no content and opens no PR — the output is a decision, not a page.
+# Ranks the last week's research against the catalogue and posts the shortlist.
+# Writes no content itself — the output is a decision, not a page. With
+# PAPER_AUTO_BUILD on, that decision is handed to the Paper build workflow.
+#
+#   PAPER_AUTO_BUILD  var   'true' builds the pick of every scheduled run
+#   PAPER_MIN_SCORE   var   lowest rubric total (of 18) worth building; default 12
 on:
   schedule:
-    # Mondays 06:00 UTC, after the weekend's arXiv listings have settled
-    - cron: "0 6 * * 1"
+    # Daily, after arXiv's overnight announcement. Off the top of the hour, where
+    # GitHub's scheduler is most congested: the :00 runs here started five to
+    # seven hours late.
+    - cron: "17 6 * * *"
   workflow_dispatch:
     inputs:
       days:
@@ -13,10 +19,17 @@ on:
         required: false
         default: "7"
         type: string
+      build:
+        description: "Also build the pick"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
   issues: write
+  # starting the Paper build run
+  actions: write
 
 concurrency:
   group: paper-radar
@@ -34,14 +47,37 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - name: Find papers a build was already started for
+        id: attempted
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Every build announces itself with a "Building `<id>`" comment, so two
+          # weeks of comments are the record of what has been tried. A paper whose
+          # build failed, or whose PR is waiting for review, is not in the
+          # catalogue — without this it would be the pick again every morning.
+          SINCE=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh api --paginate "repos/${{ github.repository }}/issues/comments?since=$SINCE&per_page=100" \
+            --jq '.[].body' > comments.txt
+          # shellcheck disable=SC2016 # the backticks are literal, part of the comment
+          IDS=$(grep -oE '^Building `[0-9]{4}\.[0-9]{4,5}`' comments.txt \
+                  | grep -oE '[0-9]{4}\.[0-9]{4,5}' | sort -u | paste -sd, - || true)
+          echo "ids=$IDS" >> "$GITHUB_OUTPUT"
+          echo "Already attempted: ${IDS:-none}"
+
       - name: Rank this week's papers
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
           PAPERLENS_MODEL: ${{ vars.PAPERLENS_MODEL }}
-        run: bun scripts/radar.ts --days "${{ inputs.days || '7' }}" --out radar.md --title-out radar-title.txt
+        run: >-
+          bun scripts/radar.ts --days "${{ inputs.days || '7' }}"
+          --skip "${{ steps.attempted.outputs.ids }}"
+          --out radar.md --title-out radar-title.txt --pick-out pick.json
 
       - name: Open the week's radar issue
+        id: issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -52,7 +88,7 @@ jobs:
           # A label makes the whole series findable even as titles vary.
           gh label create radar --color 0E8A16 --description "Weekly paper scan" 2>/dev/null || true
 
-          # Re-running in the same week updates that week's issue rather than
+          # A later run in the same week updates that week's issue rather than
           # opening a second one. The ISO week prefix is the identity.
           WEEK=$(printf '%s' "$TITLE" | grep -oE '[0-9]{4}-W[0-9]{2}' | head -1)
           NUM=$(gh issue list --state open --label radar --limit 50 \
@@ -65,5 +101,35 @@ jobs:
             echo "updated issue #$NUM"
           else
             URL=$(gh issue create --title "$TITLE" --label radar --body-file radar.md)
+            NUM="${URL##*/}"
             echo "opened $URL"
           fi
+          echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Build the pick
+        if: (github.event_name == 'schedule' && vars.PAPER_AUTO_BUILD == 'true') || inputs.build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIN_SCORE: ${{ vars.PAPER_MIN_SCORE }}
+        run: |
+          set -euo pipefail
+          if [ ! -f pick.json ]; then
+            echo "No buildable pick in this scan."
+            exit 0
+          fi
+          ID=$(jq -r .id pick.json)
+          TOTAL=$(jq -r .total pick.json)
+          MIN="${MIN_SCORE:-12}"
+
+          # A quiet day should stay quiet. Publishing the best of a weak batch is
+          # how the catalogue fills with entries nobody searches for.
+          if [ "$TOTAL" -lt "$MIN" ]; then
+            echo "$ID scored $TOTAL of 18, under the bar of $MIN. Nothing is built today."
+            exit 0
+          fi
+
+          # Dispatched rather than requested with a /build comment: a comment
+          # posted with GITHUB_TOKEN starts no workflow, a dispatch does.
+          gh workflow run paper-build.yml --ref "${{ github.ref_name }}" \
+            -f arxiv="$ID" -f issue="${{ steps.issue.outputs.number }}"
+          echo "Started a build of $ID (scored $TOTAL of 18)."

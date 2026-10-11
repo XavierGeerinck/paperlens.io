@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Weekly paper radar.
+ * Paper radar.
  *
  * Harvests candidates, drops what the catalogue already covers, ranks the rest
  * against docs/scan-rubric.md, and prints a markdown report. Writes no content
@@ -10,6 +10,8 @@
  *   bun scripts/radar.ts --days 14
  *   bun scripts/radar.ts --top 8
  *   bun scripts/radar.ts --out report.md
+ *   bun scripts/radar.ts --skip 2609.20511,2609.19969   # builds already started
+ *   bun scripts/radar.ts --pick-out pick.json           # the pick, for the workflow
  *
  * Needs OPENAI_API_KEY; OPENAI_API_URL and PAPERLENS_MODEL are optional.
  */
@@ -103,6 +105,17 @@ const SCHEMA = {
 	},
 };
 
+/**
+ * Total = 2 × search demand + the other four, as the rubric defines it.
+ *
+ * Computed here rather than read from the reply: the model's arithmetic is not
+ * reliable (it has reported 9 for a row that adds to 11), and this number
+ * decides whether a paper is built without anyone looking.
+ */
+export function total(s: Pick<Ranked, "searchDemand" | "simulatable" | "oneMechanism" | "overturns" | "fillsGap">): number {
+	return 2 * s.searchDemand + s.simulatable + s.oneMechanism + s.overturns + s.fillsGap;
+}
+
 function arg(name: string, fallback?: string): string | undefined {
 	const i = Bun.argv.indexOf(`--${name}`);
 	return i === -1 ? fallback : Bun.argv[i + 1];
@@ -136,6 +149,11 @@ async function main() {
 	const top = Number(arg("top", "6"));
 	const out = arg("out");
 	const titleOut = arg("title-out");
+	const pickOut = arg("pick-out");
+	// Papers a build was already started for. A failed build or a PR waiting for
+	// review leaves nothing in the catalogue, so without this a daily run would
+	// recommend the same paper every morning.
+	const attempted = new Set((arg("skip") ?? "").split(",").map((s) => s.trim()).filter(Boolean));
 
 	await assertModelAvailable();
 	console.error(`# radar · last ${days} days · model ${model()}`);
@@ -150,7 +168,8 @@ async function main() {
 
 	// Exact ID matches are a hard drop and never reach the model.
 	const hardDropped = all.filter((c) => covered.has(c.id));
-	let candidates = all.filter((c) => !covered.has(c.id));
+	const alreadyTried = all.filter((c) => !covered.has(c.id) && attempted.has(c.id));
+	let candidates = all.filter((c) => !covered.has(c.id) && !attempted.has(c.id));
 
 	// Keep the prompt affordable: everything that trended, plus the most
 	// title-similar of the rest (those are where near-duplicates hide).
@@ -163,7 +182,10 @@ async function main() {
 		.slice(0, 40)
 		.map((s) => s.c);
 
-	console.error(`  ${hardDropped.length} already covered by ID, ${candidates.length} sent for ranking`);
+	console.error(
+		`  ${hardDropped.length} already covered by ID, ${alreadyTried.length} already attempted, ` +
+			`${candidates.length} sent for ranking`,
+	);
 	if (candidates.length === 0) {
 		console.log("_No new candidates this week._");
 		return;
@@ -227,6 +249,8 @@ async function main() {
 		for (const d of unverified) console.error(`      ${d.id} -> "${d.coveredBy}"`);
 	}
 
+	for (const s of verdict.shortlist) s.total = total(s);
+
 	const picked = verdict.shortlist.find((s) => s.id === verdict.pick.id) ?? verdict.shortlist[0];
 	const iso = new Date().toISOString().slice(0, 10);
 
@@ -235,7 +259,8 @@ async function main() {
 		"",
 		`Scanned ${all.length} papers from the last ${days} days ` +
 			`(HuggingFace daily + arXiv ${ARXIV_CATEGORIES.join(", ")}). ` +
-			`${hardDropped.length} already covered by arXiv ID.`,
+			`${hardDropped.length} already covered by arXiv ID.` +
+			(alreadyTried.length ? ` ${alreadyTried.length} left out because a build was already started for them.` : ""),
 		"",
 		"| # | arXiv | Paper | Search×2 | Sim | Mech | Overturns | Gap | Total |",
 		"|---|---|---|---|---|---|---|---|---|",
@@ -306,6 +331,17 @@ async function main() {
 	if (titleOut) {
 		await Bun.write(titleOut, title);
 		console.error(`wrote ${titleOut}: ${title}`);
+	}
+	if (pickOut) {
+		// Only a pick that is on the shortlist and came out of this harvest can be
+		// built unattended. An ID the model made up gets no file, and so no build.
+		const real = verdict.shortlist.find((s) => s.id === verdict.pick.id && candidates.some((c) => c.id === s.id));
+		if (real) {
+			await Bun.write(pickOut, JSON.stringify({ id: real.id, title: real.title, total: real.total }));
+			console.error(`wrote ${pickOut}: ${real.id} scored ${real.total}`);
+		} else {
+			console.error(`  ! pick ${verdict.pick.id} is not a ranked candidate from this harvest; no ${pickOut} written`);
+		}
 	}
 	console.error(`\ntitle: ${title}`);
 	console.log(report);

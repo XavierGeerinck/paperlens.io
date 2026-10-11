@@ -114,6 +114,10 @@ export function planProblems(p: EntryPlan, truncated: boolean): string[] {
 	if (!p.simulationName || !/^[A-Z][A-Za-z0-9]*$/.test(p.simulationName))
 		bad.push(`simulationName "${p.simulationName}" is not PascalCase`);
 
+	// The slug becomes a file path, a branch name and a URL, and nobody reads it
+	// before an unattended build uses it for all three.
+	if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(p.slug ?? "")) bad.push(`slug "${p.slug}" is not kebab-case`);
+
 	return bad;
 }
 
