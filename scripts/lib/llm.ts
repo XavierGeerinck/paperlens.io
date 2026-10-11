@@ -219,6 +219,26 @@ export async function askJsonChecked<T = unknown>(opts: AskOptions): Promise<{ v
 	return { value: extractJson(text) as T, truncated };
 }
 
+/**
+ * Whether a failure belongs to one model rather than to the request, so the
+ * next slug in the chain is worth trying. A 401 is the key itself and fails
+ * identically everywhere.
+ */
+export function isModelSpecific(err: unknown): boolean {
+	const status = (err as { status?: number })?.status;
+	const message = err instanceof Error ? err.message : String(err);
+	return (
+		// A provider rejecting the request shape or size; another may accept it.
+		status === 400 ||
+		status === 402 ||
+		status === 404 ||
+		status === 429 ||
+		status === 503 ||
+		// Repeated unparseable replies mean this model cannot hold the schema.
+		/Reply was not JSON/.test(message)
+	);
+}
+
 async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: boolean }> {
 	const chain = models();
 	let lastFailure: unknown;
@@ -230,15 +250,7 @@ async function askRaw(opts: AskOptions): Promise<{ text: string; truncated: bool
 		} catch (err) {
 			lastFailure = err;
 			const status = (err as { status?: number })?.status;
-			const message = err instanceof Error ? err.message : String(err);
-			const exhausted =
-				status === 429 ||
-				status === 402 ||
-				status === 404 ||
-				status === 503 ||
-				// Repeated unparseable replies mean this model cannot hold the schema.
-				/Reply was not JSON/.test(message);
-			if (exhausted && i < chain.length - 1) {
+			if (isModelSpecific(err) && i < chain.length - 1) {
 				console.error(`  · ${slug} unavailable (HTTP ${status}); falling back to ${chain[i + 1]}`);
 				continue;
 			}
@@ -324,7 +336,10 @@ async function askOne(opts: AskOptions, slug: string): Promise<{ text: string; t
 			// and retrying only obscures the real message.
 			const transient = status === undefined || status === 408 || status === 429 || status >= 500;
 			if (!transient) {
-				throw new Error(`Model call failed (${slug}, HTTP ${status}): ${message}`);
+				// Keep the status here too. Without it a retired slug's 404 looked like
+				// an unknown failure, and the chain stopped on the first model instead
+				// of skipping it — which failed the radar for weeks.
+				throw Object.assign(new Error(`Model call failed (${slug}, HTTP ${status}): ${message}`), { status });
 			}
 			if (attempt < retries) {
 				// A rate limit needs a real pause; two seconds just burns an attempt.

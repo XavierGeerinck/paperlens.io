@@ -59,3 +59,45 @@ test("the aggregate error keeps the status so the chain can fall through", async
   const status = (err as { status?: number }).status;
   expect(status === 429 || status === 402 || status === 404 || status === 503).toBe(true);
 });
+
+test("a retired slug's 404 moves the chain on instead of ending the run", async () => {
+  // Regression: z-ai/glm-5.2:free stopped being free, its 404 lost its status on
+  // the non-transient path, and every scheduled radar died on the first model.
+  const { ask } = await import("./llm");
+  const realFetch = globalThis.fetch;
+  const asked: string[] = [];
+
+  process.env.OPENAI_API_KEY = "test";
+  process.env.OPENAI_API_URL = "https://llm.invalid/v1";
+  process.env.PAPERLENS_MODEL = "gone/model:free,live/model";
+
+  globalThis.fetch = (async (_input: unknown, init?: { body?: unknown }) => {
+    const slug = JSON.parse(String(init?.body)).model as string;
+    asked.push(slug);
+    if (slug === "gone/model:free") {
+      return Response.json({ error: { message: "This model is unavailable for free." } }, { status: 404 });
+    }
+    return Response.json({
+      id: "x",
+      object: "chat.completion",
+      model: slug,
+      choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content: "from the second model" } }],
+    });
+  }) as unknown as typeof fetch;
+
+  try {
+    expect(await ask({ system: "s", user: "u", retries: 0 })).toBe("from the second model");
+    expect(asked).toEqual(["gone/model:free", "live/model"]);
+  } finally {
+    globalThis.fetch = realFetch;
+    delete process.env.PAPERLENS_MODEL;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.OPENAI_API_URL;
+  }
+});
+
+test("a bad key is not worth trying on the next model", async () => {
+  const { isModelSpecific } = await import("./llm");
+  expect(isModelSpecific(Object.assign(new Error("no auth"), { status: 401 }))).toBe(false);
+  expect(isModelSpecific(Object.assign(new Error("provider error"), { status: 400 }))).toBe(true);
+});
