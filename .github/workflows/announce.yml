@@ -1,6 +1,6 @@
 name: Announce
 
-# Posts newly published entries to Threads.
+# Posts newly published entries to Threads and to Discord.
 #
 # Runs after a successful Pages deploy rather than on push, so an entry is only
 # announced once its page is actually live. The script also HEADs the URL before
@@ -35,6 +35,9 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    env:
+      # A manual run is a dry run unless "post" is ticked; a deploy always posts.
+      POST_FLAG: ${{ (github.event_name == 'workflow_dispatch' && inputs.post != true) && ' ' || '--post' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -87,12 +90,25 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
           PAPERLENS_MODEL: ${{ vars.PAPERLENS_MODEL }}
-          POST_FLAG: ${{ (github.event_name == 'workflow_dispatch' && inputs.post != true) && ' ' || '--post' }}
         run: |
           set -euo pipefail
           for SLUG in ${{ steps.find.outputs.slugs }}; do
             echo "::group::$SLUG"
             bun scripts/announce.ts "$SLUG" $POST_FLAG
+            echo "::endgroup::"
+          done
+
+      - name: Post to Discord
+        # Runs even when the Threads step failed: one channel being down is no
+        # reason to stay silent on the other.
+        if: ${{ !cancelled() && steps.find.outputs.slugs != '' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          for SLUG in ${{ steps.find.outputs.slugs }}; do
+            echo "::group::$SLUG"
+            bun scripts/discord.ts "$SLUG" $POST_FLAG
             echo "::endgroup::"
           done
 
